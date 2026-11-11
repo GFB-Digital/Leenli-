@@ -12,6 +12,7 @@ Läuft als installierbare Web-App (PWA) – komplett lokal und offline.
 | `npm run dev:handy` | Wie `dev`, aber auch im WLAN erreichbar (z. B. iPhone) |
 | `npm run build` | Typprüfung + fertige App in `dist/` bauen |
 | `npm run preview` | Gebaute App aus `dist/` starten (hier funktioniert auch offline) |
+| `npm test` | Tests der Speed-Reader-Logik ausführen |
 | `npm run icons` | App-Icons neu erzeugen (`scripts/generate-icons.mjs`) |
 
 Die ausführliche Anleitung (Inhaltsformat, Prompt-Vorlage, Capacitor) folgt.

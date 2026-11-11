@@ -11,4 +11,4 @@ Claude Code liest diese Datei zu Beginn jeder Sitzung automatisch. Die beiden fo
 - In Phasen arbeiten und nach jeder Phase anhalten: sagen, was getestet werden soll, und einen Commit vorschlagen (`git add`, `commit`, `push`). Der Nutzer committet selbst.
 - Vor größeren Umbauten nachfragen.
 - Nach jeder Phase **FORTSCHRITT.md aktualisieren**: Erledigtes, Entscheidungen, nächste Schritte.
-- Vor dem Abschluss einer Phase prüfen: `npm run build` (enthält die Typprüfung).
+- Vor dem Abschluss einer Phase prüfen: `npm run build` (enthält die Typprüfung) und `npm test` (Speed-Reader-Logik).

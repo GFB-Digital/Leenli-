@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 11.11.2026 – Phase 3 abgeschlossen, als Nächstes Phase 4 (Speed-Reader).
+**Stand:** 12.11.2026 – Phase 4 abgeschlossen, als Nächstes Phase 5 (Import und Einstellungen).
 
 ## Erledigt
 
@@ -28,6 +28,12 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - Tastatur am PC ([src/lib/useKeydown.ts](src/lib/useKeydown.ts)): Enter = Weiter, Ziffern 1–9 wählen eine Antwort
 - Ergebnis wird beim Erreichen der Zusammenfassung gespeichert, nicht erst beim Klick auf „Zurück zum Kurs“
 
+### Phase 4 – Speed-Reader
+- Logik als reine Funktionen in [src/lib/orp.ts](src/lib/orp.ts): `tokenize`, `splitWord`, `pauseAfter`, `wordDuration`, `remainingMs`, `sentenceBackTarget`, `clampWpm`
+- 28 Tests in [src/lib/orp.test.ts](src/lib/orp.test.ts), Aufruf mit `npm test`
+- Oberfläche in [src/components/speed/](src/components/speed/): `RsvpWord` (Wortanzeige mit Auto-Verkleinerung per ResizeObserver) und `SpeedReader` (Taktgeber, Bedienung, Tastatur, ganzer Text)
+- Im Browser gemessen (Firefox, 360 px und 1280 px): Der Fokusbuchstabe lag bei allen 96 Wörtern eines Abschnitts höchstens 0,01 px neben der Mitte, nichts wurde abgeschnitten
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
@@ -41,16 +47,35 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - **Lesemodus:** Wer in einer Lektion auf „Speed“ umschaltet, behält das für die restlichen Abschnitte dieser Lektion. Der Standard kommt aus den Einstellungen und wird dadurch nicht geändert.
 - **Schließen** einer begonnenen Lektion fragt nach („Lektion beenden?“). Die Zurück-Taste des Browsers verlässt die Lektion ohne Rückfrage.
 - **Silbentrennung** ist nur im Lesetext automatisch, nicht in Fragen und Antworten (der Browser trennte dort ungünstig, z. B. „sinnlo-se“).
+- **Tests:** Statt Vitest wird der in Node.js eingebaute Test-Runner genutzt (`node --test`). Node 26 führt TypeScript direkt aus, deshalb ist keine zusätzliche Bibliothek nötig. Die Testdateien prüft `tsconfig.node.json`, nicht `tsconfig.app.json`.
+- **Speed-Reader im Detail:**
+  - Zeichen werden als Grapheme gezählt (`Intl.Segmenter`, sonst `Array.from`). So gilt z. B. „Ä“ aus A + ¨ als ein Buchstabe. Ziffern zählen als Buchstaben, Emojis bekommen den Fokus aufs erste Zeichen.
+  - „+0,3“ für lange Wörter wird zum Faktor addiert (also +30 % der Grundzeit).
+  - Abkürzungen („z. B.“, „usw.“, „Dr.“), Initialen („H.“) und Ordnungszahlen („11.“) gelten nicht als Satzende.
+  - Alleinstehende Satzzeichen (z. B. ein Gedankenstrich) werden ans vorherige Wort gehängt.
+  - **„Satz zurück“:** Mitten im Satz springt es an dessen Anfang. Am Satzanfang oder bei zweimaligem Drücken innerhalb von 1,5 s geht es zum vorherigen Satz (wie „Titel zurück“ im Musikplayer).
+  - „Weiter“ erscheint, sobald der Text einmal bis zum Ende gelesen wurde, sonst „Überspringen“.
+  - Wird die App in den Hintergrund geschickt, hält der Reader automatisch an.
+  - Bei „Ganzer Text“ springt der Reader zum angetippten Wort.
+  - Ein Mausklick wählt die Bedien-Buttons nicht aus, damit die Leertaste immer Start/Pause bleibt.
 
-## Nächste Phase: 4 – Speed-Reader
-- Logik in `src/lib/orp.ts` als reine Funktionen: Wörter zerlegen (Satzzeichen anzeigen, aber nicht mitzählen; `Array.from`, `\p{L}`), Fokusbuchstabe nach Wortlänge, Anzeigedauer pro Wort, Satzanfänge für „Satz zurück“
-- Tests dafür: Vitest einrichten (`npm test`)
-- Komponente `SpeedReader` ersetzt den Platzhalter im Speed-Modus von [TextStepView.tsx](src/components/lesson/TextStepView.tsx); sie bringt ihre eigene `LessonFooter` mit („Weiter“ wenn fertig, sonst „Überspringen“)
-- Roter Fokusbuchstabe exakt in der Mitte, Führungslinien, automatische Schriftverkleinerung per ResizeObserver
-- Bedienung und Tastatur laut PLAN.md; Tempo per `updateSettings({ wpm })` speichern
+## Nächste Phase: 5 – Import und Einstellungen
+- **Inhalte-Bildschirm** ([src/screens/ContentScreen.tsx](src/screens/ContentScreen.tsx)):
+  - JSON einfügen (auch mit ```json-Rahmen) oder `.json`-Datei wählen
+  - Kurs oder Liste von Kursen; gleiche ID ersetzt den alten Kurs
+  - Fehlende Lektions-IDs ergänzen
+  - Gründliche Prüfung mit deutschen Fehlermeldungen (Kurs, Lektion, Schritt)
+  - Importierte Kurse löschen
+  - Button „Vorlage für Claude kopieren“
+- **Klären:** Darf ein Import den eingebauten Beispielkurs (ID `lernen-lernen`) ersetzen?
+- **Beim ersten Import** `navigator.storage.persist()` anfragen, damit der Browser die Daten nicht löscht
+- **Einstellungen** ([src/screens/SettingsScreen.tsx](src/screens/SettingsScreen.tsx)):
+  - Standard-Lesemodus, Tempo, Schriftgröße, Darstellung (Automatisch | Hell | Dunkel)
+  - Fortschritt zurücksetzen mit `ConfirmDialog`
+  - Den App-Status behalten
+- **Schriftgröße und Darstellung** wirken auf die ganze App, über CSS-Variablen bzw. ein `data-theme`-Attribut an `<html>`
 
 ## Danach
-- **Phase 5 – Import und Einstellungen:** inklusive Darstellung; beim ersten Import `navigator.storage.persist()` anfragen, damit der Browser die Daten nicht löscht
 - **Phase 6 – Feinschliff:** Design, iPhone-Größe, README; `npm audit` erneut prüfen
 
 ## Offene Punkte
