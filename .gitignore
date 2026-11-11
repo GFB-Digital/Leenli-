@@ -1,0 +1,22 @@
+# Abhängigkeiten
+node_modules/
+
+# Build-Ausgabe
+dist/
+dev-dist/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+*.log
+
+# Editor / System
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Lokale Umgebungsdateien
+.env
+.env.*
