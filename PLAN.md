@@ -50,7 +50,7 @@ Fehlende Lektions-IDs automatisch ergänzen. Beim Import gründlich prüfen und 
 2. Kurs: Lektionsliste mit Häkchen und Ergebnis für erledigte Lektionen.
 3. Lektion (siehe oben).
 4. Inhalte: JSON einfügen (auch mit ```json-Rahmen) oder .json-Datei wählen → importieren; Kurs oder Liste von Kursen; gleiche ID ersetzt den alten Kurs; importierte Kurse löschen; Button „Vorlage für Claude kopieren“ mit einem fertigen Prompt, der Kurse genau in diesem Format erzeugt.
-5. Einstellungen: Standard-Lesemodus, Tempo, Schriftgröße, Fortschritt zurücksetzen (mit Bestätigung).
+5. Einstellungen: Standard-Lesemodus, Tempo, Schriftgröße, Darstellung (Automatisch | Hell | Dunkel, Standard: Automatisch), Fortschritt zurücksetzen (mit Bestätigung).
 
 ## Design
 Ruhig, hochwertig, nicht nach Baukasten. Heller Papierton als Hintergrund, Akzentfarbe Indigo (#4b3fd1), Rot ist nur für den Fokusbuchstaben reserviert. Dunkelmodus automatisch über prefers-color-scheme. Farben als CSS-Variablen. Funktioniert ab 360 px Breite ohne seitliches Scrollen, auf dem iPad und am PC zentriert mit maximaler Breite.
