@@ -26,6 +26,8 @@
 
   /* Rot ist ausschließlich für den Fokusbuchstaben reserviert */
   --focus-letter: #cc3b4e; /* ruhiges Karminrot */
+  --map-done: 52%; /* Anteil der Kursfarbe in gelernten Kacheln (nah) */
+  --map-done-row: 68%;
 
   /* Rückmeldung bei Fragen (bewusst kein Rot) */
   --correct: #2b8a57;
@@ -81,6 +83,8 @@
     --on-accent: #ffffff;
 
     --focus-letter: #ef5d6c;
+    --map-done: 32%;
+    --map-done-row: 46%;
 
     --correct: #4cc38a;
     --correct-soft: rgb(76 195 138 / 0.14);
@@ -109,6 +113,8 @@
   --on-accent: #ffffff;
 
   --focus-letter: #ef5d6c;
+  --map-done: 32%;
+  --map-done-row: 46%;
 
   --correct: #4cc38a;
   --correct-soft: rgb(76 195 138 / 0.14);

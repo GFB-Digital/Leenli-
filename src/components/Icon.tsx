@@ -30,14 +30,23 @@ const PATHS = {
       <path d="M12 8.5v4l2.5 1.5" />
     </>
   ),
+  // Kopf im Profil, der sich hinten oben in Punkte auflöst (Wissen, das verfliegt oder sich festigt)
   knowledge: (
-    <>
-      <path d="M12 3.5l8.5 4.3L12 12 3.5 7.8z" fill="currentColor" />
-      <path d="M3.5 12.2L12 16.4l8.5-4.2" />
-      <path d="M3.5 16.3L12 20.5l8.5-4.2" />
-    </>
+    <g fill="currentColor" stroke="none">
+      <path d="M7.6 22V17.6C5.7 16.2 4.6 14 4.6 11.5V11.3H7.1V9.3H9.5V7.4H11.9V5.6H14.3V4.1C16.7 4.4 19 6.9 19.3 10.2L21.1 13.2C21.35 13.65 21.05 14.1 20.55 14.1H19.3V16.6C19.3 17.7 18.4 18.6 17.3 18.6H15.4V22Z" />
+      <circle cx="5.9" cy="9.5" r="1.05" />
+      <circle cx="8.3" cy="7.6" r="1.05" />
+      <circle cx="10.7" cy="5.7" r="1" />
+      <circle cx="13" cy="4.1" r="0.95" />
+      <circle cx="5.3" cy="6.6" r="0.9" />
+      <circle cx="8" cy="4.6" r="0.85" />
+      <circle cx="3" cy="8.4" r="0.75" />
+      <circle cx="10.6" cy="2.4" r="0.75" />
+      <circle cx="5" cy="3.4" r="0.65" />
+    </g>
   ),
   shield: <path d="M12 3l7 3v5.5c0 4.2-3 7.8-7 9.5-4-1.7-7-5.3-7-9.5V6z" />,
+  shieldFilled: <path d="M12 3l7 3v5.5c0 4.2-3 7.8-7 9.5-4-1.7-7-5.3-7-9.5V6z" fill="currentColor" />,
   import: (
     <>
       <path d="M12 4v11" />

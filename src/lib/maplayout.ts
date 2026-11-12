@@ -1,40 +1,90 @@
-// Geometrie der Wissenskarte: Achtecke in einem quadratischen Raster.
+// Geometrie der Wissenskarte: Achtecke, die wie Waben ineinandergreifen.
 //
-// Jeder Kurs ist ein Block aus Kacheln (zeilenweise in Lernreihenfolge),
-// umgeben von einer Fläche („Gebiet“) mit leicht unregelmäßigem Rand.
-// Die Kurse werden so angeordnet, dass sich ihre Gebiete nicht berühren.
+// Die Zeilen sind um eine halbe Zelle versetzt und so eng gesetzt, dass jedes
+// Achteck seine Nachbarn links und rechts an den senkrechten Kanten und die
+// Nachbarn darüber und darunter an den schrägen Kanten berührt. Jede Zelle hat
+// damit sechs Nachbarn wie in einem Wabenmuster; gerechnet wird mit axialen
+// Koordinaten (q, r) wie bei Sechseck-Karten.
+//
+// Jeder Kurs ist eine rundliche Gruppe aus Kacheln (zeilenweise in
+// Lernreihenfolge), umgeben von einer Fläche („Gebiet“). Die Kurse werden so
+// angeordnet, dass zwischen ihren Gebieten immer eine Zelle frei bleibt.
 // Reine Funktionen → maplayout.test.ts.
 
-/** Kantenlänge einer Rasterzelle in Kartenpixeln (bei Zoom 1) */
+/** Breite einer Zelle (= Achteck) und Abstand zweier Nachbarn in einer Zeile, in Kartenpixeln bei Zoom 1 */
 export const CELL = 60
+/** Zeilenabstand: genau so eng, dass die schrägen Kanten aufeinanderliegen */
+export const ROW = CELL * (Math.SQRT2 - 0.5)
 
 export interface Cell {
-  col: number
-  row: number
+  q: number
+  r: number
 }
 
-export const cellKey = (c: Cell) => `${c.col},${c.row}`
+export const cellKey = (c: Cell) => `${c.q},${c.r}`
 
 /** Mittelpunkt einer Zelle in Kartenpixeln */
 export function cellCenter(c: Cell): { x: number; y: number } {
-  return { x: c.col * CELL, y: c.row * CELL }
+  return { x: (c.q + c.r / 2) * CELL, y: c.r * ROW }
 }
 
-/** Eckpunkte eines regelmäßigen Achtecks mit Breite `width` (Kante zu Kante) */
-export function octagonPoints(cx: number, cy: number, width: number): string {
+const DIRECTIONS: Cell[] = [
+  { q: 1, r: 0 },
+  { q: -1, r: 0 },
+  { q: 0, r: 1 },
+  { q: -1, r: 1 },
+  { q: 0, r: -1 },
+  { q: 1, r: -1 },
+]
+
+/** Die sechs Nachbarzellen (links, rechts und je zwei darüber und darunter) */
+export function neighbors(c: Cell): Cell[] {
+  return DIRECTIONS.map((d) => ({ q: c.q + d.q, r: c.r + d.r }))
+}
+
+/** Anzahl Schritte von Zelle zu Zelle */
+export function cellDistance(a: Cell, b: Cell): number {
+  const dq = a.q - b.q
+  const dr = a.r - b.r
+  return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2
+}
+
+function octagonCorners(cx: number, cy: number, width: number): [number, number][] {
   const h = width / 2
   const cut = width / (2 + Math.SQRT2)
-  const pts = [
-    [-h + cut, -h],
-    [h - cut, -h],
-    [h, -h + cut],
-    [h, h - cut],
-    [h - cut, h],
-    [-h + cut, h],
-    [-h, h - cut],
-    [-h, -h + cut],
+  return [
+    [cx - h + cut, cy - h],
+    [cx + h - cut, cy - h],
+    [cx + h, cy - h + cut],
+    [cx + h, cy + h - cut],
+    [cx + h - cut, cy + h],
+    [cx - h + cut, cy + h],
+    [cx - h, cy + h - cut],
+    [cx - h, cy - h + cut],
   ]
-  return pts.map(([x, y]) => `${(cx + x).toFixed(2)},${(cy + y).toFixed(2)}`).join(' ')
+}
+
+const fmt = (n: number) => n.toFixed(2)
+
+/** Eckpunkte eines regelmäßigen Achtecks mit Breite `width` (Kante zu Kante), für `<polygon points>` */
+export function octagonPoints(cx: number, cy: number, width: number): string {
+  return octagonCorners(cx, cy, width)
+    .map(([x, y]) => `${fmt(x)},${fmt(y)}`)
+    .join(' ')
+}
+
+/**
+ * Viele Achtecke als ein SVG-Pfad. Alle laufen im gleichen Drehsinn, deshalb
+ * ergibt die Füllung ihre Vereinigung – eine Fläche, deren Rand den Achtecken folgt.
+ */
+export function octagonsPath(cells: Cell[], width: number): string {
+  return cells
+    .map((cell) => {
+      const { x, y } = cellCenter(cell)
+      const [first, ...rest] = octagonCorners(x, y, width)
+      return `M${fmt(first[0])} ${fmt(first[1])}` + rest.map(([px, py]) => `L${fmt(px)} ${fmt(py)}`).join('') + 'Z'
+    })
+    .join('')
 }
 
 /** Zufallszahlen, die für denselben Text immer gleich ausfallen (mulberry32) */
@@ -51,28 +101,62 @@ export function seededRandom(seed: string): () => number {
   }
 }
 
+/** Senkrechte Abstände zählen etwas weniger → Kurse werden eher hoch als breit (passt zum Handy) */
+const UPRIGHT = 0.9
+
+/** Mögliche Mittelpunkte einer Kachelgruppe: Zellmitte, zwischen zwei Zellen, zwischen drei Zellen */
+const GROUP_CENTERS = [
+  { x: 0, y: 0 },
+  { x: CELL / 2, y: 0 },
+  { x: CELL / 4, y: ROW / 2 },
+  { x: CELL / 2, y: ROW / 3 },
+  { x: CELL, y: (2 * ROW) / 3 },
+]
+
+/** Kachel-Reihenfolge: zeilenweise von oben nach unten, in jeder Zeile von links nach rechts */
+function readingOrder(a: Cell, b: Cell): number {
+  return a.r - b.r || a.q + a.r / 2 - (b.q + b.r / 2)
+}
+
 /**
- * Kacheln zeilenweise im Block anordnen (fast quadratisch).
- * Eine unvollständige letzte Zeile wird mittig gesetzt, wenn das im Raster aufgeht.
+ * Kacheln eines Kurses als möglichst runde Gruppe (wie eine Wabe) anordnen.
+ * Ausprobiert werden mehrere Mittelpunkte; genommen wird die kompakteste Form.
  */
 export function blockCells(count: number): Cell[] {
   const n = Math.max(1, count)
-  const cols = Math.ceil(Math.sqrt(n))
-  const cells: Cell[] = []
-  const rows = Math.ceil(n / cols)
-  for (let row = 0; row < rows; row++) {
-    const inRow = Math.min(cols, n - row * cols)
-    const offset = inRow < cols ? Math.floor((cols - inRow) / 2) : 0
-    for (let col = 0; col < inRow; col++) cells.push({ col: col + offset, row })
+  const radius = Math.ceil(Math.sqrt(n)) + 2
+  const pool: Cell[] = []
+  for (let r = -radius; r <= radius; r++) {
+    for (let q = -2 * radius; q <= 2 * radius; q++) {
+      if (cellDistance({ q, r }, { q: 0, r: 0 }) <= radius) pool.push({ q, r })
+    }
   }
-  return cells
+  const weighted = (cell: Cell, cx: number, cy: number) => {
+    const { x, y } = cellCenter(cell)
+    return (x - cx) ** 2 + ((y - cy) * UPRIGHT) ** 2
+  }
+
+  let best: { cells: Cell[]; spread: number } | null = null
+  for (const center of GROUP_CENTERS) {
+    const cells = [...pool]
+      .sort((a, b) => weighted(a, center.x, center.y) - weighted(b, center.x, center.y) || readingOrder(a, b))
+      .slice(0, n)
+    const mx = cells.reduce((sum, c) => sum + cellCenter(c).x, 0) / n
+    const my = cells.reduce((sum, c) => sum + cellCenter(c).y, 0) / n
+    const spread = cells.reduce((sum, c) => sum + weighted(c, mx, my), 0)
+    if (!best || spread < best.spread - 1e-6) best = { cells, spread }
+  }
+
+  return normalize(best!.cells).sort(readingOrder)
 }
 
-/** Chebyshev-Abstand (Schachkönig-Schritte) einer Zelle zur nächsten Kachel */
-function distanceToBlock(c: Cell, tiles: Cell[]): number {
-  let best = Infinity
-  for (const t of tiles) best = Math.min(best, Math.max(Math.abs(c.col - t.col), Math.abs(c.row - t.row)))
-  return best
+/** Verschiebt Zellen so, dass die erste Zeile r = 0 ist und die linke Kante bei x ≈ 0 liegt */
+function normalize(cells: Cell[]): Cell[] {
+  const minR = Math.min(...cells.map((c) => c.r))
+  const moved = cells.map((c) => ({ q: c.q, r: c.r - minR }))
+  const minX = Math.min(...moved.map((c) => c.q + c.r / 2))
+  const dq = -Math.floor(minX)
+  return moved.map((c) => ({ q: c.q + dq, r: c.r }))
 }
 
 export interface CourseLayout {
@@ -81,43 +165,40 @@ export interface CourseLayout {
   tiles: Cell[]
   /** Zellen der umgebenden Fläche (absolut, ohne Kacheln) */
   territory: Cell[]
+  /** Teil des Gebiets, auf dem zarte Achteck-Umrisse liegen (Schmuck) */
+  decor: Cell[]
 }
 
-/** Block + Gebiet eines Kurses, relativ zum Ursprung */
+/** Kacheln + Gebiet eines Kurses, relativ zum Ursprung */
 function buildCourse(id: string, tileCount: number): CourseLayout {
   const random = seededRandom(id)
   const tiles = blockCells(tileCount)
-  const used = new Set(tiles.map(cellKey))
-  const maxCol = Math.max(...tiles.map((t) => t.col))
-  const maxRow = Math.max(...tiles.map((t) => t.row))
+  const taken = new Set(tiles.map(cellKey))
   const territory: Cell[] = []
-  for (let row = -2; row <= maxRow + 2; row++) {
-    for (let col = -2; col <= maxCol + 2; col++) {
-      const cell = { col, row }
-      if (used.has(cellKey(cell))) continue
-      const d = distanceToBlock(cell, tiles)
-      // Direkt um die Kacheln geschlossen, außen ausgefranst → natürliche Form ohne Löcher
-      if (d <= 1 || (d === 2 && random() < 0.55)) territory.push(cell)
-    }
+  const add = (cell: Cell) => {
+    taken.add(cellKey(cell))
+    territory.push(cell)
   }
-  return { id, tiles, territory }
+  // Erster Ring geschlossen, zweiter ausgefranst → natürliche Form ohne Löcher
+  const ring1: Cell[] = []
+  for (const t of tiles) for (const c of neighbors(t)) if (!taken.has(cellKey(c))) add(c), ring1.push(c)
+  for (const t of ring1) for (const c of neighbors(t)) if (!taken.has(cellKey(c)) && random() < 0.5) add(c)
+  const decor = territory.filter(() => random() < 0.38)
+  return { id, tiles, territory, decor }
 }
 
-function rectOf(cells: Cell[]) {
-  return {
-    minCol: Math.min(...cells.map((c) => c.col)),
-    maxCol: Math.max(...cells.map((c) => c.col)),
-    minRow: Math.min(...cells.map((c) => c.row)),
-    maxRow: Math.max(...cells.map((c) => c.row)),
-  }
-}
-
-/** Mögliche Mittelpunkte, nach Nähe zum Ursprung sortiert (hochkant bevorzugt) */
-const CANDIDATES: Cell[] = (() => {
+/** Mögliche Verschiebungen, nach Abstand zur Kartenmitte sortiert (hochkant bevorzugt) */
+const SHIFTS: Cell[] = (() => {
+  const reach = 60
   const list: Cell[] = []
-  for (let row = -60; row <= 60; row++) for (let col = -60; col <= 60; col++) list.push({ col, row })
-  const cost = (c: Cell) => c.col * c.col * 1.8 + c.row * c.row
-  return list.sort((a, b) => cost(a) - cost(b))
+  for (let r = -reach; r <= reach; r++) {
+    for (let q = -reach - Math.ceil(r / 2); q <= reach - Math.floor(r / 2); q++) list.push({ q, r })
+  }
+  const cost = (c: Cell) => {
+    const { x, y } = cellCenter(c)
+    return (x * 1.5) ** 2 + y ** 2
+  }
+  return list.sort((a, b) => cost(a) - cost(b) || readingOrder(a, b))
 })()
 
 /**
@@ -125,50 +206,117 @@ const CANDIDATES: Cell[] = (() => {
  * sein Gebiet mit mindestens einer freien Zelle Abstand zu allen anderen passt.
  */
 export function layoutCourses(courses: { id: string; tileCount: number }[]): CourseLayout[] {
-  type Rect = ReturnType<typeof rectOf>
-  const placed: { layout: CourseLayout; rect: Rect }[] = []
+  const occupied = new Set<string>()
+  const result: CourseLayout[] = []
   for (const course of courses) {
     const base = buildCourse(course.id, course.tileCount)
-    const rect = rectOf([...base.tiles, ...base.territory])
-    const fits = (dx: number, dy: number) =>
-      placed.every(
-        ({ rect: p }) =>
-          rect.maxCol + dx + 1 < p.minCol ||
-          rect.minCol + dx - 1 > p.maxCol ||
-          rect.maxRow + dy + 1 < p.minRow ||
-          rect.minRow + dy - 1 > p.maxRow,
-      )
-    const midCol = Math.floor((rect.minCol + rect.maxCol) / 2)
-    const midRow = Math.floor((rect.minRow + rect.maxRow) / 2)
-    let shift = { dx: 0, dy: placed.length * 200 }
-    for (const c of CANDIDATES) {
-      const dx = c.col - midCol
-      const dy = c.row - midRow
-      if (fits(dx, dy)) {
-        shift = { dx, dy }
+    const own = [...base.tiles, ...base.territory]
+    // Zelle in der Mitte der Kacheln als Anker
+    const mx = base.tiles.reduce((s, c) => s + cellCenter(c).x, 0) / base.tiles.length
+    const my = base.tiles.reduce((s, c) => s + cellCenter(c).y, 0) / base.tiles.length
+    const anchor = [...base.tiles].sort((a, b) => {
+      const pa = cellCenter(a)
+      const pb = cellCenter(b)
+      return (pa.x - mx) ** 2 + (pa.y - my) ** 2 - ((pb.x - mx) ** 2 + (pb.y - my) ** 2)
+    })[0]
+    // Alles, was frei sein muss: eigene Zellen und ihre Nachbarn (= eine Zelle Abstand)
+    const haloKeys = new Set<string>()
+    const halo: Cell[] = []
+    for (const cell of own) {
+      for (const c of [cell, ...neighbors(cell)]) {
+        const key = cellKey(c)
+        if (!haloKeys.has(key)) haloKeys.add(key), halo.push(c)
+      }
+    }
+    const fits = (dq: number, dr: number) => halo.every((c) => !occupied.has(cellKey({ q: c.q + dq, r: c.r + dr })))
+
+    let shift = { q: 0, r: (result.length + 1) * 200 }
+    for (const target of SHIFTS) {
+      const dq = target.q - anchor.q
+      const dr = target.r - anchor.r
+      if (fits(dq, dr)) {
+        shift = { q: dq, r: dr }
         break
       }
     }
-    const move = (c: Cell) => ({ col: c.col + shift.dx, row: c.row + shift.dy })
-    placed.push({
-      layout: { id: course.id, tiles: base.tiles.map(move), territory: base.territory.map(move) },
-      rect: {
-        minCol: rect.minCol + shift.dx,
-        maxCol: rect.maxCol + shift.dx,
-        minRow: rect.minRow + shift.dy,
-        maxRow: rect.maxRow + shift.dy,
-      },
-    })
+    const move = (c: Cell) => ({ q: c.q + shift.q, r: c.r + shift.r })
+    const placed: CourseLayout = {
+      id: course.id,
+      tiles: base.tiles.map(move),
+      territory: base.territory.map(move),
+      decor: base.decor.map(move),
+    }
+    for (const c of [...placed.tiles, ...placed.territory]) occupied.add(cellKey(c))
+    result.push(placed)
   }
-  return placed.map((p) => p.layout)
+  return result
 }
 
 /** Umrandendes Rechteck von Zellen in Kartenpixeln */
 export function cellBounds(cells: Cell[]) {
-  const r = rectOf(cells)
-  const minX = r.minCol * CELL - CELL / 2
-  const maxX = r.maxCol * CELL + CELL / 2
-  const minY = r.minRow * CELL - CELL / 2
-  const maxY = r.maxRow * CELL + CELL / 2
+  const xs = cells.map((c) => cellCenter(c).x)
+  const ys = cells.map((c) => cellCenter(c).y)
+  const minX = Math.min(...xs) - CELL / 2
+  const maxX = Math.max(...xs) + CELL / 2
+  const minY = Math.min(...ys) - CELL / 2
+  const maxY = Math.max(...ys) + CELL / 2
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY }
+}
+
+// ---------------------------------------------------------------------------
+// Zeichen in einer Kachel: ein Kreis je Leseseite, ein Schild je Frage
+
+/** Maße der Zeichenreihen in Kartenpixeln (bei Maßstab 1) */
+export const MARK = { pitch: 8.4, size: 6.2, pad: 2.6, height: 11, gap: 3 }
+/** Höchstens so viele Zeichen nebeneinander */
+const MAX_PER_ROW = 6
+
+const rowWidth = (k: number) => k * MARK.pitch - (MARK.pitch - MARK.size) + 2 * MARK.pad
+
+/** Größter Maßstab, bei dem alle Reihen ins Achteck der Breite `width` passen */
+function fitScale(rows: number[], width: number): number {
+  const inner = width * 0.86
+  const half = inner / 2
+  const flat = (inner * (Math.SQRT2 - 1)) / 2
+  const fits = (s: number) => {
+    const total = s * (rows.length * MARK.height + (rows.length - 1) * MARK.gap)
+    return rows.every((k, i) => {
+      const top = -total / 2 + i * s * (MARK.height + MARK.gap)
+      const far = Math.max(Math.abs(top), Math.abs(top + s * MARK.height))
+      return (s * rowWidth(k)) / 2 <= half - Math.max(0, far - flat)
+    })
+  }
+  let lo = 0.1
+  let hi = 1
+  if (fits(hi)) return hi
+  for (let i = 0; i < 20; i++) {
+    const mid = (lo + hi) / 2
+    if (fits(mid)) lo = mid
+    else hi = mid
+  }
+  return lo
+}
+
+/**
+ * Verteilt `count` Zeichen auf Reihen (vorne voller) und bestimmt den Maßstab.
+ * Bevorzugt wenige, breite Reihen, solange die Zeichen groß genug bleiben.
+ */
+export function markRows(count: number, width: number): { rows: number[]; scale: number } {
+  if (count <= 0) return { rows: [], scale: 1 }
+  let best: { rows: number[]; scale: number } | null = null
+  for (let rowCount = 1; rowCount <= count; rowCount++) {
+    const perRow = Math.ceil(count / rowCount)
+    if (perRow > MAX_PER_ROW) continue
+    const rows: number[] = []
+    let left = count
+    for (let i = rowCount; i > 0; i--) {
+      const k = Math.ceil(left / i)
+      rows.push(k)
+      left -= k
+    }
+    const scale = fitScale(rows, width)
+    if (scale >= 0.85) return { rows, scale }
+    if (!best || scale > best.scale) best = { rows, scale }
+  }
+  return best!
 }

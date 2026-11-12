@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Überarbeitung nach dem ersten iPhone-Test: Achtecke statt Sechsecke, Karte und Bildschirme näher an den Kinnu-Screenshots. Als Nächstes: erneuter Test auf dem iPhone.
+**Stand:** 12.11.2026 – Zweite Überarbeitung nach iPhone-Test: Achtecke greifen wie Waben ineinander, Umrandung folgt den Achtecken, Kreise/Schilde in den Kacheln, kleinere untere Leiste. Als Nächstes: erneuter Test auf dem iPhone.
 
 ## Erledigt
 
@@ -78,6 +78,16 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Kursblatt** in der Kursfarbe mit weißer Schrift und weißem Hauptknopf; Kachelliste mit Nummern statt Emojis.
 - **Leseseite** als Karte mit zentrierter Kopfzeile (Kurs, Kachel, „Seite x / y“); **Fragekarte** mit „Weiß ich nicht“ und „Weiter“ in der Karte und einer Fußzeile (Fragetyp, Kachel).
 - Die Screenshots des Nutzers liegen nur in der temporären Sitzung; im öffentlichen Repo sollen keine Kinnu-Screenshots landen.
+
+### Zweite Überarbeitung nach dem iPhone-Test (12.11.2026)
+- **Achtecke greifen wie Waben ineinander** statt im Quadratraster: Zeilen um eine halbe Zelle versetzt und so eng, dass die schrägen Kanten aufeinanderliegen (Zeilenabstand = Breite × (√2 − ½)). Jede Zelle hat sechs Nachbarn, gerechnet wird mit axialen Koordinaten wie bei Sechseck-Karten ([maplayout.ts](src/lib/maplayout.ts)).
+- **Kachelgruppen rundlich** (z. B. 7 Kacheln = 2-3-2), gefüllt zeilenweise in Lernreihenfolge. Kurse werden so platziert, dass zwischen den Gebieten immer eine Zelle frei bleibt.
+- **Keine Rechtecke mehr:** Gebiet, dunkler Rand und Umrandungslinie bestehen aus vergrößerten Achtecken (je Ebene ein SVG-Pfad), der Rand folgt also der Form der Kacheln. Zarte Umrisse nur noch auf einem Teil des Gebiets.
+- **In den Kacheln** (nah): Kreis = Leseseite, Schild = Frage, nebeneinander in einer Reihe; bei vielen Zeichen mehrere Reihen und kleiner (`markRows`). Fragen auch in der Leiste beim Lernen, im Wiederholungs-Zähler und in der Fragekarte als Schild.
+- **Untere Leiste kleiner und flacher:** runde Knöpfe und „Schlau lernen“ gleich hoch (52 px, `--bar-h`), Pille mit ganz runden Enden, dezenter Schatten statt Leuchten.
+- **Wissensbank-Symbol:** eigener Kopf im Profil, der sich hinten oben in Punkte auflöst (im Stil des Vorbilds, nicht kopiert).
+- **Heller Modus:** gelernte Kacheln kräftiger (`--map-done`), damit sie sich von neuen abheben.
+- Tests: 100 (maplayout neu: Nachbarn berühren sich, Gruppen zusammenhängend und rundlich, Abstand zwischen Kursen, Zeichenreihen).
 
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.

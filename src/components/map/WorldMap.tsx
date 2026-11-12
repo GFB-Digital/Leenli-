@@ -10,7 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { courseColor } from '../../lib/colors.ts'
-import { CELL, cellBounds, cellCenter, layoutCourses, octagonPoints, type CourseLayout } from '../../lib/maplayout.ts'
+import { CELL, MARK, cellBounds, cellCenter, layoutCourses, markRows, octagonPoints, octagonsPath, type CourseLayout } from '../../lib/maplayout.ts'
 import { nextTile, tileStatus } from '../../lib/model.ts'
 import { isQuestion, type Course, type LearnState, type Tile } from '../../lib/types.ts'
 
@@ -20,11 +20,14 @@ const MAX_K = 4
 const FIT_MAX_K = 2
 /** Bewegung (px), bis aus einem Tippen ein Ziehen wird */
 const TAP_SLOP = 8
-/** Abstand und Stärke der Umrandung um die Kacheln eines Kurses */
-const BORDER_GAP = 9
-const BORDER = 3.5
-/** Breite eines Kachel-Achtecks im Verhältnis zur Zelle */
-const TILE = 0.88
+/** Kachel-Achteck im Verhältnis zur Zelle → schmale dunkle Fugen zwischen den Kacheln */
+const TILE = 0.9
+/** Dunkler Rand um die Kacheln eines Kurses (füllt auch die kleinen Lücken zwischen den Achtecken) */
+const RIM = 6
+/** Stärke der Umrandungslinie in Kursfarbe */
+const BORDER = 4
+/** Gebietsfläche etwas größer als die Zellen, damit sie lückenlos ist */
+const TERR = 6
 
 interface View {
   x: number
@@ -51,47 +54,34 @@ function fitView(box: Box, width: number, height: number, insets: Insets): View 
   return { k, x: width / 2 - cx * k, y: insets.top + pad + availH / 2 - cy * k }
 }
 
-/** Je Leseseite eine Zeile, je Frage danach ein Punkt */
-function tileRows(tile: Tile): number[] {
-  const rows: number[] = []
-  for (const step of tile.steps) {
-    if (!isQuestion(step)) rows.push(0)
-    else if (rows.length === 0) rows.push(1)
-    else rows[rows.length - 1]++
-  }
-  return rows.length > 0 ? rows : [0]
-}
+/** Schild für eine Frage, mittig um (0, 0) */
+const SHIELD = 'M0 -3.4L2.9 -2.3V0C2.9 1.8 1.7 3 0 3.6C-1.7 3 -2.9 1.8 -2.9 0V-2.3Z'
 
-/** Punktreihen in einer Kachel – zeigt, wie viele Seiten und Fragen sie hat */
+/** Zeichen in einer Kachel wie in der Leiste beim Lernen: Kreis = Leseseite, Schild = Frage */
 function TileContent({ tile, x, y }: { tile: Tile; x: number; y: number }) {
-  const rows = tileRows(tile)
-  const dot = 5.2
-  const gap = 1.6
-  const padX = 1.9
-  const pillH = dot + 2.8
-  const rowGap = 2.6
-  const widthOf = (n: number) => (n === 0 ? 14 : n * dot + (n - 1) * gap + 2 * padX)
-  const maxW = Math.max(...rows.map(widthOf))
-  const totalH = rows.length * pillH + (rows.length - 1) * rowGap
-  const room = CELL * TILE * 0.68
-  const scale = Math.min(1, room / maxW, room / totalH)
+  const marks = tile.steps.map((step) => isQuestion(step))
+  const { rows, scale } = markRows(marks.length, CELL * TILE)
+  const total = rows.length * MARK.height + (rows.length - 1) * MARK.gap
+  let index = 0
   return (
     <g className="map-content" transform={`translate(${x} ${y}) scale(${scale})`}>
-      {rows.map((n, i) => {
-        const w = widthOf(n)
-        const top = -totalH / 2 + i * (pillH + rowGap)
+      {rows.map((count, row) => {
+        const width = count * MARK.pitch - (MARK.pitch - MARK.size) + 2 * MARK.pad
+        const top = -total / 2 + row * (MARK.height + MARK.gap)
+        const cy = top + MARK.height / 2
+        const items = marks.slice(index, index + count)
+        index += count
         return (
-          <g key={i}>
-            <rect className="map-pill" x={-w / 2} y={top} width={w} height={pillH} rx={pillH / 2} />
-            {Array.from({ length: n }, (_, d) => (
-              <circle
-                key={d}
-                className="map-dot"
-                cx={-w / 2 + padX + dot / 2 + d * (dot + gap)}
-                cy={top + pillH / 2}
-                r={dot / 2}
-              />
-            ))}
+          <g key={row}>
+            <rect className="map-row" x={-width / 2} y={top} width={width} height={MARK.height} rx={MARK.height / 2} />
+            {items.map((question, i) => {
+              const cx = -width / 2 + MARK.pad + MARK.size / 2 + i * MARK.pitch
+              return question ? (
+                <path key={i} className="map-mark" d={SHIELD} transform={`translate(${cx} ${cy})`} />
+              ) : (
+                <circle key={i} className="map-mark" cx={cx} cy={cy} r={MARK.size / 2} />
+              )
+            })}
           </g>
         )
       })}
@@ -115,7 +105,6 @@ const MapLayer = memo(function MapLayer({
   detail: 0 | 1 | 2
   selectedId?: string
 }) {
-  const half = CELL / 2
   return (
     <g className={`map-d${detail}`}>
       {layout.map((course, i) => {
@@ -131,28 +120,13 @@ const MapLayer = memo(function MapLayer({
             className={classes.join(' ')}
             style={{ '--course': courseColor(data) } as CSSProperties}
           >
-            {/* Gebiet: Fläche mit zarten Achteck-Umrissen */}
-            {course.territory.map((cell) => {
-              const { x, y } = cellCenter(cell)
-              return <rect key={`t${cell.col},${cell.row}`} className="map-terr" x={x - half - 0.5} y={y - half - 0.5} width={CELL + 1} height={CELL + 1} />
-            })}
-            {detail > 0 &&
-              course.territory.map((cell) => {
-                const { x, y } = cellCenter(cell)
-                return <polygon key={`o${cell.col},${cell.row}`} className="map-terr-oct" points={octagonPoints(x, y, CELL * 0.8)} />
-              })}
+            {/* Gebiet: Fläche aus Achtecken, darauf ein paar zarte Umrisse */}
+            <path className="map-terr" d={octagonsPath([...course.tiles, ...course.territory], CELL + 2 * TERR)} />
+            {detail > 0 && <path className="map-terr-oct" d={octagonsPath(course.decor, CELL * 0.84)} />}
 
-            {/* Umrandung des Kurses (äußere Fläche in Kursfarbe, innere dunkel) */}
-            {course.tiles.map((cell) => {
-              const { x, y } = cellCenter(cell)
-              const s = CELL + 2 * BORDER_GAP
-              return <rect key={`b${cell.col},${cell.row}`} className="map-path-border" x={x - s / 2} y={y - s / 2} width={s} height={s} rx={14} />
-            })}
-            {course.tiles.map((cell) => {
-              const { x, y } = cellCenter(cell)
-              const s = CELL + 2 * BORDER_GAP - 2 * BORDER
-              return <rect key={`i${cell.col},${cell.row}`} className="map-path-inner" x={x - s / 2} y={y - s / 2} width={s} height={s} rx={11} />
-            })}
+            {/* Umrandung: folgt den Achtecken (außen Kursfarbe, innen dunkel) */}
+            <path className="map-path-border" d={octagonsPath(course.tiles, CELL + 2 * (RIM + BORDER))} />
+            <path className="map-path-inner" d={octagonsPath(course.tiles, CELL + 2 * RIM)} />
 
             {/* Kacheln */}
             {course.tiles.map((cell, t) => {
@@ -373,7 +347,7 @@ export function WorldMap({
 
   // Detailstufe nach Bildschirmgröße einer Zelle
   const cellPx = CELL * view.k
-  const detail: 0 | 1 | 2 = cellPx < 24 ? 0 : cellPx < 56 ? 1 : 2
+  const detail: 0 | 1 | 2 = cellPx < 24 ? 0 : cellPx < 64 ? 1 : 2
 
   return (
     <div
@@ -395,7 +369,7 @@ export function WorldMap({
         const data = courses[i]
         const box = cellBounds(course.tiles)
         const x = (box.minX + box.maxX) / 2
-        const y = box.minY - BORDER_GAP
+        const y = box.minY - RIM - BORDER / 2
         const dim = selectedId !== undefined && selectedId !== data.id
         return (
           <button

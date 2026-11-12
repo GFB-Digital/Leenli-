@@ -41,16 +41,16 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 ## So lernst du mit Leenli
 
-**Die Wissenskarte (Startseite).** Jeder Kurs ist ein farbiger Block aus Achtecken – ein Achteck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah eine Punktreihe je Leseseite und einen Punkt je Frage.
+**Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Achtecken, die wie Waben ineinandergreifen – ein Achteck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah in jeder Kachel ihren Inhalt: einen Kreis je Leseseite und ein Schild je Frage, nebeneinander in der Reihenfolge, in der sie drankommen.
 
 **Kurs antippen** öffnet das Kursblatt mit Anzahl der Kacheln, Fortschritt und Lernzeit, dazu „Kurs starten“ bzw. „Weiterlernen“. Tippst du eine Kachel an, kannst du sie lernen, nochmal lesen oder zurücksetzen.
 
 **Eine Kachel** läuft so ab:
 
 1. **Du lernst …** – zwei Leitfragen zum Aufdecken
-2. **Seiten mit Fragen** – nach jeder Seite eine Frage. Die Leiste oben zeigt Punkte (Seiten) und Achtecke (Fragen).
+2. **Seiten mit Fragen** – nach jeder Seite eine Frage. Die Leiste oben zeigt Kreise (Seiten) und Schilde (Fragen).
 3. **Rückblick** – die Kernaussagen zum Aufdecken
-4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Achteck, wie viele noch offen sind.
+4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Schild, wie viele noch offen sind.
 
 **Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch und Lückentext.
 
@@ -327,7 +327,7 @@ src/
     session/              Fortschrittsleiste, Seite, Fragekarte, „Du lernst …“/„Rückblick“
     speed/                Speed-Reader
   lib/
-    maplayout.ts          Geometrie der Karte (Achteck-Raster)     (+ maplayout.test.ts)
+    maplayout.ts          Geometrie der Karte (Achteck-Waben)      (+ maplayout.test.ts)
     srs.ts                Wiederholung in wachsenden Abständen     (+ srs.test.ts)
     session.ts            Ablauf einer Sitzung, falsche Fragen anhängen
     smart.ts              Auswahl für „Wissen stärken“ und „Schlau lernen“

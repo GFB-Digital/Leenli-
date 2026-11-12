@@ -177,7 +177,7 @@ export function QuestionCard({
             {step.explanation && <p>{step.explanation}</p>}
             {!result.correct && (
               <p className="q-feedback-again">
-                <Icon name="octFilled" size={14} /> Diese Frage kommt am Ende noch einmal.
+                <Icon name="shieldFilled" size={14} /> Diese Frage kommt am Ende noch einmal.
               </p>
             )}
           </div>
@@ -194,7 +194,7 @@ export function QuestionCard({
 
         <footer className="q-footer">
           <span className="q-footer-kind">
-            <Icon name={retry ? 'octFilled' : 'oct'} size={16} />
+            <Icon name={retry ? 'shieldFilled' : 'shield'} size={16} />
             {retry ? 'Noch einmal' : KIND_LABEL[step.type]}
           </span>
           <span className="q-footer-context">{context}</span>
