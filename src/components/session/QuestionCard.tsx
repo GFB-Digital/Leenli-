@@ -11,7 +11,6 @@ import {
 import type { QuestionStep } from '../../lib/types.ts'
 import { isOnButton, useKeydown } from '../../lib/useKeydown.ts'
 import { Icon } from '../Icon.tsx'
-import { LessonFooter } from '../lesson/LessonFooter.tsx'
 
 interface Result {
   correct: boolean
@@ -47,6 +46,7 @@ export function QuestionCard({
   const [order] = useState(() => (step.type === 'truefalse' ? [] : shuffledIndices(step.options.length)))
   const [result, setResult] = useState<Result | null>(null)
   const feedbackRef = useRef<HTMLDivElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
   const swipeStart = useRef<number | null>(null)
 
@@ -62,7 +62,7 @@ export function QuestionCard({
 
   useEffect(() => {
     if (!result) return
-    feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    actionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     nextRef.current?.focus({ preventScroll: true })
   }, [result])
 
@@ -162,11 +162,6 @@ export function QuestionCard({
   return (
     <>
       <div className="session-card session-card--color question-card step-enter" aria-label={questionText(step)}>
-        <p className="session-eyebrow">
-          {retry && <Icon name="hexFilled" size={14} />}
-          {retry ? 'Noch einmal' : KIND_LABEL[step.type]}
-        </p>
-
         {body}
 
         {result && (
@@ -182,23 +177,29 @@ export function QuestionCard({
             {step.explanation && <p>{step.explanation}</p>}
             {!result.correct && (
               <p className="q-feedback-again">
-                <Icon name="hexFilled" size={14} /> Diese Frage kommt am Ende noch einmal.
+                <Icon name="octFilled" size={14} /> Diese Frage kommt am Ende noch einmal.
               </p>
             )}
           </div>
         )}
 
-        <p className="question-context">{context}</p>
-      </div>
+        <div ref={actionsRef} className="q-actions">
+          <button type="button" className="q-btn q-btn--light" disabled={result !== null} onClick={() => decide(null)}>
+            Weiß ich nicht
+          </button>
+          <button ref={nextRef} type="button" className="q-btn q-btn--next" disabled={result === null} onClick={onNext}>
+            Weiter
+          </button>
+        </div>
 
-      <LessonFooter>
-        <button type="button" className="btn btn-secondary" disabled={result !== null} onClick={() => decide(null)}>
-          Weiß ich nicht
-        </button>
-        <button ref={nextRef} type="button" className="btn btn-primary" disabled={result === null} onClick={onNext}>
-          Weiter
-        </button>
-      </LessonFooter>
+        <footer className="q-footer">
+          <span className="q-footer-kind">
+            <Icon name={retry ? 'octFilled' : 'oct'} size={16} />
+            {retry ? 'Noch einmal' : KIND_LABEL[step.type]}
+          </span>
+          <span className="q-footer-context">{context}</span>
+        </footer>
+      </div>
     </>
   )
 }

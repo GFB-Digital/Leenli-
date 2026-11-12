@@ -79,7 +79,7 @@ export function KnowledgeScreen({ nav, section }: { nav: Navigation; section?: '
 
         <section className="kb-stats" aria-label="Überblick">
           <div>
-            <Icon name="hexFilled" size={26} />
+            <Icon name="octFilled" size={26} />
             <strong>{stamps}</strong>
             <span>Lerntage</span>
           </div>
@@ -139,11 +139,11 @@ export function KnowledgeScreen({ nav, section }: { nav: Navigation; section?: '
                         <span>{course.title} ›</span>
                         <strong>{percent}%</strong>
                       </span>
-                      <span className="kb-hexes" aria-hidden="true">
+                      <span className="kb-octes" aria-hidden="true">
                         {course.tiles.map((tile) => {
                           const status = tileStatus(learn, course.id, tile.id)
                           return (
-                            <span key={tile.id} className={`kb-hex kb-hex--${status}`}>
+                            <span key={tile.id} className={`kb-oct kb-oct--${status}`}>
                               {status === 'done' && <Icon name="check" size={14} />}
                             </span>
                           )
@@ -277,7 +277,7 @@ function Stamps({
     <>
       <div className="stamp-hero">
         <span className="stamp-big" aria-hidden="true">
-          <Icon name="hexFilled" size={84} />
+          <Icon name="octFilled" size={84} />
           <strong>{stamps}</strong>
         </span>
         <div>
@@ -298,7 +298,7 @@ function Stamps({
           {week.map((key, i) => (
             <span key={key} className={key === today ? 'week-day week-day--today' : 'week-day'}>
               <span className={hasStamp(days[key]) ? 'mini-stamp mini-stamp--on' : 'mini-stamp'}>
-                <Icon name="hexFilled" size={30} />
+                <Icon name="octFilled" size={30} />
               </span>
               <span>{WEEKDAYS[i]}</span>
             </span>
@@ -330,7 +330,7 @@ function Stamps({
                 <span className="calendar-num">{Number(key.slice(8))}</span>
                 {hasStamp(days[key]) && (
                   <span className="mini-stamp mini-stamp--on" aria-label="Lerntag">
-                    <Icon name="hexFilled" size={26} />
+                    <Icon name="octFilled" size={26} />
                   </span>
                 )}
               </span>

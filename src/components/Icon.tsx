@@ -6,8 +6,15 @@ const PATHS = {
   close: <path d="M18 6L6 18M6 6l12 12" />,
   check: <path d="M20 6L9 17l-5-5" />,
   bolt: <path d="M13.5 2.5L5 13.5h6l-1.5 8L18 10.5h-6z" fill="currentColor" stroke="currentColor" strokeWidth="1" />,
-  hex: <path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z" />,
-  hexFilled: <path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z" fill="currentColor" />,
+  oct: <path d="M8.6 3h6.8L21 8.6v6.8L15.4 21H8.6L3 15.4V8.6z" />,
+  octFilled: <path d="M8.6 3h6.8L21 8.6v6.8L15.4 21H8.6L3 15.4V8.6z" fill="currentColor" />,
+  calendar: (
+    <>
+      <rect x="4" y="5.5" width="16" height="15" rx="2.5" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+      <path d="M9 15.2l2 2 4-4" />
+    </>
+  ),
   arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
   arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
   book: (
@@ -25,9 +32,9 @@ const PATHS = {
   ),
   knowledge: (
     <>
-      <path d="M8 3.6l3.5 2v4L8 11.6l-3.5-2v-4z" />
-      <path d="M16 3.6l3.5 2v4L16 11.6l-3.5-2v-4z" />
-      <path d="M12 10.6l3.5 2v4L12 18.6l-3.5-2v-4z" fill="currentColor" />
+      <path d="M12 3.5l8.5 4.3L12 12 3.5 7.8z" fill="currentColor" />
+      <path d="M3.5 12.2L12 16.4l8.5-4.2" />
+      <path d="M3.5 16.3L12 20.5l8.5-4.2" />
     </>
   ),
   shield: <path d="M12 3l7 3v5.5c0 4.2-3 7.8-7 9.5-4-1.7-7-5.3-7-9.5V6z" />,

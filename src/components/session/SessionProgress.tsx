@@ -2,7 +2,7 @@ import type { SessionItem } from '../../lib/session.ts'
 import { Icon } from '../Icon.tsx'
 
 /**
- * Leiste oben: ein Punkt pro Seite, ein Sechseck pro Frage, Ringe für
+ * Leiste oben: ein Punkt pro Seite, ein Achteck pro Frage, Ringe für
  * Einleitung und Rückblick. Angehängte Wiederholungen erscheinen hinten.
  */
 export function SessionProgress({
@@ -33,7 +33,7 @@ export function SessionProgress({
       </div>
       {retries > 0 && (
         <span className="retry-chip" title="Fragen, die noch einmal kommen">
-          <Icon name="hexFilled" size={14} />
+          <Icon name="octFilled" size={14} />
           {retries}
         </span>
       )}

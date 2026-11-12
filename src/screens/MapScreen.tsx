@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Icon } from '../components/Icon.tsx'
 import { CourseSheet } from '../components/map/CourseSheet.tsx'
-import { HexMap } from '../components/map/HexMap.tsx'
+import { WorldMap } from '../components/map/WorldMap.tsx'
 import type { Navigation } from '../lib/navigation.ts'
 import { atRiskCards } from '../lib/smart.ts'
 import { useAppState } from '../lib/store.ts'
@@ -33,7 +33,7 @@ export function MapScreen({
 
   return (
     <div className="map-screen">
-      <HexMap
+      <WorldMap
         courses={courses}
         learn={learn}
         selectedId={selected?.id}
@@ -81,9 +81,11 @@ export function MapScreen({
           </button>
 
           <button type="button" className="map-side" onClick={() => nav.navigate({ name: 'knowledge', section: 'days' })}>
-            <span className={stampedToday ? 'stamp stamp--today' : 'stamp'}>
-              <Icon name="hexFilled" size={44} />
-              <span className="stamp-count">{stamps}</span>
+            <span className="round-btn round-btn--accent">
+              <Icon name="calendar" size={26} />
+              <span className={stampedToday ? 'side-badge side-badge--done' : 'side-badge'} aria-label={`${stamps} Lerntage`}>
+                {stamps}
+              </span>
             </span>
             <span className="map-side-label">Lerntage</span>
           </button>

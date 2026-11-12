@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Phasen 7–12 (Wissenskarte, Kacheln, Wiederholung, Wissensbank, Lerntage, „Schlau lernen“) abgeschlossen. Als Nächstes: Test auf dem echten iPhone.
+**Stand:** 12.11.2026 – Überarbeitung nach dem ersten iPhone-Test: Achtecke statt Sechsecke, Karte und Bildschirme näher an den Kinnu-Screenshots. Als Nächstes: erneuter Test auf dem iPhone.
 
 ## Erledigt
 
@@ -69,6 +69,16 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - Entfernt: HomeScreen, CourseScreen, LessonScreen und die alten Lektions-Komponenten.
 - Tests: 92 (orp, importer, srs, learning, hexmap). Im Browser geprüft: kompletter Kachel-Ablauf, Übernahme alter Daten, 360 px hell/dunkel, 1280 px.
 
+### Überarbeitung nach dem ersten iPhone-Test (12.11.2026)
+- **Achtecke statt Sechsecke** überall (Wunsch des Nutzers, „etwas Eigenes“): Karte, Fortschrittsleiste, Abzeichen, Symbole (`oct`/`octFilled`), CSS-Form `--oct`.
+- **Karte neu** ([WorldMap.tsx](src/components/map/WorldMap.tsx), Geometrie [maplayout.ts](src/lib/maplayout.ts) + Tests): Kacheln zeilenweise im Raster, Umrandung in Kursfarbe (ausgewählt: hell), Fläche mit zarten Achteck-Umrissen, Kursname als Reiter oben. Keine Emojis und keine Titel mehr in Kacheln.
+- **Detailstufen:** weit weg nur Flächen; mittel: gelernte Kacheln in Kursfarbe mit mittigem Häkchen; nah: **eine Punktreihe je Leseseite, ein Punkt je Frage** (gelernte Kacheln hell, nächste Kachel umrandet, neue dunkel).
+- **Untere Leiste symmetrisch:** zwei gleich große runde Knöpfe (Wissensbank mit Ebenen-Symbol, Lerntage mit Kalender und Zähler), „Schlau lernen“ genau in der Mitte.
+- **Kopf wie im Vorbild:** großer fetter Schriftzug, runde graue Knöpfe untereinander.
+- **Kursblatt** in der Kursfarbe mit weißer Schrift und weißem Hauptknopf; Kachelliste mit Nummern statt Emojis.
+- **Leseseite** als Karte mit zentrierter Kopfzeile (Kurs, Kachel, „Seite x / y“); **Fragekarte** mit „Weiß ich nicht“ und „Weiter“ in der Karte und einer Fußzeile (Fragetyp, Kachel).
+- Die Screenshots des Nutzers liegen nur in der temporären Sitzung; im öffentlichen Repo sollen keine Kinnu-Screenshots landen.
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
@@ -102,7 +112,7 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Fragen-Schlüssel:** Der Lernstand einer Frage hängt an einem Fingerabdruck ihres Textes (`cardKey` in model.ts). Ändert sich der Fragetext bei einem Re-Import, gilt sie als neue Frage.
 - **Gewertet wird nur der erste Versuch** einer Frage; angehängte Wiederholungen dienen dem Festigen.
 - **Lerntage:** Stempel nur für abgeschlossene Kacheln oder Wiederholungsrunden, nicht fürs reine Nachlesen. „Fortschritt zurücksetzen“ behält Lerntage und Lernzeit.
-- **Eigenes Design statt Kopie:** Sechseck-Stempel statt Kraniche, Indigo-Akzent, Kursfarben für Karte, Fragekarten und Buttons in der Sitzung; Dunkelmodus in neutralem Anthrazit (`#212125`). Rot bleibt dem Fokusbuchstaben vorbehalten (falsch = Orange).
+- **Eigenes Design statt Kopie:** Achteck-Stempel statt Kraniche, Indigo-Akzent, Kursfarben für Karte, Fragekarten und Buttons in der Sitzung; Dunkelmodus in neutralem Anthrazit (`#212125`). Rot bleibt dem Fokusbuchstaben vorbehalten (falsch = Orange).
 - **Neue Styles** stehen in [learning.css](src/styles/learning.css), die Grundlagen weiter in global.css.
 
 ## Als Nächstes

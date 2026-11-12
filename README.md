@@ -1,6 +1,6 @@
 # Leenli
 
-Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sechsecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
+Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Achtecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
 
 - Läuft auf PC, iPhone, iPad und Android als installierbare Web-App (PWA)
 - Funktioniert komplett offline – kein Server, kein Konto, keine Synchronisierung
@@ -41,16 +41,16 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 ## So lernst du mit Leenli
 
-**Die Wissenskarte (Startseite).** Jeder Kurs ist ein farbiger Cluster aus Sechsecken – ein Sechseck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Emojis, dann Kacheltitel. Erledigte Kacheln tragen ein Häkchen.
+**Die Wissenskarte (Startseite).** Jeder Kurs ist ein farbiger Block aus Achtecken – ein Achteck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah eine Punktreihe je Leseseite und einen Punkt je Frage.
 
 **Kurs antippen** öffnet das Kursblatt mit Anzahl der Kacheln, Fortschritt und Lernzeit, dazu „Kurs starten“ bzw. „Weiterlernen“. Tippst du eine Kachel an, kannst du sie lernen, nochmal lesen oder zurücksetzen.
 
 **Eine Kachel** läuft so ab:
 
 1. **Du lernst …** – zwei Leitfragen zum Aufdecken
-2. **Seiten mit Fragen** – nach jeder Seite eine Frage. Die Leiste oben zeigt Punkte (Seiten) und Sechsecke (Fragen).
+2. **Seiten mit Fragen** – nach jeder Seite eine Frage. Die Leiste oben zeigt Punkte (Seiten) und Achtecke (Fragen).
 3. **Rückblick** – die Kernaussagen zum Aufdecken
-4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Sechseck, wie viele noch offen sind.
+4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Achteck, wie viele noch offen sind.
 
 **Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch und Lückentext.
 
@@ -66,7 +66,7 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 **Schlau lernen** (großer Knopf unten) startet automatisch das Sinnvollste: zuerst fällige Wiederholungen, dann eine angefangene Kachel, dann die nächste neue. Die Zahl am Knopf zeigt, wie viele Fragen gerade fällig sind.
 
-**Lerntage** (Sechseck unten rechts): Jeder Tag mit mindestens einer abgeschlossenen Kachel oder Wiederholungsrunde bekommt einen Stempel. Dazu gibt es Serie, Wochenleiste und Monatskalender.
+**Lerntage** (Knopf unten rechts): Jeder Tag mit mindestens einer abgeschlossenen Kachel oder Wiederholungsrunde bekommt einen Stempel. Dazu gibt es Serie, Wochenleiste und Monatskalender.
 
 ---
 
@@ -323,11 +323,11 @@ src/
     ContentScreen.tsx     Import, Vorlage für Claude, Kurse verwalten
     SettingsScreen.tsx    Einstellungen
   components/
-    map/                  Sechseck-Karte und Kursblatt
+    map/                  Achteck-Karte und Kursblatt
     session/              Fortschrittsleiste, Seite, Fragekarte, „Du lernst …“/„Rückblick“
     speed/                Speed-Reader
   lib/
-    hexmap.ts             Geometrie der Karte                      (+ hexmap.test.ts)
+    maplayout.ts          Geometrie der Karte (Achteck-Raster)     (+ maplayout.test.ts)
     srs.ts                Wiederholung in wachsenden Abständen     (+ srs.test.ts)
     session.ts            Ablauf einer Sitzung, falsche Fragen anhängen
     smart.ts              Auswahl für „Wissen stärken“ und „Schlau lernen“

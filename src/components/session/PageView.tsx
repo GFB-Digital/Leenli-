@@ -80,13 +80,11 @@ export function PageView({
 
   const head = (
     <header className="page-head">
-      <div className="page-head-text">
-        <span className="page-course">{courseTitle}</span>
-        <span className="page-tile">{tileTitle}</span>
-        <span className="page-count">
-          Seite {page} / {pages}
-        </span>
-      </div>
+      <span className="page-course">{courseTitle}</span>
+      <span className="page-tile">{tileTitle}</span>
+      <span className="page-count">
+        Seite {page} / {pages}
+      </span>
       <SegmentedControl label="Lesemodus" value={mode} options={MODES} onChange={onModeChange} />
     </header>
   )
@@ -110,19 +108,21 @@ export function PageView({
   return (
     <>
       <div className="lesson-content step-enter">
-        {head}
-        <article className="reading-text">
-          {step.title && <h2 className="reading-title">{step.title}</h2>}
-          {parts.map((paragraph, i) => (
-            <div key={i}>
-              <p>
-                <RichText text={paragraph} />
-              </p>
-              {/* Bild nach dem ersten Absatz */}
-              {i === 0 && step.image && <Figure image={step.image} />}
-            </div>
-          ))}
-        </article>
+        <div className="session-card page-card">
+          {head}
+          <article className="reading-text">
+            {step.title && <h2 className="reading-title">{step.title}</h2>}
+            {parts.map((paragraph, i) => (
+              <div key={i}>
+                <p>
+                  <RichText text={paragraph} />
+                </p>
+                {/* Bild nach dem ersten Absatz */}
+                {i === 0 && step.image && <Figure image={step.image} />}
+              </div>
+            ))}
+          </article>
+        </div>
       </div>
       <LessonFooter>
         <button type="button" className="btn btn-primary" onClick={onNext}>
