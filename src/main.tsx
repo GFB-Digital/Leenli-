@@ -4,6 +4,7 @@ import App from './App.tsx'
 import { startServiceWorker } from './lib/pwa.ts'
 import { loadAppState } from './lib/store.ts'
 import './styles/global.css'
+import './styles/learning.css'
 
 void loadAppState()
 

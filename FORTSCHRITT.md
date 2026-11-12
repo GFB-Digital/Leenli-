@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Phase 6 abgeschlossen. Offen: GitHub Pages im Repo einschalten (Nutzer) und Rückmeldungen vom iPhone-Test.
+**Stand:** 12.11.2026 – Phasen 7–12 (Wissenskarte, Kacheln, Wiederholung, Wissensbank, Lerntage, „Schlau lernen“) abgeschlossen. Als Nächstes: Test auf dem echten iPhone.
 
 ## Erledigt
 
@@ -57,6 +57,18 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - **README** komplett: Installation auf dem Handy, Claude-Workflow, Kursformat, Speed-Reader-Regeln, Entwicklung, GitHub Pages, Projektaufbau, Capacitor. Die Vorlage wurde per Skript aus `claude-template.ts` eingesetzt (bei Änderungen der Vorlage README mit aktualisieren).
 - `@types/node` auf ^26 angehoben; `npm audit`: App-Code 0 Warnungen, die 6 Warnungen in workbox-build bestehen weiter (keine korrigierte Version verfügbar)
 
+### Phasen 7–12 – Wissenskarte, Kacheln, Wiederholung (12.11.2026, Vorbild: Screenshots von Kinnu)
+Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Übernommen wurde die Lern-Mechanik, nicht Kinnus Erscheinungsbild.
+
+- **Phase 7 – Kursformat:** Kurs → Kacheln (`tiles`) mit `intro`, `steps`, `recap`; neue Fragetypen `binary` und `cloze`; Bilder (`image`), Kursfarben (`color`, siehe [colors.ts](src/lib/colors.ts)), **fett** im Text. Alte Kurse (`lessons`) und alter Fortschritt (`progress`) werden beim Start automatisch umgewandelt ([store.ts](src/lib/store.ts)). Beispielkurs und Claude-Vorlage neu.
+- **Phase 8 – Kachel-Ablauf:** [SessionScreen.tsx](src/screens/SessionScreen.tsx) + [components/session/](src/components/session/). Falsche Antworten und „Weiß ich nicht“ werden hinten angehängt, bis sie sitzen ([session.ts](src/lib/session.ts)).
+- **Phase 9 – Karte:** [HexMap.tsx](src/components/map/HexMap.tsx) (SVG, Ziehen, Zwei-Finger-/Mausrad-Zoom, Doppeltippen, Detailstufen) und [CourseSheet.tsx](src/components/map/CourseSheet.tsx). Geometrie in [hexmap.ts](src/lib/hexmap.ts).
+- **Phase 10 – Wiederholung:** [srs.ts](src/lib/srs.ts) (Vergessenskurve wie bei FSRS, Stabilität wächst mit richtigen Antworten zur rechten Zeit). „Wissen stärken“ beliebig oft ([smart.ts](src/lib/smart.ts)). Kachel zurücksetzen.
+- **Phase 11 – Wissensbank und Lerntage:** [KnowledgeScreen.tsx](src/screens/KnowledgeScreen.tsx), [streak.ts](src/lib/streak.ts).
+- **Phase 12 – „Schlau lernen“** (`planSmartSession`), Feinschliff, README.
+- Entfernt: HomeScreen, CourseScreen, LessonScreen und die alten Lektions-Komponenten.
+- Tests: 92 (orp, importer, srs, learning, hexmap). Im Browser geprüft: kompletter Kachel-Ablauf, Übernahme alter Daten, 360 px hell/dunkel, 1280 px.
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
@@ -86,11 +98,17 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
   - Bei „Ganzer Text“ springt der Reader zum angetippten Wort.
   - Ein Mausklick wählt die Bedien-Buttons nicht aus, damit die Leertaste immer Start/Pause bleibt.
 
+- **Wiederholung:** Start-Abstand 3 Tage (auf Anhieb richtig) bzw. 1 Tag. Richtig → Stabilität × (1 + (ease − 1) × Zeitfaktor); sofortiges Wiederholen bringt kaum Zuwachs, schadet aber nicht. Falsch → Stabilität × 0,3, mindestens ½ Tag. „Gefährdet“ heißt: Erinnerungswahrscheinlichkeit unter 90 %.
+- **Fragen-Schlüssel:** Der Lernstand einer Frage hängt an einem Fingerabdruck ihres Textes (`cardKey` in model.ts). Ändert sich der Fragetext bei einem Re-Import, gilt sie als neue Frage.
+- **Gewertet wird nur der erste Versuch** einer Frage; angehängte Wiederholungen dienen dem Festigen.
+- **Lerntage:** Stempel nur für abgeschlossene Kacheln oder Wiederholungsrunden, nicht fürs reine Nachlesen. „Fortschritt zurücksetzen“ behält Lerntage und Lernzeit.
+- **Eigenes Design statt Kopie:** Sechseck-Stempel statt Kraniche, Indigo-Akzent, Kursfarben für Karte, Fragekarten und Buttons in der Sitzung; Dunkelmodus in neutralem Anthrazit (`#212125`). Rot bleibt dem Fokusbuchstaben vorbehalten (falsch = Orange).
+- **Neue Styles** stehen in [learning.css](src/styles/learning.css), die Grundlagen weiter in global.css.
+
 ## Als Nächstes
-- **GitHub Pages einschalten (Nutzer, einmalig):** Repo → Settings → Pages → Source „GitHub Actions“. Claude durfte das nicht selbst tun (Einstellung, die etwas öffentlich macht). Danach einmal pushen oder den Workflow unter „Actions“ starten.
-- Rückmeldungen vom echten iPhone einarbeiten: Speed-Reader-Optik, Lesbarkeit, Kopieren der Vorlage, Installation vom Home-Bildschirm
-- Mögliche Ideen für später: Export/Import des Fortschritts als Datei (Sicherung), Wiederholungs-Erinnerungen (Abstandseffekt), Startbildschirme für iOS
+- Rückmeldungen vom echten iPhone einarbeiten: Karte (Zoomen mit zwei Fingern), Kachel-Ablauf, Wischen bei Entweder-oder, Speed-Reader, Wissensbank
+- Mögliche Ideen für später: Sicherung von Kursen und Lernstand als Datei, Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS
 
 ## Offene Punkte
-- **Hosting:** Workflow für GitHub Pages ist fertig; das Einschalten in den Repo-Einstellungen steht noch aus (siehe „Als Nächstes“).
+- **Hosting:** GitHub Pages ist eingeschaltet, jeder Push auf main veröffentlicht automatisch.
 - **Abweichung von PLAN.md:** Der Plan nennt für den Fokusbuchstaben „Mitte“. Auf Wunsch des Nutzers (Video-Vorbild) steht er jetzt bei 38 %.

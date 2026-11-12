@@ -65,14 +65,14 @@
    Einstellung „Darstellung“ erzwingt Hell. Beide Blöcke gleich halten! */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #15141a;
-    --surface: #1e1d25;
-    --surface-2: #272631;
-    --border: #34323f;
-    --track: #2e2d39;
+    --bg: #212125;
+    --surface: #2b2b30;
+    --surface-2: #35353b;
+    --border: #404047;
+    --track: #3d3d44;
 
-    --text: #ece9f2;
-    --text-muted: #a29db1;
+    --text: #f2f1f5;
+    --text-muted: #aaa8b4;
 
     --accent: #5a4ee6;
     --accent-pressed: #4b3fd1;
@@ -93,14 +93,14 @@
 
 /* Einstellung „Darstellung: Dunkel“ */
 :root[data-theme='dark'] {
-  --bg: #15141a;
-  --surface: #1e1d25;
-  --surface-2: #272631;
-  --border: #34323f;
-  --track: #2e2d39;
+  --bg: #212125;
+  --surface: #2b2b30;
+  --surface-2: #35353b;
+  --border: #404047;
+  --track: #3d3d44;
 
-  --text: #ece9f2;
-  --text-muted: #a29db1;
+  --text: #f2f1f5;
+  --text-muted: #aaa8b4;
 
   --accent: #5a4ee6;
   --accent-pressed: #4b3fd1;

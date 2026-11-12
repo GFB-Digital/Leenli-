@@ -1,6 +1,6 @@
 # Leenli
 
-Eine Lern-App in kurzen Häppchen: Lektionen bestehen aus kurzen Leseabschnitten, nach jedem Abschnitt kommt eine Frage. Jeder Abschnitt lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
+Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sechsecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
 
 - Läuft auf PC, iPhone, iPad und Android als installierbare Web-App (PWA)
 - Funktioniert komplett offline – kein Server, kein Konto, keine Synchronisierung
@@ -14,13 +14,14 @@ Eine Lern-App in kurzen Häppchen: Lektionen bestehen aus kurzen Leseabschnitten
 ## Inhalt
 
 1. [Auf dem Handy installieren](#auf-dem-handy-installieren)
-2. [Eigene Kurse mit Claude erstellen](#eigene-kurse-mit-claude-erstellen)
-3. [Das Kursformat](#das-kursformat)
-4. [Der Speed-Reader](#der-speed-reader)
-5. [Entwicklung am PC](#entwicklung-am-pc)
-6. [Veröffentlichen auf GitHub Pages](#veröffentlichen-auf-github-pages)
-7. [Projektaufbau](#projektaufbau)
-8. [Später als echte App (Capacitor)](#später-als-echte-app-capacitor)
+2. [So lernst du mit Leenli](#so-lernst-du-mit-leenli)
+3. [Eigene Kurse mit Claude erstellen](#eigene-kurse-mit-claude-erstellen)
+4. [Das Kursformat](#das-kursformat)
+5. [Der Speed-Reader](#der-speed-reader)
+6. [Entwicklung am PC](#entwicklung-am-pc)
+7. [Veröffentlichen auf GitHub Pages](#veröffentlichen-auf-github-pages)
+8. [Projektaufbau](#projektaufbau)
+9. [Später als echte App (Capacitor)](#später-als-echte-app-capacitor)
 
 ---
 
@@ -32,9 +33,40 @@ Eine Lern-App in kurzen Häppchen: Lektionen bestehen aus kurzen Leseabschnitten
 | **Android** | In Chrome öffnen → Menü ⋮ → **„App installieren“** |
 | **PC (Chrome/Edge)** | Rechts in der Adressleiste auf das Installieren-Symbol klicken |
 
-Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neue Version, erscheint unten der Hinweis „Neue Version verfügbar → Aktualisieren“. Die App lädt nie ungefragt neu, damit keine laufende Lektion verloren geht.
+Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neue Version, erscheint unten der Hinweis „Neue Version verfügbar → Aktualisieren“. Die App lädt nie ungefragt neu, damit keine laufende Kachel verloren geht.
 
 > **Wichtig:** Deine Kurse und dein Fortschritt liegen nur auf dem jeweiligen Gerät. Wird die App vom Home-Bildschirm gelöscht, sind auch die Daten weg.
+
+---
+
+## So lernst du mit Leenli
+
+**Die Wissenskarte (Startseite).** Jeder Kurs ist ein farbiger Cluster aus Sechsecken – ein Sechseck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Emojis, dann Kacheltitel. Erledigte Kacheln tragen ein Häkchen.
+
+**Kurs antippen** öffnet das Kursblatt mit Anzahl der Kacheln, Fortschritt und Lernzeit, dazu „Kurs starten“ bzw. „Weiterlernen“. Tippst du eine Kachel an, kannst du sie lernen, nochmal lesen oder zurücksetzen.
+
+**Eine Kachel** läuft so ab:
+
+1. **Du lernst …** – zwei Leitfragen zum Aufdecken
+2. **Seiten mit Fragen** – nach jeder Seite eine Frage. Die Leiste oben zeigt Punkte (Seiten) und Sechsecke (Fragen).
+3. **Rückblick** – die Kernaussagen zum Aufdecken
+4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Sechseck, wie viele noch offen sind.
+
+**Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch und Lückentext.
+
+**Wiederholen (Spaced Repetition).** Nach einer Kachel bekommt jede ihrer Fragen einen Gedächtnis-Stand. Leenli rechnet aus, wann du sie voraussichtlich vergisst, und holt sie kurz vorher wieder. Richtig beantwortet → der Abstand wächst (Tage → Wochen → Monate). Falsch → er schrumpft deutlich. Die Kachel musst du dafür nicht noch einmal lesen.
+
+**Wissensbank** (Knopf unten links):
+
+- **Dein Wissen:** jede gelernte Kachel als Kette von Punkten – gefüllt = sicher, Ring = droht vergessen zu werden
+- **Wissen stärken:** so oft du willst, die schwächsten Fragen kommen zuerst
+- **Gerade am Lernen:** Fortschritt pro Kurs
+- **Gedächtnis-Prognose:** wie lange du einen Kurs voraussichtlich noch weißt
+- **Lerntage und Lernstatistik**
+
+**Schlau lernen** (großer Knopf unten) startet automatisch das Sinnvollste: zuerst fällige Wiederholungen, dann eine angefangene Kachel, dann die nächste neue. Die Zahl am Knopf zeigt, wie viele Fragen gerade fällig sind.
+
+**Lerntage** (Sechseck unten rechts): Jeder Tag mit mindestens einer abgeschlossenen Kachel oder Wiederholungsrunde bekommt einen Stempel. Dazu gibt es Serie, Wochenleiste und Monatskalender.
 
 ---
 
@@ -46,7 +78,7 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 4. In Leenli unter **Inhalte** einfügen → **„Importieren“** (oder eine `.json`-Datei wählen)
 
 Findet Leenli Fehler, steht genau da, wo: zum Beispiel
-„Kurs („Photosynthese“) › Lektion 2 › Schritt 3 (Frage): „answer“ ist 4, erlaubt sind aber nur 0 bis 3.“
+„Kurs („Photosynthese“) › Kachel 2 › Schritt 3 (Frage): „answer“ ist 4, erlaubt sind aber nur 0 bis 3.“
 Diese Meldung kannst du Claude einfach zurückgeben und um Korrektur bitten.
 
 ### Kurse überarbeiten statt doppelt anlegen
@@ -55,7 +87,7 @@ Jeder Kurs hat eine **ID**. Daran erkennt Leenli „denselben“ Kurs.
 
 - **Neuer Kurs:** Die Vorlage lässt Claude das heutige Datum in die ID schreiben (z. B. `photosynthese-20261112`). So überschneiden sich neue Kurse nie.
 - **Verbesserter Kurs:** Bitte Claude, die IDs beizubehalten. Beim Import fragt Leenli dann:
-  - **Ersetzen** – der alte Kurs wird ausgetauscht, dein Fortschritt bleibt für Lektionen mit gleicher ID erhalten.
+  - **Ersetzen** – der alte Kurs wird ausgetauscht, dein Fortschritt bleibt für Kacheln mit gleicher ID erhalten.
   - **Als neuen Kurs hinzufügen** – der Kurs bekommt automatisch eine neue ID (bei gleichem Titel z. B. „Photosynthese (2)“).
 
 Auch der eingebaute Beispielkurs „Lernen lernen“ lässt sich so ersetzen. Löschst du deine Version wieder, ist der Beispielkurs zurück.
@@ -69,16 +101,30 @@ So sieht die Vorlage aus (in der App steht statt `JJJJMMTT` das heutige Datum):
 Erstelle mir einen Lernkurs für meine Lern-App „Leenli“.
 
 Thema: [HIER DEIN THEMA EINTRAGEN]
-Umfang: [z. B. 3 Lektionen]
+Umfang: [z. B. 6 Kacheln]
+
+So ist ein Kurs aufgebaut:
+- Ein Kurs besteht aus Kacheln. Jede Kachel ist eine kurze Lerneinheit zu einem Teilthema (z. B. beim Kurs „Das Gehirn“ eine Kachel pro Hirnregion). Ordne die Kacheln so, dass sie aufeinander aufbauen.
+- Jede Kachel beginnt mit 2 Leitfragen („intro“): Was lernt man in dieser Kachel?
+- Dann folgen 3 bis 4 Leseseiten. Nach jeder Seite kommt genau eine Frage zu genau dieser Seite. Am Ende darf noch eine zusätzliche Frage zur ganzen Kachel stehen.
+- Jede Kachel endet mit einem Rückblick („recap“): 3 kurze Kernaussagen.
 
 Inhalt:
-- Sprache: Deutsch, klar und anschaulich.
-- Jede Lektion besteht aus 3 bis 5 Leseabschnitten. Nach jedem Abschnitt folgt genau eine Frage dazu.
-- Jeder Leseabschnitt hat 60 bis 120 Wörter. Absätze innerhalb eines Abschnitts trennst du mit \n\n.
+- Sprache: Deutsch, lebendig und anschaulich, wie ein gutes Sachbuch.
+- Jede Seite hat 80 bis 140 Wörter. Absätze innerhalb einer Seite trennst du mit \n\n.
+- Erzähle Hintergründe: Wer hat etwas entdeckt, erfunden oder erforscht – wann, wie und warum? Beschreibe Experimente, Geschichten und konkrete Beispiele.
+- Markiere 1 bis 2 Schlüsselbegriffe pro Seite mit **zwei Sternchen** (fett).
 - Nur gesicherte Fakten, nichts erfinden. Bei Unsicherheit lieber weglassen.
-- Die Fragen prüfen das Verständnis, nicht den genauen Wortlaut. Jede Frage bekommt eine kurze Erklärung (1–2 Sätze).
-- Auswahlfragen haben 3 oder 4 plausible Antworten, genau eine ist richtig. Die richtige Antwort steht nicht immer an derselben Stelle.
-- Mische Auswahlfragen ("choice") und Richtig/Falsch-Aussagen ("truefalse").
+- Fragen prüfen das Verständnis, nicht den genauen Wortlaut. Jede Frage bekommt eine kurze Erklärung (1–2 Sätze).
+- Mische die Fragetypen:
+  - "choice": Auswahlfrage mit 3 oder 4 plausiblen Antworten, genau eine richtig. Die richtige steht nicht immer an derselben Stelle.
+  - "binary": Entweder-oder mit genau 2 Antworten, gut für Fallbeispiele („Anna macht … – was passiert?“).
+  - "truefalse": eine Aussage, die stimmt oder nicht stimmt.
+  - "cloze": ein Satz mit genau einer Lücke ___ und 3 Antworten zum Einsetzen.
+
+Bilder (freiwillig):
+- Nur wenn du dir sicher bist, dass es das Bild gibt: "image" mit einer direkten Adresse von upload.wikimedia.org und einer Quellenangabe in "credit" (Wer, Lizenz, „via Wikimedia Commons“).
+- Bist du nicht ganz sicher, lass "image" weg. Ein falscher Link wird als fehlendes Bild angezeigt.
 
 Format:
 Antworte ausschließlich mit gültigem JSON in einem ```json-Codeblock, ohne Text davor oder danach. Halte dich genau an diese Struktur:
@@ -88,17 +134,24 @@ Antworte ausschließlich mit gültigem JSON in einem ```json-Codeblock, ohne Tex
   "id": "thema-JJJJMMTT",
   "title": "Titel des Kurses",
   "emoji": "📘",
+  "color": "blau",
   "description": "Ein Satz, worum es in dem Kurs geht.",
-  "lessons": [
+  "tiles": [
     {
-      "id": "lektion-1",
-      "title": "Titel der Lektion",
+      "id": "kachel-1",
+      "title": "Titel der Kachel",
+      "emoji": "🔬",
+      "intro": ["Erste Leitfrage?", "Zweite Leitfrage?"],
       "steps": [
-        { "type": "text", "title": "Überschrift des Abschnitts", "text": "Erster Absatz …\n\nZweiter Absatz …" },
-        { "type": "choice", "question": "Frage zum Abschnitt?", "options": ["Antwort A", "Antwort B", "Antwort C"], "answer": 1, "explanation": "Warum Antwort B stimmt." },
-        { "type": "text", "title": "Nächster Abschnitt", "text": "…" },
-        { "type": "truefalse", "statement": "Eine Aussage zum Abschnitt.", "answer": false, "explanation": "Warum die Aussage nicht stimmt." }
-      ]
+        { "type": "text", "title": "Überschrift der Seite", "text": "Erster Absatz mit einem **Schlüsselbegriff** …\n\nZweiter Absatz …" },
+        { "type": "choice", "question": "Frage zur Seite?", "options": ["Antwort A", "Antwort B", "Antwort C"], "answer": 1, "explanation": "Warum Antwort B stimmt." },
+        { "type": "text", "title": "Nächste Seite", "text": "…", "image": { "src": "https://upload.wikimedia.org/…", "credit": "Bild: Name, Lizenz, via Wikimedia Commons" } },
+        { "type": "binary", "question": "Ein Fallbeispiel – was ist richtig?", "options": ["Erste Möglichkeit", "Zweite Möglichkeit"], "answer": 0, "explanation": "Warum." },
+        { "type": "text", "title": "Dritte Seite", "text": "…" },
+        { "type": "cloze", "text": "Ein Satz mit einer ___ darin.", "options": ["Lücke", "Wand", "Tür"], "answer": 0, "explanation": "Warum." },
+        { "type": "truefalse", "statement": "Eine Aussage zur ganzen Kachel.", "answer": false, "explanation": "Warum sie nicht stimmt." }
+      ],
+      "recap": ["Erste Kernaussage.", "Zweite Kernaussage.", "Dritte Kernaussage."]
     }
   ]
 }
@@ -106,13 +159,14 @@ Antworte ausschließlich mit gültigem JSON in einem ```json-Codeblock, ohne Tex
 
 Regeln für das JSON:
 - "id" des Kurses: kurzer Name zum Thema aus Kleinbuchstaben, Ziffern und Bindestrichen, gefolgt von -JJJJMMTT (z. B. "photosynthese-JJJJMMTT"). So überschneidet er sich nicht mit anderen Kursen.
-- Jede Lektion hat eine eigene "id" ("lektion-1", "lektion-2", …).
-- "answer" bei "choice" ist die Nummer der richtigen Antwort in "options", gezählt ab 0 (0 = erste Antwort).
+- Jede Kachel hat eine eigene "id" ("kachel-1", "kachel-2", …) und ein passendes Emoji.
+- "color" ist einer dieser Namen: indigo, violett, blau, tuerkis, gruen, oliv, gold, orange, rost, rosa, schiefer.
+- "answer" bei "choice", "binary" und "cloze" ist die Nummer der richtigen Antwort in "options", gezählt ab 0 (0 = erste Antwort).
 - "answer" bei "truefalse" ist true oder false (ohne Anführungszeichen).
-- "emoji" ist ein einzelnes passendes Emoji.
+- Der Lückentext enthält genau eine Lücke aus drei Unterstrichen: ___
 - Nur gerade Anführungszeichen ("), keine Kommentare, kein Komma nach dem letzten Element einer Liste.
 
-Wenn ich dich später bitte, einen bestehenden Kurs zu überarbeiten, behalte seine "id" und die IDs der Lektionen bei – dann ersetzt die App den alten Kurs und mein Fortschritt bleibt erhalten.
+Wenn ich dich später bitte, einen bestehenden Kurs zu überarbeiten, behalte seine "id" und die IDs der Kacheln bei – dann ersetzt die App den alten Kurs und mein Fortschritt bleibt erhalten.
 ````
 <!-- VORLAGE:ENDE -->
 
@@ -120,7 +174,7 @@ Wenn ich dich später bitte, einen bestehenden Kurs zu überarbeiten, behalte se
 
 ## Das Kursformat
 
-Kurs → Lektionen → Schritte. Ein Import kann ein einzelner Kurs `{ … }` oder eine Liste von Kursen `[ { … }, { … } ]` sein.
+Kurs → Kacheln → Schritte (Seiten und Fragen). Ein Import kann ein einzelner Kurs `{ … }` oder eine Liste von Kursen `[ { … }, { … } ]` sein. Ältere Kurse mit `"lessons"` statt `"tiles"` werden weiterhin angenommen und automatisch umgewandelt.
 
 ### Kurs
 
@@ -128,43 +182,58 @@ Kurs → Lektionen → Schritte. Ein Import kann ein einzelner Kurs `{ … }` od
 | --- | --- | --- |
 | `id` | empfohlen | Eindeutige Kennung, z. B. `"photosynthese-20261112"`. Fehlt sie, wird sie aus dem Titel gebildet. |
 | `title` | ja | Titel des Kurses |
-| `emoji` | nein | Symbol auf der Kurskarte, z. B. `"🌱"` |
+| `emoji` | nein | Symbol auf Karte und Kursblatt, z. B. `"🌱"` |
 | `description` | nein | Ein Satz zum Inhalt |
-| `lessons` | ja | Liste der Lektionen (mindestens eine) |
+| `color` | nein | Farbe des Clusters: indigo, violett, blau, tuerkis, gruen, oliv, gold, orange, rost, rosa, schiefer |
+| `tiles` | ja | Liste der Kacheln (mindestens eine) |
 
-### Lektion
+### Kachel
 
 | Feld | Pflicht | Bedeutung |
 | --- | --- | --- |
 | `id` | nein | Kennung innerhalb des Kurses. Fehlt sie, wird sie aus dem Titel ergänzt. |
-| `title` | ja | Titel der Lektion |
-| `steps` | ja | Liste der Schritte (mindestens einer) |
+| `title` | ja | Titel der Kachel |
+| `emoji` | nein | Symbol auf der Karte |
+| `intro` | nein | „Du lernst …“: Liste von Leitfragen, z. B. `["Was ist …?", "Wer fand …?"]` |
+| `steps` | ja | Seiten und Fragen in Reihenfolge (mindestens ein Schritt) |
+| `recap` | nein | „Rückblick“: Liste von Kernaussagen |
 
 ### Schritte
 
-**Leseabschnitt**
+**Seite**
 
 ```json
-{ "type": "text", "title": "Überschrift (optional)", "text": "Erster Absatz …\n\nZweiter Absatz …" }
+{ "type": "text", "title": "Überschrift (optional)", "text": "Erster Absatz mit **Schlüsselbegriff** …\n\nZweiter Absatz …",
+  "image": { "src": "https://upload.wikimedia.org/…", "credit": "Bild: …, Lizenz, via Wikimedia Commons" } }
 ```
 
-Absätze werden mit einer Leerzeile getrennt – im JSON als `\n\n` geschrieben.
+Absätze werden mit einer Leerzeile getrennt – im JSON als `\n\n` geschrieben. `**zwei Sternchen**` machen ein Wort fett. Das Bild ist freiwillig; nach dem ersten Laden ist es auch offline verfügbar.
 
-**Auswahlfrage**
+**Auswahlfrage** (2 bis 6 Antworten, Leenli mischt sie beim Anzeigen)
 
 ```json
 { "type": "choice", "question": "Frage?", "options": ["A", "B", "C"], "answer": 1, "explanation": "Optional: warum B stimmt." }
 ```
 
-`answer` ist die Nummer der richtigen Antwort, **gezählt ab 0** (0 = erste Antwort). Leenli mischt die Antworten beim Anzeigen.
+**Entweder-oder** (genau 2 Antworten, gut für Fallbeispiele)
 
-**Richtig/Falsch-Aussage**
+```json
+{ "type": "binary", "question": "Anna lernt … – was hilft mehr?", "options": ["Erste Möglichkeit", "Zweite Möglichkeit"], "answer": 0 }
+```
+
+**Richtig/Falsch**
 
 ```json
 { "type": "truefalse", "statement": "Eine Aussage.", "answer": false, "explanation": "Optional: warum." }
 ```
 
-`answer` ist `true` oder `false` – ohne Anführungszeichen.
+**Lückentext** (genau eine Lücke aus drei Unterstrichen)
+
+```json
+{ "type": "cloze", "text": "Die Vergessenskurve stammt von Hermann ___.", "options": ["Ebbinghaus", "Leitner", "Karpicke"], "answer": 0 }
+```
+
+`answer` ist bei `choice`, `binary` und `cloze` die Nummer der richtigen Antwort, **gezählt ab 0**. Bei `truefalse` ist es `true` oder `false` – ohne Anführungszeichen.
 
 ---
 
@@ -246,26 +315,40 @@ Den Stand siehst du im Repo unter **Actions**. Ein grüner Haken heißt: veröff
 
 ```
 src/
-  App.tsx                 Ansichts-Steuerung (Start, Kurs, Lektion, Inhalte, Einstellungen)
-  screens/                Die fünf Bildschirme
-  components/             Bausteine: Kopfleiste, Dialog, Umschalter, Tempo-Regler …
-    lesson/               Leseabschnitt, Frage, Zusammenfassung
-    speed/                Speed-Reader (Taktgeber, Bedienung, Wortanzeige)
+  App.tsx                 Ansichts-Steuerung (Karte, Kachel, Wiederholen, Wissensbank, Inhalte, Einstellungen)
+  screens/
+    MapScreen.tsx         Startseite: Wissenskarte, „Schlau lernen“, Kursblatt
+    SessionScreen.tsx     Lernsitzung: Kachel lernen/lesen, Wissen stärken, Schlau lernen
+    KnowledgeScreen.tsx   Wissensbank, Prognose, Lerntage, Statistik
+    ContentScreen.tsx     Import, Vorlage für Claude, Kurse verwalten
+    SettingsScreen.tsx    Einstellungen
+  components/
+    map/                  Sechseck-Karte und Kursblatt
+    session/              Fortschrittsleiste, Seite, Fragekarte, „Du lernst …“/„Rückblick“
+    speed/                Speed-Reader
   lib/
-    orp.ts                Speed-Reader-Logik (reine Funktionen) + orp.test.ts
-    importer.ts           Kurs-Import und Prüfung + importer.test.ts
+    hexmap.ts             Geometrie der Karte                      (+ hexmap.test.ts)
+    srs.ts                Wiederholung in wachsenden Abständen     (+ srs.test.ts)
+    session.ts            Ablauf einer Sitzung, falsche Fragen anhängen
+    smart.ts              Auswahl für „Wissen stärken“ und „Schlau lernen“
+    streak.ts             Lerntage, Serie, Kalender                (+ learning.test.ts)
+    orp.ts                Speed-Reader-Logik                       (+ orp.test.ts)
+    importer.ts           Kurs-Import und Prüfung                  (+ importer.test.ts)
     db.ts                 Speicher (IndexedDB) – einzige Stelle mit Speicherzugriff
-    store.ts              App-Zustand: Kurse, Fortschritt, Einstellungen
+    store.ts              App-Zustand: Kurse, Lernstand, Einstellungen; Übernahme alter Daten
+    model.ts, colors.ts   Hilfsfunktionen, Kursfarben
     navigation.ts         Ansichtswechsel mit Zurück-Taste
     appearance.ts         Hell/Dunkel und Schriftgröße
     pwa.ts                Offline-Modus und Update-Hinweis
   content/
     sample-course.ts      Eingebauter Beispielkurs „Lernen lernen“
     claude-template.ts    Vorlage für Claude
-  styles/global.css       Alle Farben und Maße als CSS-Variablen
+  styles/
+    global.css            Farben, Grundstil, Lesen, Speed-Reader
+    learning.css          Karte, Kursblatt, Sitzung, Wissensbank
 ```
 
-Der aktuelle Arbeitsstand steht in [FORTSCHRITT.md](FORTSCHRITT.md), der ursprüngliche Auftrag in [PLAN.md](PLAN.md).
+Der aktuelle Arbeitsstand steht in [FORTSCHRITT.md](FORTSCHRITT.md), der Auftrag in [PLAN.md](PLAN.md).
 
 ---
 

@@ -4,14 +4,18 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { extractJson, parseCourses, slugify, uniqueId, withFreshIds } from './importer.ts'
 
-const lesson = (extra: object = {}) => ({
-  id: 'l1',
-  title: 'Erste Lektion',
+const tile = (extra: object = {}) => ({
+  id: 't1',
+  title: 'Erste Kachel',
+  intro: ['Was ist X?', 'Wer fand X?'],
   steps: [
-    { type: 'text', title: 'Start', text: 'Absatz eins.\n\nAbsatz zwei.' },
+    { type: 'text', title: 'Start', text: 'Absatz eins.\n\nAbsatz **zwei**.' },
     { type: 'choice', question: 'Welche?', options: ['A', 'B', 'C'], answer: 2, explanation: 'Weil C.' },
+    { type: 'binary', question: 'Oben oder unten?', options: ['Oben', 'Unten'], answer: 1 },
     { type: 'truefalse', statement: 'Stimmt das?', answer: false },
+    { type: 'cloze', text: 'Die ___ ist rund.', options: ['Erde', 'Scheibe'], answer: 0 },
   ],
+  recap: ['X ist wichtig.'],
   ...extra,
 })
 
@@ -20,7 +24,8 @@ const course = (extra: object = {}) => ({
   title: 'Testkurs',
   emoji: '🧪',
   description: 'Zum Testen.',
-  lessons: [lesson()],
+  color: 'gruen',
+  tiles: [tile()],
   ...extra,
 })
 
@@ -48,55 +53,73 @@ describe('JSON aus eingefügtem Text holen', () => {
   })
 
   it('lässt sich von einem im Text erwähnten ```json nicht irritieren', () => {
-    const answer = 'Hier als ```json-Block:\n\n```json\n{"a":1}\n```'
-    assert.equal(extractJson(answer), '{"a":1}')
+    assert.equal(extractJson('Hier als ```json-Block:\n\n```json\n{"a":1}\n```'), '{"a":1}')
   })
 
   it('entfernt ein unsichtbares BOM-Zeichen am Anfang', () => {
-    assert.equal(extractJson('\uFEFF{"a":1}'), '{"a":1}')
+    assert.equal(extractJson(String.fromCharCode(0xfeff) + '{"a":1}'), '{"a":1}')
   })
 })
 
 describe('Gültige Kurse importieren', () => {
-  it('liest einen einzelnen Kurs', () => {
+  it('liest einen Kurs mit allen Fragetypen, Einleitung und Rückblick', () => {
     const result = parseCourses(json(course()))
-    assert.ok(result.ok)
-    assert.equal(result.courses.length, 1)
-    assert.equal(result.courses[0].title, 'Testkurs')
-    assert.equal(result.courses[0].lessons[0].steps.length, 3)
+    assert.ok(result.ok, result.ok ? '' : result.errors.join('\n'))
+    const t = result.courses[0].tiles[0]
+    assert.equal(result.courses[0].color, 'gruen')
+    assert.deepEqual(t.intro, ['Was ist X?', 'Wer fand X?'])
+    assert.deepEqual(t.recap, ['X ist wichtig.'])
+    assert.deepEqual(
+      t.steps.map((s) => s.type),
+      ['text', 'choice', 'binary', 'truefalse', 'cloze'],
+    )
     assert.deepEqual(result.notes, [])
+  })
+
+  it('nimmt ältere Kurse mit „lessons“ an', () => {
+    const old = { id: 'alt', title: 'Alt', lessons: [{ id: 'l1', title: 'L', steps: [{ type: 'text', text: 'T' }] }] }
+    const result = parseCourses(json(old))
+    assert.ok(result.ok)
+    assert.equal(result.courses[0].tiles[0].id, 'l1')
+  })
+
+  it('liest Bilder als Objekt oder als einfache Adresse', () => {
+    const steps = [
+      { type: 'text', text: 'A', image: { src: 'https://example.org/a.jpg', credit: 'Bild: X' } },
+      { type: 'text', text: 'B', image: 'https://example.org/b.jpg' },
+    ]
+    const result = parseCourses(json(course({ tiles: [tile({ steps })] })))
+    assert.ok(result.ok)
+    const [a, b] = result.courses[0].tiles[0].steps
+    assert.deepEqual(a.type === 'text' && a.image, { src: 'https://example.org/a.jpg', credit: 'Bild: X' })
+    assert.deepEqual(b.type === 'text' && b.image, { src: 'https://example.org/b.jpg' })
   })
 
   it('liest eine Liste von Kursen und { "courses": [...] }', () => {
     const list = parseCourses(json([course(), course({ id: 'zweiter' })]))
     assert.ok(list.ok)
     assert.equal(list.courses.length, 2)
-    const wrapped = parseCourses(json({ courses: [course()] }))
-    assert.ok(wrapped.ok)
+    assert.ok(parseCourses(json({ courses: [course()] })).ok)
   })
 
-  it('akzeptiert eingefügten Text mit ```json-Rahmen', () => {
-    assert.ok(parseCourses('Bitte schön:\n```json\n' + json(course()) + '\n```').ok)
-  })
-
-  it('ergänzt fehlende Lektions-IDs aus dem Titel', () => {
+  it('ergänzt fehlende Kachel-IDs aus dem Titel', () => {
     const result = parseCourses(
       json(
         course({
-          lessons: [
-            lesson({ id: undefined, title: 'Über das Gedächtnis' }),
-            lesson({ id: undefined, title: 'Über das Gedächtnis' }),
-            lesson({ id: undefined, title: 'Dritte' }),
+          tiles: [
+            tile({ id: undefined, title: 'Über das Gedächtnis' }),
+            tile({ id: undefined, title: 'Über das Gedächtnis' }),
+            tile({ id: undefined, title: 'Dritte' }),
           ],
         }),
       ),
     )
     assert.ok(result.ok)
     assert.deepEqual(
-      result.courses[0].lessons.map((l) => l.id),
+      result.courses[0].tiles.map((t) => t.id),
       ['ueber-das-gedaechtnis', 'ueber-das-gedaechtnis-2', 'dritte'],
     )
-    assert.match(result.notes[0], /3 fehlende Lektions-IDs/)
+    assert.match(result.notes[0], /3 fehlende Kachel-IDs/)
   })
 
   it('ergänzt eine fehlende Kurs-ID aus dem Titel', () => {
@@ -122,17 +145,16 @@ describe('Fehler verständlich melden', () => {
   })
 
   it('erkennt typografische Anführungszeichen', () => {
-    const errors = errorsOf('{ „id“: „x“ }')
-    assert.ok(errors.some((e) => /typografische/.test(e)), errors.join('\n'))
+    assert.ok(errorsOf('{ „id“: „x“ }').some((e) => /typografische/.test(e)))
   })
 
-  it('nennt Kurs, Lektion und Schritt beim Fehler', () => {
+  it('nennt Kurs, Kachel und Schritt beim Fehler', () => {
     const bad = course({
-      lessons: [
-        lesson(),
-        lesson({
-          id: 'l2',
-          title: 'Zweite Lektion',
+      tiles: [
+        tile(),
+        tile({
+          id: 't2',
+          title: 'Zweite Kachel',
           steps: [
             { type: 'text', text: 'Ok.' },
             { type: 'choice', question: 'Welche?', options: ['A', 'B', 'C', 'D'], answer: 4 },
@@ -142,15 +164,15 @@ describe('Fehler verständlich melden', () => {
     })
     const errors = errorsOf(json(bad))
     assert.equal(errors.length, 1)
-    assert.match(errors[0], /Kurs \(„Testkurs“\) › Lektion 2 \(„Zweite Lektion“\) › Schritt 2 \(Frage\)/)
+    assert.match(errors[0], /Kurs \(„Testkurs“\) › Kachel 2 \(„Zweite Kachel“\) › Schritt 2 \(Frage\)/)
     assert.match(errors[0], /„answer“ ist 4, erlaubt sind aber nur 0 bis 3/)
   })
 
   it('sammelt mehrere Fehler auf einmal', () => {
     const bad = course({
       title: '',
-      lessons: [
-        lesson({
+      tiles: [
+        tile({
           steps: [
             { type: 'text', text: '' },
             { type: 'quiz', question: 'x' },
@@ -162,25 +184,52 @@ describe('Fehler verständlich melden', () => {
     })
     const errors = errorsOf(json(bad))
     assert.ok(errors.some((e) => /Titel \(„title“\) fehlt/.test(e)))
-    assert.ok(errors.some((e) => /Schritt 1 \(Text\): Der Lesetext/.test(e)))
+    assert.ok(errors.some((e) => /Schritt 1 \(Seite\): Der Lesetext/.test(e)))
     assert.ok(errors.some((e) => /Unbekannter Typ „quiz“/.test(e)))
     assert.ok(errors.some((e) => /true oder false sein – ohne Anführungszeichen/.test(e)))
     assert.ok(errors.some((e) => /Schritt 4: Die Angabe „type“ fehlt/.test(e)))
   })
 
-  it('verlangt mindestens 2 Antworten und gültige Listen', () => {
-    const errors = errorsOf(
-      json(course({ lessons: [lesson({ steps: [{ type: 'choice', question: 'F?', options: ['nur eine'], answer: 0 }] })] })),
-    )
-    assert.match(errors[0], /mindestens 2 Antworten/)
-    assert.match(errorsOf(json(course({ lessons: [] })))[0], /mindestens einer Lektion/)
-    assert.match(errorsOf(json(course({ lessons: [lesson({ steps: [] })] })))[0], /mindestens einem Schritt/)
+  it('prüft Entweder-oder und Lückentext', () => {
+    const steps = [
+      { type: 'binary', question: 'F?', options: ['a', 'b', 'c'], answer: 0 },
+      { type: 'cloze', text: 'Ohne Lücke.', options: ['a', 'b'], answer: 0 },
+      { type: 'cloze', text: 'Zwei ___ und ___.', options: ['a', 'b'], answer: 0 },
+    ]
+    const errors = errorsOf(json(course({ tiles: [tile({ steps })] })))
+    assert.ok(errors.some((e) => /genau 2 Antworten/.test(e)), errors.join('\n'))
+    assert.ok(errors.some((e) => /genau eine Lücke „___“ \(gefunden: 0\)/.test(e)))
+    assert.ok(errors.some((e) => /genau eine Lücke „___“ \(gefunden: 2\)/.test(e)))
+  })
+
+  it('prüft Bilder, Farben, Einleitung und Rückblick', () => {
+    const bad = course({
+      color: 'pink',
+      tiles: [
+        tile({
+          intro: 'kein Array',
+          recap: ['ok', ''],
+          steps: [{ type: 'text', text: 'T', image: { src: 'http://unsicher.org/a.jpg' } }],
+        }),
+      ],
+    })
+    const errors = errorsOf(json(bad))
+    assert.ok(errors.some((e) => /Unbekannte Farbe „pink“/.test(e)))
+    assert.ok(errors.some((e) => /„intro“ muss eine Liste von Texten/.test(e)))
+    assert.ok(errors.some((e) => /„recap“ muss eine Liste von Texten/.test(e)))
+    assert.ok(errors.some((e) => /mit https:\/\/ beginnen/.test(e)))
+  })
+
+  it('verlangt gültige Listen', () => {
+    const one = [{ type: 'choice', question: 'F?', options: ['nur eine'], answer: 0 }]
+    assert.match(errorsOf(json(course({ tiles: [tile({ steps: one })] })))[0], /2 bis 6 Antworten/)
+    assert.match(errorsOf(json(course({ tiles: [] })))[0], /mindestens einer Kachel/)
+    assert.match(errorsOf(json(course({ tiles: [tile({ steps: [] })] })))[0], /mindestens einem Schritt/)
   })
 
   it('meldet doppelte IDs', () => {
     assert.match(errorsOf(json([course(), course()]))[0], /mehrfach vor/)
-    const twice = course({ lessons: [lesson(), lesson()] })
-    assert.match(errorsOf(json(twice))[0], /Lektions-ID „l1“ kommt in diesem Kurs mehrfach vor/)
+    assert.match(errorsOf(json(course({ tiles: [tile(), tile()] })))[0], /Kachel-ID „t1“ kommt in diesem Kurs mehrfach vor/)
   })
 
   it('meldet leere Eingabe und falsche Grundform', () => {
@@ -202,14 +251,13 @@ describe('IDs', () => {
     assert.equal(uniqueId('kurs', new Set(['kurs', 'kurs-2'])), 'kurs-3')
   })
 
-  it('vergibt bei „Als neuen Kurs hinzufügen“ neue IDs', () => {
+  it('vergibt bei „Als neuen Kurs hinzufügen“ neue IDs und Titel', () => {
     const result = parseCourses(json([course(), course({ id: 'neu' })]))
     assert.ok(result.ok)
-    const existing = [
+    const renamed = withFreshIds(result.courses, [
       { id: 'test-kurs', title: 'Testkurs' },
       { id: 'lernen-lernen', title: 'Lernen lernen' },
-    ]
-    const renamed = withFreshIds(result.courses, existing)
+    ])
     assert.deepEqual(
       renamed.map((c) => [c.id, c.title]),
       [
@@ -220,12 +268,17 @@ describe('IDs', () => {
   })
 })
 
-describe('Vorlage für Claude', () => {
-  it('enthält ein Beispiel, das sich fehlerfrei importieren lässt', async () => {
+describe('Mitgelieferte Inhalte', () => {
+  it('Vorlage für Claude enthält ein fehlerfrei importierbares Beispiel', async () => {
     const { claudeTemplate } = await import('../content/claude-template.ts')
     const result = parseCourses(claudeTemplate(new Date(2026, 10, 12)))
     assert.ok(result.ok, result.ok ? '' : result.errors.join('\n'))
     assert.equal(result.courses[0].id, 'thema-20261112')
-    assert.equal(result.courses[0].lessons[0].steps.length, 4)
+  })
+
+  it('Beispielkurs ist im gültigen Format', async () => {
+    const { SAMPLE_COURSE } = await import('../content/sample-course.ts')
+    const result = parseCourses(JSON.stringify(SAMPLE_COURSE))
+    assert.ok(result.ok, result.ok ? '' : result.errors.join('\n'))
   })
 })

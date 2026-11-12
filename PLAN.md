@@ -73,3 +73,21 @@ Arbeite in Phasen und halte nach jeder Phase an, damit ich teste:
 6. Feinschliff: Design, Dunkelmodus, Test auf iPhone-Größe, README (Installation, Inhaltsformat, Prompt-Vorlage, wie man später Capacitor ergänzt)
 
 Nach jeder Phase: kurz sagen, was ich testen soll, und einen Commit mit sinnvoller Nachricht vorschlagen (git add, commit, push). Wenn etwas unklar ist, frag mich, bevor du großflächig umbaust.
+
+## Erweiterung (12.11.2026): Wissenskarte, Kacheln und Wiederholung
+
+Vorbild für die Lernprinzipien sind die Screenshots von Kinnu. Übernommen wird die Mechanik, nicht das Erscheinungsbild (keine Namen, Kraniche, Kronen, Origami-Figuren). Eigenes Design, auch ähnlich dunkel; dazu ein helles Leenli-Design.
+
+- **Kursformat:** Kurs → Kacheln. Eine Kachel hat „Du lernst …“ (Leitfragen zum Aufdecken), Seiten (Text, optional Bild mit Quelle), Fragen nach den Seiten und einen „Rückblick“ (Kernaussagen zum Aufdecken). Alte Kurse mit `lessons` werden automatisch umgewandelt.
+- **Fragetypen:** Auswahl (mit „Weiß ich nicht“), Entweder-oder (eine Antwort oben, eine unten), Richtig/Falsch, Lückentext.
+- **Falsche Antworten** werden hinten an die Kachel angehängt und kommen so lange wieder, bis sie richtig beantwortet sind.
+- **Nach einer Kachel** ist sie fertig markiert; danach gibt es nur noch Wiederholungsfragen (Lesen bleibt möglich). Jede Kachel lässt sich zurücksetzen.
+- **Wiederholung in wachsenden Abständen (Spaced Repetition)** für jede Frage. „Wissen stärken“ darf beliebig oft gedrückt werden.
+- **Startseite = Wissenskarte** aus Sechsecken (verschieben, zoomen); jeder Kurs ein Cluster; Kursblatt mit „Weiterlernen“.
+- **Wissensbank:** sicher / droht vergessen zu werden, „Gerade am Lernen“, Gedächtnis-Prognose, Lernstatistik, „Wissen stärken“.
+- **Lerntage-Serie** mit eigenem Stempel (Sechseck), Wochenleiste und Monatskalender.
+- **„Schlau lernen“:** ein Knopf, der automatisch das Sinnvollste startet (fällige Wiederholungen → angefangene Kachel → nächste Kachel).
+- **Inhalte** erzählen Hintergründe: wer etwas entdeckt hat und warum.
+
+Phasen: 7 Kursformat · 8 Kachel-Ablauf · 9 Karte · 10 Wiederholung · 11 Wissensbank + Lerntage · 12 „Schlau lernen“ + Feinschliff.
+Der Nutzer hat am 12.11.2026 gebeten, diese Phasen ohne Pause nacheinander umzusetzen.

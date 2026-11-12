@@ -9,8 +9,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type View =
   | { name: 'home' }
-  | { name: 'course'; courseId: string }
-  | { name: 'lesson'; courseId: string; lessonId: string }
+  /** Karte mit geöffnetem Kursblatt */
+  | { name: 'course'; courseId: string; tileId?: string }
+  /** Kachel lernen oder nur lesen */
+  | { name: 'tile'; courseId: string; tileId: string; mode: 'learn' | 'read' }
+  /** Wissen stärken (alle Kurse oder einer); round zählt „Noch eine Runde“ */
+  | { name: 'review'; courseId?: string; round: number }
+  | { name: 'smart' }
+  | { name: 'knowledge'; section?: 'days' }
   | { name: 'content' }
   | { name: 'settings' }
 

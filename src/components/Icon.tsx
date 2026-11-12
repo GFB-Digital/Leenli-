@@ -5,6 +5,32 @@ const PATHS = {
   chevron: <path d="M9 18l6-6-6-6" />,
   close: <path d="M18 6L6 18M6 6l12 12" />,
   check: <path d="M20 6L9 17l-5-5" />,
+  bolt: <path d="M13.5 2.5L5 13.5h6l-1.5 8L18 10.5h-6z" fill="currentColor" stroke="currentColor" strokeWidth="1" />,
+  hex: <path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z" />,
+  hexFilled: <path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z" fill="currentColor" />,
+  arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
+  arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
+  book: (
+    <>
+      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z" />
+      <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z" />
+    </>
+  ),
+  reset: (
+    <>
+      <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
+      <path d="M4.5 4.5v4h4" />
+      <path d="M12 8.5v4l2.5 1.5" />
+    </>
+  ),
+  knowledge: (
+    <>
+      <path d="M8 3.6l3.5 2v4L8 11.6l-3.5-2v-4z" />
+      <path d="M16 3.6l3.5 2v4L16 11.6l-3.5-2v-4z" />
+      <path d="M12 10.6l3.5 2v4L12 18.6l-3.5-2v-4z" fill="currentColor" />
+    </>
+  ),
+  shield: <path d="M12 3l7 3v5.5c0 4.2-3 7.8-7 9.5-4-1.7-7-5.3-7-9.5V6z" />,
   import: (
     <>
       <path d="M12 4v11" />

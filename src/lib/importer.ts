@@ -1,16 +1,30 @@
 // Import eigener Kurse: JSON lesen, gründlich prüfen, verständliche deutsche
 // Fehlermeldungen erzeugen. Reine Funktionen → getestet in importer.test.ts.
 
-import type { ChoiceStep, Course, Lesson, Step, TrueFalseStep } from './types.ts'
+import { COURSE_COLOR_NAMES, isCourseColor } from './colors.ts'
+import type {
+  BinaryStep,
+  ChoiceStep,
+  ClozeStep,
+  Course,
+  ImageRef,
+  Step,
+  TextStep,
+  Tile,
+  TrueFalseStep,
+} from './types.ts'
 
 export type ParseOutcome =
   | { ok: true; courses: Course[]; notes: string[] }
   | { ok: false; errors: string[] }
 
-/** Mehr Fehler auf einmal zeigen wäre unübersichtlich */
+/** Mehr Fehler auf einmal zu zeigen wäre unübersichtlich */
 export const MAX_ERRORS = 25
 
-const STEP_TYPES = '"text", "choice" oder "truefalse"'
+const STEP_TYPES = '"text", "choice", "binary", "truefalse" oder "cloze"'
+
+/** Lücke im Lückentext: drei oder mehr Unterstriche */
+export const CLOZE_GAP = /_{3,}/
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen
@@ -23,6 +37,10 @@ function isObject(value: unknown): value is Obj {
 
 function isText(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== ''
+}
+
+function isEmpty(value: unknown): boolean {
+  return value === undefined || value === null || value === ''
 }
 
 function shorten(text: string, max = 40): string {
@@ -65,7 +83,7 @@ export function uniqueId(base: string, taken: Set<string>): string {
  * Begleittext wie „Hier ist dein Kurs:“.
  */
 export function extractJson(raw: string): string {
-  const text = raw.replace(/^\uFEFF/, '').trim()
+  const text = raw.replace(/^\ufeff/, '').trim()
 
   // Codeblöcke: ``` am Zeilenanfang. Ein bloß erwähntes „```json“ im Fließtext zählt nicht.
   const fence = /(?:^|\n)[ \t]*```[a-zA-Z]*[ \t]*\r?\n([\s\S]*?)(?:\r?\n[ \t]*```|$)/g
@@ -106,7 +124,6 @@ function describeJsonError(error: unknown, text: string): string[] {
     if (content?.trim()) errors.push(`Zeile ${line}: ${shorten(content.trim(), 80)}`)
   }
 
-  // Häufige Ursachen gezielt benennen
   if (/[“”„]\s*:/.test(text) || /:\s*[“”„]/.test(text)) {
     errors.push('Tipp: Es stehen typografische Anführungszeichen („ “) im JSON. Nötig sind gerade: "')
   } else if (/,\s*[}\]]/.test(text)) {
@@ -127,6 +144,86 @@ interface Context {
   notes: string[]
 }
 
+/** Prüft Felder eines Objekts und sammelt Fehler mit Ortsangabe */
+function fields(value: Obj, where: string, ctx: Context) {
+  return {
+    required(key: string, label: string): string | null {
+      const field = value[key]
+      if (!isText(field)) {
+        ctx.errors.push(`${where}: ${label} („${key}“) fehlt oder ist leer.`)
+        return null
+      }
+      return field.trim()
+    },
+    optional(key: string): string | undefined {
+      const field = value[key]
+      if (isEmpty(field)) return undefined
+      if (typeof field !== 'string') {
+        ctx.errors.push(`${where}: „${key}“ muss ein Text sein.`)
+        return undefined
+      }
+      return field.trim() || undefined
+    },
+    /** Liste kurzer Texte (für „intro“ und „recap“) */
+    textList(key: string): string[] | undefined {
+      const field = value[key]
+      if (isEmpty(field)) return undefined
+      if (!Array.isArray(field) || field.some((item) => !isText(item))) {
+        ctx.errors.push(`${where}: „${key}“ muss eine Liste von Texten sein, z. B. ["…", "…"].`)
+        return undefined
+      }
+      return field.length > 0 ? (field as string[]).map((item) => item.trim()) : undefined
+    },
+    /** Antwortmöglichkeiten + Index der richtigen */
+    options(min: number, max: number, exact = false): { options: string[]; answer: number } | null {
+      const options = value.options
+      const count = exact ? `genau ${min}` : `${min} bis ${max}`
+      if (!Array.isArray(options) || options.length < min || options.length > max) {
+        ctx.errors.push(`${where}: „options“ muss eine Liste mit ${count} Antworten sein.`)
+        return null
+      }
+      const bad = options.findIndex((option) => !isText(option))
+      if (bad >= 0) {
+        ctx.errors.push(`${where}: Antwort ${bad + 1} in „options“ ist leer oder kein Text.`)
+        return null
+      }
+      const answer = value.answer
+      const last = options.length - 1
+      if (typeof answer !== 'number' || !Number.isInteger(answer)) {
+        ctx.errors.push(
+          `${where}: „answer“ muss die Nummer der richtigen Antwort sein (0 = erste, ${last} = letzte).`,
+        )
+        return null
+      }
+      if (answer < 0 || answer > last) {
+        ctx.errors.push(
+          `${where}: „answer“ ist ${answer}, erlaubt sind aber nur 0 bis ${last}. Die Zählung beginnt bei 0.`,
+        )
+        return null
+      }
+      return { options: (options as string[]).map((option) => option.trim()), answer }
+    },
+  }
+}
+
+function validateImage(value: unknown, where: string, ctx: Context): ImageRef | undefined {
+  if (isEmpty(value)) return undefined
+  const image: Obj | null = typeof value === 'string' ? { src: value } : isObject(value) ? value : null
+  if (!image || !isText(image.src)) {
+    ctx.errors.push(`${where}: „image“ braucht eine Bildadresse in „src“.`)
+    return undefined
+  }
+  const src = image.src.trim()
+  if (!/^https:\/\//i.test(src) && !/^data:image\//i.test(src)) {
+    ctx.errors.push(`${where}: Die Bildadresse muss mit https:// beginnen.`)
+    return undefined
+  }
+  const result: ImageRef = { src }
+  if (isText(image.alt)) result.alt = image.alt.trim()
+  if (isText(image.credit)) result.credit = image.credit.trim()
+  return result
+}
+
 function validateStep(value: unknown, where: string, ctx: Context): Step | null {
   if (!isObject(value)) {
     ctx.errors.push(`${where}: Erwartet wird ein Objekt { … }.`)
@@ -137,73 +234,47 @@ function validateStep(value: unknown, where: string, ctx: Context): Step | null 
     ctx.errors.push(`${where}: Die Angabe „type“ fehlt (${STEP_TYPES}).`)
     return null
   }
-
-  const optional = (key: string): string | undefined => {
-    const field = value[key]
-    if (field === undefined || field === null || field === '') return undefined
-    if (typeof field !== 'string') {
-      ctx.errors.push(`${where}: „${key}“ muss ein Text sein.`)
-      return undefined
-    }
-    return field.trim()
-  }
-  const required = (key: string, label: string): string | null => {
-    const field = value[key]
-    if (!isText(field)) {
-      ctx.errors.push(`${where}: ${label} („${key}“) fehlt oder ist leer.`)
-      return null
-    }
-    return field.trim()
-  }
+  const f = fields(value, where, ctx)
 
   if (type === 'text') {
-    const text = required('text', 'Der Lesetext')
-    const title = optional('title')
+    const text = f.required('text', 'Der Lesetext')
+    const title = f.optional('title')
+    const image = validateImage(value.image, where, ctx)
     if (text === null) return null
-    return title ? { type, title, text } : { type, text }
+    const step: TextStep = { type, text }
+    if (title) step.title = title
+    if (image) step.image = image
+    return step
   }
 
   if (type === 'choice') {
-    const question = required('question', 'Die Frage')
-    const explanation = optional('explanation')
-    const options = value.options
-    if (!Array.isArray(options) || options.length < 2) {
-      ctx.errors.push(`${where}: „options“ muss eine Liste mit mindestens 2 Antworten sein.`)
-      return null
-    }
-    const badOption = options.findIndex((option) => !isText(option))
-    if (badOption >= 0) {
-      ctx.errors.push(`${where}: Antwort ${badOption + 1} in „options“ ist leer oder kein Text.`)
-      return null
-    }
-    const answer = value.answer
-    const last = options.length - 1
-    if (typeof answer !== 'number' || !Number.isInteger(answer)) {
-      ctx.errors.push(
-        `${where}: „answer“ muss die Nummer der richtigen Antwort sein (0 = erste, ${last} = letzte).`,
-      )
-      return null
-    }
-    if (answer < 0 || answer > last) {
-      ctx.errors.push(
-        `${where}: „answer“ ist ${answer}, erlaubt sind aber nur 0 bis ${last}. Die Zählung beginnt bei 0.`,
-      )
-      return null
-    }
-    if (question === null) return null
-    const step: ChoiceStep = {
+    const question = f.required('question', 'Die Frage')
+    const explanation = f.optional('explanation')
+    const choice = f.options(2, 6)
+    if (question === null || !choice) return null
+    const step: ChoiceStep = { type, question, ...choice }
+    if (explanation) step.explanation = explanation
+    return step
+  }
+
+  if (type === 'binary') {
+    const question = f.required('question', 'Die Frage')
+    const explanation = f.optional('explanation')
+    const choice = f.options(2, 2, true)
+    if (question === null || !choice) return null
+    const step: BinaryStep = {
       type,
       question,
-      options: (options as string[]).map((option) => option.trim()),
-      answer,
+      options: [choice.options[0], choice.options[1]],
+      answer: choice.answer === 1 ? 1 : 0,
     }
     if (explanation) step.explanation = explanation
     return step
   }
 
   if (type === 'truefalse') {
-    const statement = required('statement', 'Die Aussage')
-    const explanation = optional('explanation')
+    const statement = f.required('statement', 'Die Aussage')
+    const explanation = f.optional('explanation')
     const answer = value.answer
     if (typeof answer !== 'boolean') {
       const hint = answer === 'true' || answer === 'false' ? ' – ohne Anführungszeichen' : ''
@@ -216,36 +287,54 @@ function validateStep(value: unknown, where: string, ctx: Context): Step | null 
     return step
   }
 
+  if (type === 'cloze') {
+    const text = f.required('text', 'Der Lückentext')
+    const explanation = f.optional('explanation')
+    const choice = f.options(2, 6)
+    if (text !== null) {
+      const gaps = text.match(new RegExp(CLOZE_GAP.source, 'g'))?.length ?? 0
+      if (gaps !== 1) {
+        ctx.errors.push(`${where}: Der Lückentext braucht genau eine Lücke „___“ (gefunden: ${gaps}).`)
+        return null
+      }
+    }
+    if (text === null || !choice) return null
+    const step: ClozeStep = { type, text, ...choice }
+    if (explanation) step.explanation = explanation
+    return step
+  }
+
   ctx.errors.push(`${where}: Unbekannter Typ „${String(type)}“. Erlaubt sind ${STEP_TYPES}.`)
   return null
 }
 
-function validateLesson(
+function validateTile(
   value: unknown,
   index: number,
   courseLabel: string,
   takenIds: Set<string>,
   ctx: Context,
-): { lesson: Lesson | null; generatedId: boolean } {
-  const where = `${courseLabel} › ${titled(`Lektion ${index + 1}`, isObject(value) ? value.title : undefined)}`
+): { tile: Tile | null; generatedId: boolean } {
+  const where = `${courseLabel} › ${titled(`Kachel ${index + 1}`, isObject(value) ? value.title : undefined)}`
   if (!isObject(value)) {
     ctx.errors.push(`${where}: Erwartet wird ein Objekt { … }.`)
-    return { lesson: null, generatedId: false }
+    return { tile: null, generatedId: false }
   }
+  const f = fields(value, where, ctx)
+  const title = f.required('title', 'Der Titel')
+  const emoji = f.optional('emoji')
+  const intro = f.textList('intro')
+  const recap = f.textList('recap')
 
-  const title = isText(value.title) ? value.title.trim() : null
-  if (!title) ctx.errors.push(`${where}: Der Titel („title“) fehlt oder ist leer.`)
-
-  // ID: vorhanden → prüfen; fehlt → aus dem Titel erzeugen
   let id: string | null = null
   let generatedId = false
-  if (value.id === undefined || value.id === null || value.id === '') {
-    id = uniqueId(slugify(title ?? '') || `lektion-${index + 1}`, takenIds)
+  if (isEmpty(value.id)) {
+    id = uniqueId(slugify(title ?? '') || `kachel-${index + 1}`, takenIds)
     generatedId = true
   } else if (isText(value.id) || typeof value.id === 'number') {
     id = String(value.id).trim()
     if (takenIds.has(id)) {
-      ctx.errors.push(`${where}: Die Lektions-ID „${id}“ kommt in diesem Kurs mehrfach vor.`)
+      ctx.errors.push(`${where}: Die Kachel-ID „${id}“ kommt in diesem Kurs mehrfach vor.`)
     }
   } else {
     ctx.errors.push(`${where}: „id“ muss ein Text sein.`)
@@ -255,21 +344,20 @@ function validateLesson(
   const steps = value.steps
   if (!Array.isArray(steps) || steps.length === 0) {
     ctx.errors.push(`${where}: „steps“ muss eine Liste mit mindestens einem Schritt sein.`)
-    return { lesson: null, generatedId }
+    return { tile: null, generatedId }
   }
 
   const checked = steps.map((step, k) => {
-    const kind =
-      isObject(step) && step.type === 'text'
-        ? 'Text'
-        : isObject(step) && (step.type === 'choice' || step.type === 'truefalse')
-          ? 'Frage'
-          : ''
+    const kind = isObject(step) ? (step.type === 'text' ? 'Seite' : step.type ? 'Frage' : '') : ''
     return validateStep(step, `${where} › Schritt ${k + 1}${kind ? ` (${kind})` : ''}`, ctx)
   })
 
-  if (!title || !id || checked.some((step) => step === null)) return { lesson: null, generatedId }
-  return { lesson: { id, title, steps: checked as Step[] }, generatedId }
+  if (!title || !id || checked.some((step) => step === null)) return { tile: null, generatedId }
+  const tile: Tile = { id, title, steps: checked as Step[] }
+  if (emoji) tile.emoji = emoji
+  if (intro) tile.intro = intro
+  if (recap) tile.recap = recap
+  return { tile, generatedId }
 }
 
 function validateCourse(value: unknown, index: number, total: number, ctx: Context): Course | null {
@@ -279,12 +367,19 @@ function validateCourse(value: unknown, index: number, total: number, ctx: Conte
     ctx.errors.push(`${label}: Erwartet wird ein Objekt { … }.`)
     return null
   }
+  const f = fields(value, label, ctx)
+  const title = f.required('title', 'Der Titel')
+  const emoji = f.optional('emoji')
+  const description = f.optional('description')
 
-  const title = isText(value.title) ? value.title.trim() : null
-  if (!title) ctx.errors.push(`${label}: Der Titel („title“) fehlt oder ist leer.`)
+  let color = f.optional('color')
+  if (color && !isCourseColor(color)) {
+    ctx.errors.push(`${label}: Unbekannte Farbe „${color}“. Erlaubt: ${COURSE_COLOR_NAMES.join(', ')}.`)
+    color = undefined
+  }
 
   let id: string | null = null
-  if (value.id === undefined || value.id === null || value.id === '') {
+  if (isEmpty(value.id)) {
     id = slugify(title ?? '') || 'kurs'
     ctx.notes.push(`${label}: Keine ID angegeben – „${id}“ wird verwendet.`)
   } else if (isText(value.id) || typeof value.id === 'number') {
@@ -293,43 +388,33 @@ function validateCourse(value: unknown, index: number, total: number, ctx: Conte
     ctx.errors.push(`${label}: „id“ muss ein Text sein.`)
   }
 
-  const optional = (key: 'emoji' | 'description'): string | undefined => {
-    const field = value[key]
-    if (field === undefined || field === null || field === '') return undefined
-    if (typeof field !== 'string') {
-      ctx.errors.push(`${label}: „${key}“ muss ein Text sein.`)
-      return undefined
-    }
-    return field.trim() || undefined
-  }
-  const emoji = optional('emoji')
-  const description = optional('description')
-
-  const lessons = value.lessons
-  if (!Array.isArray(lessons) || lessons.length === 0) {
-    ctx.errors.push(`${label}: „lessons“ muss eine Liste mit mindestens einer Lektion sein.`)
+  // Ältere Kurse heißen „lessons“ statt „tiles“ – beides wird angenommen
+  const tiles = value.tiles ?? value.lessons
+  if (!Array.isArray(tiles) || tiles.length === 0) {
+    ctx.errors.push(`${label}: „tiles“ muss eine Liste mit mindestens einer Kachel sein.`)
     return null
   }
 
-  const takenLessonIds = new Set<string>()
+  const takenTileIds = new Set<string>()
   let generated = 0
-  const checked = lessons.map((lesson, j) => {
-    const result = validateLesson(lesson, j, label, takenLessonIds, ctx)
+  const checked = tiles.map((tile, j) => {
+    const result = validateTile(tile, j, label, takenTileIds, ctx)
     if (result.generatedId) generated++
-    return result.lesson
+    return result.tile
   })
   if (generated > 0) {
     ctx.notes.push(
       generated === 1
-        ? `${label}: 1 fehlende Lektions-ID wurde ergänzt.`
-        : `${label}: ${generated} fehlende Lektions-IDs wurden ergänzt.`,
+        ? `${label}: 1 fehlende Kachel-ID wurde ergänzt.`
+        : `${label}: ${generated} fehlende Kachel-IDs wurden ergänzt.`,
     )
   }
 
-  if (!title || !id || checked.some((lesson) => lesson === null)) return null
-  const course: Course = { id, title, lessons: checked as Lesson[] }
+  if (!title || !id || checked.some((tile) => tile === null)) return null
+  const course: Course = { id, title, tiles: checked as Tile[] }
   if (emoji) course.emoji = emoji
   if (description) course.description = description
+  if (color) course.color = color
   return course
 }
 
@@ -347,7 +432,11 @@ export function parseCourses(raw: string): ParseOutcome {
   } catch (error) {
     return { ok: false, errors: describeJsonError(error, text) }
   }
+  return validateCourses(data)
+}
 
+/** Prüft bereits gelesene Daten (auch für gespeicherte Kurse älteren Formats) */
+export function validateCourses(data: unknown): ParseOutcome {
   const list = Array.isArray(data)
     ? data
     : isObject(data) && Array.isArray(data.courses)
@@ -356,10 +445,7 @@ export function parseCourses(raw: string): ParseOutcome {
         ? [data]
         : null
   if (!list) {
-    return {
-      ok: false,
-      errors: ['Erwartet wird ein Kurs { … } oder eine Liste von Kursen [ … ].'],
-    }
+    return { ok: false, errors: ['Erwartet wird ein Kurs { … } oder eine Liste von Kursen [ … ].'] }
   }
   if (list.length === 0) return { ok: false, errors: ['Die Liste enthält keinen Kurs.'] }
 
@@ -370,7 +456,9 @@ export function parseCourses(raw: string): ParseOutcome {
     const course = validateCourse(value, i, list.length, ctx)
     if (!course) return
     if (seen.has(course.id)) {
-      ctx.errors.push(`${titled(`Kurs ${i + 1}`, course.title)}: Die ID „${course.id}“ kommt in diesem Import mehrfach vor.`)
+      ctx.errors.push(
+        `${titled(`Kurs ${i + 1}`, course.title)}: Die ID „${course.id}“ kommt in diesem Import mehrfach vor.`,
+      )
     }
     seen.add(course.id)
     courses.push(course)

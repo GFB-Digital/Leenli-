@@ -9,7 +9,7 @@
     <meta name="description" content="Lernen in kurzen Abschnitten – mit eingebautem Speed-Reader." />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#15141a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#212125" media="(prefers-color-scheme: dark)" />
 
     <!-- Als App vom Home-Bildschirm (iPhone/iPad) -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -32,7 +32,7 @@
         var root = document.documentElement
         if (a && (a.theme === 'light' || a.theme === 'dark')) {
           root.setAttribute('data-theme', a.theme)
-          var bar = a.theme === 'dark' ? '#15141a' : '#f7f3ea'
+          var bar = a.theme === "dark" ? "#212125" : "#f7f3ea"
           document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
             m.setAttribute('content', bar)
           })

@@ -38,7 +38,7 @@ const OFFLINE_TEXT: Record<OfflineStatus, string> = {
 
 export function SettingsScreen({ nav }: { nav: Navigation }) {
   const pwa = usePwa()
-  const { settings, storage, progress } = useAppState()
+  const { settings, storage, learn } = useAppState()
   const [confirmReset, setConfirmReset] = useState(false)
   const [resetDone, setResetDone] = useState(false)
   const [persistent, setPersistent] = useState<boolean | null>(null)
@@ -47,7 +47,7 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
     void isStoragePersistent().then(setPersistent)
   }, [])
 
-  const hasProgress = Object.values(progress).some((lessons) => Object.keys(lessons).length > 0)
+  const hasProgress = Object.keys(learn.cards).length > 0 || Object.values(learn.tiles).some((tiles) => Object.keys(tiles).length > 0)
 
   return (
     <>
@@ -62,7 +62,7 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
             <div className="setting-text">
               <span className="setting-label">Standard-Lesemodus</span>
               <span className="setting-hint">
-                Damit beginnt jeder Leseabschnitt. In der Lektion kannst du jederzeit umschalten.
+                Damit beginnt jeder Leseabschnitt. Auf jeder Seite kannst du jederzeit umschalten.
               </span>
             </div>
             <SegmentedControl
@@ -100,6 +100,23 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
         </section>
 
         <section className="card settings-group">
+          <h2 className="card-title">Wiederholen</h2>
+          <div className="setting">
+            <div className="setting-text">
+              <span className="setting-label">Fragen pro Runde</span>
+              <span className="setting-hint">So viele Fragen kommen bei „Wissen stärken“ und „Schlau lernen“ auf einmal.</span>
+            </div>
+            <SegmentedControl
+              label="Fragen pro Runde"
+              value={String(settings.reviewBatch)}
+              options={['5', '10', '15', '20'].map((value) => ({ value, label: value }))}
+              onChange={(value) => void updateSettings({ reviewBatch: Number(value) })}
+              fill
+            />
+          </div>
+        </section>
+
+        <section className="card settings-group">
           <h2 className="card-title">Darstellung</h2>
           <div className="setting">
             <SegmentedControl
@@ -117,7 +134,7 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
           <h2 className="card-title">Fortschritt</h2>
           <div className="setting">
             <span className="setting-hint">
-              Entfernt alle Häkchen und Ergebnisse. Kurse und Einstellungen bleiben erhalten.
+              Alle Kacheln gelten wieder als neu, der Wiederholungsstand wird gelöscht. Kurse, Einstellungen, Lerntage und Lernzeit bleiben erhalten.
             </span>
             <button
               type="button"
@@ -163,7 +180,7 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
       <ConfirmDialog
         open={confirmReset}
         title="Fortschritt zurücksetzen?"
-        message={<p>Alle Häkchen und Ergebnisse werden gelöscht. Das lässt sich nicht rückgängig machen.</p>}
+        message={<p>Alle Kacheln gelten wieder als neu, der Wiederholungsstand wird gelöscht. Das lässt sich nicht rückgängig machen.</p>}
         confirmLabel="Zurücksetzen"
         onConfirm={() => {
           void resetProgress()

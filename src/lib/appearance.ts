@@ -6,7 +6,7 @@ import type { FontSize, Settings, Theme } from './types.ts'
 export const FONT_SCALE: Record<FontSize, number> = { S: 0.9, M: 1, L: 1.12, XL: 1.25 }
 
 /** Entspricht --bg in global.css (für die Browser-/Statusleiste) */
-const BAR_COLOR = { light: '#f7f3ea', dark: '#15141a' } as const
+const BAR_COLOR = { light: '#f7f3ea', dark: '#212125' } as const
 
 export function applyAppearance(settings: Pick<Settings, 'theme' | 'fontSize'>) {
   const root = document.documentElement

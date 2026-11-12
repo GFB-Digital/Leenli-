@@ -125,7 +125,7 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={onInputKey}
-            placeholder={'{\n  "id": "…",\n  "title": "…",\n  "lessons": [ … ]\n}'}
+            placeholder={'{\n  "id": "…",\n  "title": "…",\n  "tiles": [ … ]\n}'}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -165,7 +165,7 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
                 <ul className="result-list">
                   {result.courses.map((course) => (
                     <li key={course.id}>
-                      {course.title}: {plural(course.lessons.length, 'Lektion', 'Lektionen')}
+                      {course.title}: {plural(course.tiles.length, 'Kachel', 'Kacheln')}
                     </li>
                   ))}
                   {result.notes.map((note) => (
@@ -243,7 +243,7 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
                   <span className="manage-body">
                     <span className="manage-title">{course.title}</span>
                     <span className="manage-meta">
-                      {plural(course.lessons.length, 'Lektion', 'Lektionen')} · {origin}
+                      {plural(course.tiles.length, 'Kachel', 'Kacheln')} · {origin}
                     </span>
                   </span>
                   {imported && (
@@ -281,7 +281,7 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
                 : `Diese Kurse haben dieselbe ID wie vorhandene: ${pending?.conflicts
                     .map((c) => `„${existingTitle(c)}“`)
                     .join(', ')}.`}{' '}
-              Beim Ersetzen bleibt dein Fortschritt für Lektionen mit gleicher ID erhalten.
+              Beim Ersetzen bleibt dein Fortschritt für Kacheln mit gleicher ID erhalten.
             </p>
             {conflictBuiltin && (
               <p>

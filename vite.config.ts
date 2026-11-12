@@ -43,6 +43,18 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png}'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
+        // Bilder aus Kursen (z. B. Wikimedia) nach dem ersten Laden offline verfügbar
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'leenli-bilder',
+              expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       // Im Entwicklungsmodus (npm run dev) bleibt der Service Worker aus.
       // Offline-Test: npm run build und danach npm run preview.

@@ -1,13 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { UpdateBanner } from './components/UpdateBanner.tsx'
 import { applyAppearance } from './lib/appearance.ts'
-import { useNavigation } from './lib/navigation.ts'
+import { useNavigation, type Navigation } from './lib/navigation.ts'
 import { usePwa } from './lib/pwa.ts'
 import { useAppState } from './lib/store.ts'
 import { ContentScreen } from './screens/ContentScreen.tsx'
-import { CourseScreen } from './screens/CourseScreen.tsx'
-import { HomeScreen } from './screens/HomeScreen.tsx'
-import { LessonScreen } from './screens/LessonScreen.tsx'
+import { KnowledgeScreen } from './screens/KnowledgeScreen.tsx'
+import { MapScreen } from './screens/MapScreen.tsx'
+import { ReviewSession, SessionScreen, SmartSession, type SessionSpec } from './screens/SessionScreen.tsx'
 import { SettingsScreen } from './screens/SettingsScreen.tsx'
 
 export default function App() {
@@ -25,31 +25,69 @@ export default function App() {
   if (!app.loaded) return <div className="app" aria-busy="true" />
 
   const { view } = nav
-  const course =
-    view.name === 'course' || view.name === 'lesson'
-      ? app.courses.find((c) => c.id === view.courseId)
-      : undefined
-  const lesson =
-    view.name === 'lesson' ? course?.lessons.find((l) => l.id === view.lessonId) : undefined
-
   let screen
-  if (view.name === 'lesson' && course && lesson) {
-    screen = <LessonScreen key={lesson.id} course={course} lesson={lesson} nav={nav} />
-  } else if ((view.name === 'course' || view.name === 'lesson') && course) {
-    screen = <CourseScreen course={course} nav={nav} />
-  } else if (view.name === 'content') {
-    screen = <ContentScreen nav={nav} />
-  } else if (view.name === 'settings') {
-    screen = <SettingsScreen nav={nav} />
-  } else {
-    // Startseite – auch als Rückfall, falls ein Kurs inzwischen gelöscht wurde
-    screen = <HomeScreen nav={nav} />
+  switch (view.name) {
+    case 'course':
+      screen = <MapScreen nav={nav} selectedCourseId={view.courseId} focusTileId={view.tileId} />
+      break
+    case 'tile':
+      screen = (
+        <TileSession
+          key={`${view.courseId}/${view.tileId}/${view.mode}`}
+          courseId={view.courseId}
+          tileId={view.tileId}
+          mode={view.mode}
+          nav={nav}
+        />
+      )
+      break
+    case 'review':
+      screen = <ReviewSession key={`${view.courseId ?? 'alle'}/${view.round}`} courseId={view.courseId} round={view.round} nav={nav} />
+      break
+    case 'smart':
+      screen = <SmartSession nav={nav} />
+      break
+    case 'knowledge':
+      screen = <KnowledgeScreen nav={nav} section={view.section} />
+      break
+    case 'content':
+      screen = <ContentScreen nav={nav} />
+      break
+    case 'settings':
+      screen = <SettingsScreen nav={nav} />
+      break
+    default:
+      screen = <MapScreen nav={nav} />
   }
 
+  const inSession = view.name === 'tile' || view.name === 'review' || view.name === 'smart'
   return (
     <div className="app">
       {screen}
-      {pwa.updateAvailable && view.name !== 'lesson' && <UpdateBanner />}
+      {pwa.updateAvailable && !inSession && <UpdateBanner />}
     </div>
   )
+}
+
+/** Kachel lernen oder lesen – fällt auf die Karte zurück, falls es sie nicht (mehr) gibt */
+function TileSession({
+  courseId,
+  tileId,
+  mode,
+  nav,
+}: {
+  courseId: string
+  tileId: string
+  mode: 'learn' | 'read'
+  nav: Navigation
+}) {
+  const { courses } = useAppState()
+  const course = courses.find((c) => c.id === courseId)
+  const tile = course?.tiles.find((t) => t.id === tileId)
+  const spec = useMemo<SessionSpec | null>(
+    () => (course && tile ? { kind: 'tile', course, tile, mode } : null),
+    [course, tile, mode],
+  )
+  if (!spec) return <MapScreen nav={nav} />
+  return <SessionScreen spec={spec} nav={nav} />
 }

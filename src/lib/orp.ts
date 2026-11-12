@@ -162,7 +162,8 @@ export function splitCompound(word: string): string[] {
 export function tokenize(text: string): Token[] {
   const tokens: Token[] = []
 
-  paragraphs(text).forEach((paragraph, paragraphIndex) => {
+  // **fett**-Markierungen gehören nicht zum Lesetext
+  paragraphs(text.replace(/\*\*/g, '')).forEach((paragraph, paragraphIndex) => {
     const words: string[] = []
     let pending = '' // Satzzeichen am Absatzanfang, z. B. ein einzelnes „–“
     for (const raw of paragraph.split(/\s+/)) {
