@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Phase 5 abgeschlossen (inkl. Überarbeitung des Speed-Readers nach Video-Vorbild), als Nächstes Phase 6 (Feinschliff).
+**Stand:** 12.11.2026 – Phase 6 abgeschlossen. Offen: GitHub Pages im Repo einschalten (Nutzer) und Rückmeldungen vom iPhone-Test.
 
 ## Erledigt
 
@@ -48,6 +48,15 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - Darstellung und Schriftgröße: [src/lib/appearance.ts](src/lib/appearance.ts) setzt `data-theme` und `--font-scale` an `<html>`
 - Neue Bausteine: `TempoControl`, `ConfirmDialog` mit optionaler dritter Möglichkeit, `copyText` ([clipboard.ts](src/lib/clipboard.ts))
 
+### Phase 6 – Feinschliff
+- **Veröffentlichung:** [.github/workflows/pages.yml](.github/workflows/pages.yml) testet, baut und veröffentlicht bei jedem Push auf `main` nach <https://gfb-digital.github.io/Leenli-/> (Node 26, `npm ci` → `npm test` → `npm run build`)
+- **Kein Aufblitzen der Farben beim Start:** Darstellung und Schriftgröße werden zusätzlich in `localStorage` (`leenli-appearance`) gespiegelt; ein kleines Skript in [index.html](index.html) setzt sie vor dem ersten Zeichnen
+- **Handy im Querformat:** Wortgröße richtet sich auch nach der Höhe (`min(10vw, 9vh)`); bei niedriger Höhe scrollt die untere Leiste mit, statt Inhalt zu verdecken
+- **iOS:** kein Kopiermenü bei langem Druck auf das Wort (`-webkit-touch-callout: none`)
+- **Geprüft:** 360 px (hell/dunkel), 390 px, iPad 820 px, PC 1280 px, Querformat 844×390 – kein seitliches Scrollen, Fokus überall auf ≤ 0,02 px genau
+- **README** komplett: Installation auf dem Handy, Claude-Workflow, Kursformat, Speed-Reader-Regeln, Entwicklung, GitHub Pages, Projektaufbau, Capacitor. Die Vorlage wurde per Skript aus `claude-template.ts` eingesetzt (bei Änderungen der Vorlage README mit aktualisieren).
+- `@types/node` auf ^26 angehoben; `npm audit`: App-Code 0 Warnungen, die 6 Warnungen in workbox-build bestehen weiter (keine korrigierte Version verfügbar)
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
@@ -77,14 +86,11 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
   - Bei „Ganzer Text“ springt der Reader zum angetippten Wort.
   - Ein Mausklick wählt die Bedien-Buttons nicht aus, damit die Leertaste immer Start/Pause bleibt.
 
-## Nächste Phase: 6 – Feinschliff
-- Rückmeldungen des Nutzers vom iPhone-Test einarbeiten (Speed-Reader-Optik, Lesbarkeit, Bedienung)
-- Design-Durchgang über alle Bildschirme, Dunkelmodus, iPhone-Größe (inkl. Safe Areas im Querformat)
-- Prüfen: Kopieren der Vorlage auf dem iPhone (im WLAN-Test ohne HTTPS greift der Ersatzweg)
-- README: Installation, Inhaltsformat, Prompt-Vorlage, später Capacitor ergänzen
-- **Hosting klären:** Für Installation und Offline-Nutzung auf dem iPhone braucht die App HTTPS (z. B. GitHub Pages)
-- `npm audit` erneut prüfen
+## Als Nächstes
+- **GitHub Pages einschalten (Nutzer, einmalig):** Repo → Settings → Pages → Source „GitHub Actions“. Claude durfte das nicht selbst tun (Einstellung, die etwas öffentlich macht). Danach einmal pushen oder den Workflow unter „Actions“ starten.
+- Rückmeldungen vom echten iPhone einarbeiten: Speed-Reader-Optik, Lesbarkeit, Kopieren der Vorlage, Installation vom Home-Bildschirm
+- Mögliche Ideen für später: Export/Import des Fortschritts als Datei (Sicherung), Wiederholungs-Erinnerungen (Abstandseffekt), Startbildschirme für iOS
 
 ## Offene Punkte
-- **Hosting:** Damit die App auf dem iPhone installierbar und offline nutzbar ist, muss sie per HTTPS erreichbar sein (z. B. GitHub Pages). In Phase 6 klären.
+- **Hosting:** Workflow für GitHub Pages ist fertig; das Einschalten in den Repo-Einstellungen steht noch aus (siehe „Als Nächstes“).
 - **Abweichung von PLAN.md:** Der Plan nennt für den Fokusbuchstaben „Mitte“. Auf Wunsch des Nutzers (Video-Vorbild) steht er jetzt bei 38 %.

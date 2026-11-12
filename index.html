@@ -23,6 +23,23 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
 
     <title>Leenli</title>
+
+    <!-- Gewählte Darstellung sofort setzen, bevor die App geladen ist
+         (Gegenstück: src/lib/appearance.ts) -->
+    <script>
+      try {
+        var a = JSON.parse(localStorage.getItem('leenli-appearance') || 'null')
+        var root = document.documentElement
+        if (a && (a.theme === 'light' || a.theme === 'dark')) {
+          root.setAttribute('data-theme', a.theme)
+          var bar = a.theme === 'dark' ? '#15141a' : '#f7f3ea'
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+            m.setAttribute('content', bar)
+          })
+        }
+        if (a && typeof a.fontScale === 'number') root.style.setProperty('--font-scale', String(a.fontScale))
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

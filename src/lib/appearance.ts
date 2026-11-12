@@ -24,4 +24,19 @@ export function applyAppearance(settings: Pick<Settings, 'theme' | 'fontSize'>) 
     const color = theme === 'auto' ? (forSystemDark ? BAR_COLOR.dark : BAR_COLOR.light) : BAR_COLOR[theme]
     meta.content = color
   })
+
+  // Kopie für den nächsten Start: index.html setzt die Darstellung damit schon
+  // vor dem ersten Zeichnen (sonst blitzt kurz die falsche Farbe auf).
+  // Nur eine Bequemlichkeit – die echten Einstellungen liegen in IndexedDB.
+  try {
+    localStorage.setItem(
+      APPEARANCE_KEY,
+      JSON.stringify({ theme, fontScale: FONT_SCALE[settings.fontSize] ?? 1 }),
+    )
+  } catch {
+    // privates Fenster o. Ä. – dann eben ohne
+  }
 }
+
+/** Muss zum Skript in index.html passen */
+const APPEARANCE_KEY = 'leenli-appearance'

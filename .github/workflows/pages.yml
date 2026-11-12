@@ -1,0 +1,53 @@
+# Veröffentlicht Leenli bei jedem Push auf main automatisch auf GitHub Pages:
+# https://gfb-digital.github.io/Leenli-/
+# Ablauf: Abhängigkeiten installieren → Tests → Build → dist/ hochladen → veröffentlichen.
+# Schlägt ein Test fehl, wird nichts veröffentlicht.
+
+name: Auf GitHub Pages veröffentlichen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # zusätzlich per Knopf unter „Actions“ startbar
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur eine Veröffentlichung gleichzeitig; eine neuere ersetzt eine laufende
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Testen und bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    name: Veröffentlichen
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

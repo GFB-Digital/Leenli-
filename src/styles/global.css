@@ -1209,7 +1209,8 @@ button {
 
 /* Bühne: Tippen = Start/Pause. Kein Kasten – die zwei Linien rahmen das Wort. */
 .rsvp-stage {
-  --rsvp-size: calc(clamp(2.125rem, 10vw, 3.25rem) * var(--font-scale));
+  /* richtet sich nach Breite UND Höhe → passt auch im Querformat */
+  --rsvp-size: calc(clamp(1.75rem, min(10vw, 9vh), 3.25rem) * var(--font-scale));
   --rsvp-line: 1.5px;
   position: relative;
   display: block;
@@ -1227,6 +1228,8 @@ button {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* iOS: kein Lupen-/Kopiermenü bei langem Drücken auf das Wort */
+  -webkit-touch-callout: none;
 }
 
 /* Waagerechte Linien über die ganze Breite … */
@@ -1751,4 +1754,23 @@ button {
 
 .segmented-option {
   white-space: nowrap;
+}
+
+/* ---------- Niedrige Bildschirme (Handy im Querformat) ---------- */
+
+@media (max-height: 500px) {
+  /* Untere Leiste scrollt mit, statt Inhalt zu verdecken */
+  .lesson-footer {
+    position: static;
+    background: none;
+    padding-top: 0.5rem;
+  }
+
+  .lesson-content {
+    gap: 0.875rem;
+  }
+
+  .rsvp-stage {
+    height: calc(var(--rsvp-size) * 3.2);
+  }
 }
