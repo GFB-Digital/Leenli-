@@ -20,3 +20,7 @@ Thumbs.db
 # Lokale Umgebungsdateien
 .env
 .env.*
+
+# Eigene Studienkurse: eigenes privates Repo (GFB-Digital/Leenli-Kurse),
+# enthält urheberrechtlich geschützte Vorlesungsinhalte – nie hier veröffentlichen
+kurse/
