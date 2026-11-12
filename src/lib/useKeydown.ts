@@ -33,6 +33,15 @@ export function isOnButton(event: KeyboardEvent): boolean {
   return event.target instanceof Element && event.target.closest('button') !== null
 }
 
+/**
+ * Für onMouseDown von Bedien-Buttons: Ein Mausklick wählt den Button nicht aus.
+ * Sonst würde z. B. die Leertaste danach diesen Button auslösen statt
+ * Start/Pause. Mit der Tab-Taste bleiben die Buttons trotzdem erreichbar.
+ */
+export function keepKeyboardFocus(event: { preventDefault: () => void }) {
+  event.preventDefault()
+}
+
 /** Pfeiltasten verschieben einen ausgewählten Schieberegler selbst */
 export function isOnSlider(event: KeyboardEvent): boolean {
   return event.target instanceof HTMLInputElement && event.target.type === 'range'

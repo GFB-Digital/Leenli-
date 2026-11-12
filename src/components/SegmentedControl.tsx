@@ -9,14 +9,17 @@ export function SegmentedControl<T extends string>({
   value,
   options,
   onChange,
+  fill = false,
 }: {
   label: string
   value: T
   options: Option<T>[]
   onChange: (value: T) => void
+  /** Ganze Breite nutzen, alle Möglichkeiten gleich breit */
+  fill?: boolean
 }) {
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div className={fill ? 'segmented segmented--fill' : 'segmented'} role="radiogroup" aria-label={label}>
       {options.map((option) => (
         <button
           key={option.value}

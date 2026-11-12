@@ -120,6 +120,45 @@ export function pauseAfter(word: string): Pause {
 /** Steht ein „Wort“ nur aus Satzzeichen (z. B. ein Gedankenstrich), wird es angehängt */
 const ONLY_PUNCTUATION = /^\p{P}+$/u
 
+/** Bindestrich zwischen zwei Buchstaben/Ziffern (nicht der geschützte Bindestrich U+2011) */
+const COMPOUND_HYPHEN = /(?<=[\p{L}\p{N}])[-\u2010](?=[\p{L}\p{N}])/u
+
+/** Mindestzahl Buchstaben pro Teil – kürzere Teile bleiben angehängt („E-Mail“) */
+const MIN_PART_LETTERS = 3
+
+function countLetters(text: string): number {
+  return graphemes(text).filter(isLetter).length
+}
+
+/**
+ * Teilt Bindestrich-Wörter in einzelne Anzeigewörter, damit der Reader nicht
+ * überladen wirkt: „Wiederlese-Gruppe“ → „Wiederlese-“, „Gruppe“.
+ * Sehr kurze Teile bleiben verbunden: „E-Mail-Adresse“ → „E-Mail-“, „Adresse“.
+ */
+export function splitCompound(word: string): string[] {
+  const pieces = word.split(COMPOUND_HYPHEN)
+  if (pieces.length === 1) return [word]
+  // Bindestrich wieder an die Teile hängen (außer beim letzten)
+  const hyphens = word.match(new RegExp(COMPOUND_HYPHEN.source, 'gu')) ?? []
+  const parts = pieces.map((piece, i) => piece + (hyphens[i] ?? ''))
+
+  const result: string[] = []
+  let current = ''
+  for (const part of parts) {
+    current += part
+    if (countLetters(current) >= MIN_PART_LETTERS) {
+      result.push(current)
+      current = ''
+    }
+  }
+  if (current) {
+    // Zu kurzer Rest → an den vorherigen Teil hängen
+    if (result.length > 0) result[result.length - 1] += current
+    else result.push(current)
+  }
+  return result
+}
+
 export function tokenize(text: string): Token[] {
   const tokens: Token[] = []
 
@@ -132,7 +171,9 @@ export function tokenize(text: string): Token[] {
         if (words.length > 0) words[words.length - 1] += ` ${raw}`
         else pending = pending ? `${pending} ${raw}` : raw
       } else {
-        words.push(pending ? `${pending} ${raw}` : raw)
+        const parts = splitCompound(raw)
+        parts[0] = pending ? `${pending} ${parts[0]}` : parts[0]
+        words.push(...parts)
         pending = ''
       }
     }

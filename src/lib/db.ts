@@ -87,6 +87,29 @@ function fallBackToMemory(error: unknown) {
   mode = 'memory'
 }
 
+/**
+ * Bittet den Browser, die Daten dauerhaft zu behalten (sonst darf er sie bei
+ * Speicherknappheit löschen). Wird beim Import aufgerufen. In der späteren
+ * Capacitor-App gibt es diese Funktion nicht – dann passiert einfach nichts.
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  try {
+    if (!navigator.storage?.persist) return false
+    if (await navigator.storage.persisted()) return true
+    return await navigator.storage.persist()
+  } catch {
+    return false
+  }
+}
+
+export async function isStoragePersistent(): Promise<boolean> {
+  try {
+    return (await navigator.storage?.persisted?.()) ?? false
+  } catch {
+    return false
+  }
+}
+
 export async function getItem<T>(key: string): Promise<T | undefined> {
   if (mode === 'device') {
     try {

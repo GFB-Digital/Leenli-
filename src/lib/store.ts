@@ -56,6 +56,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/** Gespeicherte Einstellungen prüfen – Unbekanntes fällt auf den Standard zurück */
+function sanitizeSettings(stored: unknown): Settings {
+  const s = isRecord(stored) ? stored : {}
+  const pick = <T,>(value: unknown, allowed: readonly T[], fallback: T): T =>
+    allowed.includes(value as T) ? (value as T) : fallback
+  return {
+    readingMode: pick(s.readingMode, ['normal', 'speed'] as const, DEFAULT_SETTINGS.readingMode),
+    wpm: typeof s.wpm === 'number' && Number.isFinite(s.wpm) ? s.wpm : DEFAULT_SETTINGS.wpm,
+    fontSize: pick(s.fontSize, ['S', 'M', 'L', 'XL'] as const, DEFAULT_SETTINGS.fontSize),
+    theme: pick(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme),
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Laden
 
@@ -69,7 +82,7 @@ export async function loadAppState() {
     loaded: true,
     importedCourses: Array.isArray(courses) ? (courses as Course[]) : [],
     progress: isRecord(progress) ? (progress as Progress) : {},
-    settings: { ...DEFAULT_SETTINGS, ...(isRecord(settings) ? settings : {}) },
+    settings: sanitizeSettings(settings),
   })
 }
 
@@ -89,6 +102,37 @@ export async function saveLessonResult(courseId: string, lessonId: string, resul
   }
   setState({ progress })
   await persist(KEYS.progress, progress)
+}
+
+/** Kurse hinzufügen; ein Kurs mit gleicher ID ersetzt den vorhandenen an seiner Stelle */
+export async function importCourses(courses: Course[]) {
+  const imported = [...state.importedCourses]
+  for (const course of courses) {
+    const index = imported.findIndex((c) => c.id === course.id)
+    if (index >= 0) imported[index] = course
+    else imported.push(course)
+  }
+  setState({ importedCourses: imported })
+  await persist(KEYS.courses, imported)
+}
+
+/** Importierten Kurs samt Fortschritt entfernen */
+export async function deleteCourse(courseId: string) {
+  const importedCourses = state.importedCourses.filter((c) => c.id !== courseId)
+  const progress = { ...state.progress }
+  delete progress[courseId]
+  setState({ importedCourses, progress })
+  await persist(KEYS.courses, importedCourses)
+  await persist(KEYS.progress, progress)
+}
+
+export function isBuiltinCourse(courseId: string): boolean {
+  return BUILTIN_COURSES.some((c) => c.id === courseId)
+}
+
+export async function resetProgress() {
+  setState({ progress: {} })
+  await persist(KEYS.progress, {})
 }
 
 export async function updateSettings(patch: Partial<Settings>) {

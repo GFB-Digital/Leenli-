@@ -15,7 +15,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const COLORS = {
   paper: '#f7f3ea',
   indigo: '#4b3fd1',
-  focus: '#e03131',
+  focus: '#cc3b4e',
 }
 
 // Rechteck: x/y = linke obere Ecke, w/h = Größe, r = Eckenradius

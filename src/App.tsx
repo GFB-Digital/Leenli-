@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { UpdateBanner } from './components/UpdateBanner.tsx'
+import { applyAppearance } from './lib/appearance.ts'
 import { useNavigation } from './lib/navigation.ts'
 import { usePwa } from './lib/pwa.ts'
 import { useAppState } from './lib/store.ts'
@@ -12,6 +14,12 @@ export default function App() {
   const app = useAppState()
   const nav = useNavigation()
   const pwa = usePwa()
+
+  // Darstellung und Schriftgröße aus den Einstellungen anwenden
+  const { theme, fontSize } = app.settings
+  useEffect(() => {
+    applyAppearance({ theme, fontSize })
+  }, [theme, fontSize])
 
   // Gespeicherte Daten werden geladen (dauert nur einen Augenblick)
   if (!app.loaded) return <div className="app" aria-busy="true" />

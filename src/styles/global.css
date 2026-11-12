@@ -25,7 +25,7 @@
   --on-accent: #ffffff;
 
   /* Rot ist ausschließlich für den Fokusbuchstaben reserviert */
-  --focus-letter: #e03131;
+  --focus-letter: #cc3b4e; /* ruhiges Karminrot */
 
   /* Rückmeldung bei Fragen (bewusst kein Rot) */
   --correct: #2b8a57;
@@ -41,8 +41,9 @@
   --font-reading: 'Iowan Old Style', Charter, 'Palatino Linotype', Palatino, 'Book Antiqua',
     'Noto Serif', Georgia, serif;
 
-  /* Lesetypografie (Schriftgröße später über die Einstellungen änderbar) */
-  --reading-size: 1.1875rem;
+  /* Lesetypografie – --font-scale setzt die Einstellung „Schriftgröße“ */
+  --font-scale: 1;
+  --reading-size: calc(1.1875rem * var(--font-scale));
   --reading-line: 1.65;
   --reading-measure: 36rem;
 
@@ -60,8 +61,10 @@
   --safe-left: env(safe-area-inset-left, 0px);
 }
 
+/* Dunkle Farben. Gilt automatisch (Gerät im Dunkelmodus) – außer die
+   Einstellung „Darstellung“ erzwingt Hell. Beide Blöcke gleich halten! */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #15141a;
     --surface: #1e1d25;
     --surface-2: #272631;
@@ -77,7 +80,7 @@
     --accent-soft: rgb(124 112 255 / 0.16);
     --on-accent: #ffffff;
 
-    --focus-letter: #ff5a5a;
+    --focus-letter: #ef5d6c;
 
     --correct: #4cc38a;
     --correct-soft: rgb(76 195 138 / 0.14);
@@ -86,6 +89,41 @@
 
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
   }
+}
+
+/* Einstellung „Darstellung: Dunkel“ */
+:root[data-theme='dark'] {
+  --bg: #15141a;
+  --surface: #1e1d25;
+  --surface-2: #272631;
+  --border: #34323f;
+  --track: #2e2d39;
+
+  --text: #ece9f2;
+  --text-muted: #a29db1;
+
+  --accent: #5a4ee6;
+  --accent-pressed: #4b3fd1;
+  --accent-text: #a8a0ff;
+  --accent-soft: rgb(124 112 255 / 0.16);
+  --on-accent: #ffffff;
+
+  --focus-letter: #ef5d6c;
+
+  --correct: #4cc38a;
+  --correct-soft: rgb(76 195 138 / 0.14);
+  --wrong: #f0a43a;
+  --wrong-soft: rgb(240 164 58 / 0.14);
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 @media (min-width: 600px) {
@@ -878,7 +916,7 @@ button {
 
 .reading-title {
   font-family: var(--font-reading);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--font-scale));
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.005em;
@@ -888,7 +926,7 @@ button {
 
 /* Fragen */
 .question-text {
-  font-size: 1.3125rem;
+  font-size: calc(1.3125rem * var(--font-scale));
   font-weight: 600;
   line-height: 1.35;
   overflow-wrap: break-word;
@@ -915,7 +953,7 @@ button {
   border-radius: 14px;
   background: var(--surface);
   color: var(--text);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   line-height: 1.35;
   text-align: left;
   cursor: pointer;
@@ -985,6 +1023,7 @@ button {
   padding: 1rem 1.125rem;
   border-radius: 14px;
   border-left: 4px solid;
+  font-size: calc(1rem * var(--font-scale));
   line-height: 1.5;
   scroll-margin-bottom: 7rem;
   animation: step-in 0.2s ease both;
@@ -1153,12 +1192,12 @@ button {
 /* ---------- Speed-Reader ---------- */
 
 :root {
-  --guide: color-mix(in srgb, var(--text) 16%, transparent);
-  --guide-mark: color-mix(in srgb, var(--text) 45%, transparent);
+  /* Führungslinien: dezent, wie bei klassischen RSVP-Readern */
+  --guide: color-mix(in srgb, var(--text) 18%, transparent);
 }
 
 .reading-title--compact {
-  font-size: 1.25rem;
+  font-size: calc(1.25rem * var(--font-scale));
   margin: -0.25rem 0 0;
 }
 
@@ -1168,19 +1207,19 @@ button {
   gap: 1rem;
 }
 
-/* Bühne: Tippen = Start/Pause */
+/* Bühne: Tippen = Start/Pause. Kein Kasten – die zwei Linien rahmen das Wort. */
 .rsvp-stage {
-  --rsvp-size: clamp(1.875rem, 8.5vw, 3rem);
+  --rsvp-size: calc(clamp(2.125rem, 10vw, 3.25rem) * var(--font-scale));
+  --rsvp-line: 1.5px;
   position: relative;
   display: block;
   width: 100%;
   /* feste Höhe → verkleinerte Wörter verschieben nichts */
-  height: calc(var(--rsvp-size) * 3.2);
+  height: calc(var(--rsvp-size) * 3.6);
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: var(--text);
   overflow: hidden;
   cursor: pointer;
@@ -1190,61 +1229,73 @@ button {
   touch-action: manipulation;
 }
 
-/* Führungslinien mit Markierung genau über/unter dem Fokuspunkt */
-.rsvp-guide {
+/* Waagerechte Linien über die ganze Breite … */
+.rsvp-line {
   position: absolute;
-  left: 1.25rem;
-  right: 1.25rem;
-  height: 1px;
+  left: 0;
+  right: 0;
+  height: var(--rsvp-line);
   background: var(--guide);
 }
 
-.rsvp-guide--top {
-  top: 20%;
+.rsvp-line--top {
+  top: 12%;
 }
 
-.rsvp-guide--bottom {
-  bottom: 20%;
+.rsvp-line--bottom {
+  bottom: 12%;
 }
 
-.rsvp-guide::after {
+/* … mit senkrechter Markierung genau über bzw. unter dem Fokusbuchstaben */
+.rsvp-line::after {
   content: '';
   position: absolute;
-  left: 50%;
-  width: 2px;
-  height: 0.6rem;
-  margin-left: -1px;
-  background: var(--guide-mark);
+  left: var(--rsvp-focus-x);
+  width: var(--rsvp-line);
+  height: calc(var(--rsvp-size) * 0.5);
+  transform: translateX(-50%);
+  background: var(--guide);
 }
 
-.rsvp-guide--top::after {
-  top: 0;
+.rsvp-line--top::after {
+  top: 100%;
 }
 
-.rsvp-guide--bottom::after {
-  bottom: 0;
+.rsvp-line--bottom::after {
+  bottom: 100%;
 }
 
-/* Wort: drei Spalten, die mittlere (Fokusbuchstabe) liegt exakt in der Mitte */
+/* Wort: Der Fokusbuchstabe ist bei --rsvp-focus-x festgemacht,
+   der linke Teil hängt links daran, der rechte rechts. */
 .rsvp-word {
   position: absolute;
-  inset: 0 0.75rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  font-family: var(--font-ui);
-  font-weight: 500;
+  inset: 0;
+  font-family: var(--font-reading);
+  font-weight: 400;
   font-size: calc(var(--rsvp-size) * var(--rsvp-scale, 1));
   line-height: 1;
   white-space: nowrap;
 }
 
+.rsvp-anchor {
+  position: absolute;
+  top: 50%;
+  left: var(--rsvp-focus-x);
+  transform: translate(-50%, -50%);
+}
+
+.rsvp-before,
+.rsvp-after {
+  position: absolute;
+  top: 0;
+}
+
 .rsvp-before {
-  text-align: right;
+  right: 100%;
 }
 
 .rsvp-after {
-  text-align: left;
+  left: 100%;
 }
 
 .rsvp-focus {
@@ -1375,7 +1426,7 @@ button {
 }
 
 /* Tempo */
-.rsvp-tempo {
+.rsvp-tempo-box {
   display: grid;
   gap: 0.375rem;
   padding: 0.875rem 1rem;
@@ -1384,7 +1435,7 @@ button {
   border-radius: var(--radius);
 }
 
-.rsvp-tempo-head {
+.tempo-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -1392,13 +1443,13 @@ button {
   font-size: 0.875rem;
 }
 
-.rsvp-tempo-head strong {
+.tempo-head strong {
   color: var(--text);
   font-size: 1.0625rem;
   font-variant-numeric: tabular-nums;
 }
 
-.rsvp-tempo-row {
+.tempo-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1450,4 +1501,254 @@ button {
 .rsvp-ft-word.is-current {
   background: var(--accent-soft);
   box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* ---------- Tempo-Regler (Speed-Reader und Einstellungen) ---------- */
+
+.tempo {
+  display: grid;
+  gap: 0.375rem;
+}
+
+/* ---------- Umschalter über die ganze Breite ---------- */
+
+.segmented--fill {
+  display: flex;
+  width: 100%;
+}
+
+.segmented--fill .segmented-option {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0.5rem;
+}
+
+/* ---------- Dialog: Text und gestapelte Buttons ---------- */
+
+.dialog-message {
+  display: grid;
+  gap: 0.5rem;
+  color: var(--text-muted);
+}
+
+.dialog-actions--stacked {
+  flex-direction: column-reverse;
+}
+
+/* ---------- Inhalte ---------- */
+
+.json-input {
+  width: 100%;
+  min-height: 11rem;
+  padding: 0.75rem 0.875rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--bg);
+  color: var(--text);
+  /* mind. 16 px – sonst zoomt iOS beim Antippen hinein */
+  font: 1rem/1.45 ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, Menlo, monospace;
+  resize: vertical;
+}
+
+.json-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.button-row .btn {
+  flex: 1 1 10rem;
+}
+
+@media (min-width: 600px) {
+  .button-row .btn {
+    flex: 0 0 auto;
+  }
+}
+
+.result {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-small);
+  border-left: 4px solid;
+  scroll-margin: 1rem;
+}
+
+.result--success {
+  background: var(--correct-soft);
+  border-color: var(--correct);
+}
+
+.result--error {
+  background: var(--wrong-soft);
+  border-color: var(--wrong);
+}
+
+.result-title {
+  font-weight: 700;
+}
+
+.result--success .result-title {
+  color: color-mix(in srgb, var(--correct) 75%, var(--text));
+}
+
+.result--error .result-title {
+  color: color-mix(in srgb, var(--wrong) 75%, var(--text));
+}
+
+.result-list {
+  margin: 0;
+  padding-left: 1.125rem;
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.template summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.template-text {
+  margin: 0.25rem 0 0;
+  padding: 0.875rem;
+  max-height: 22rem;
+  overflow: auto;
+  border-radius: var(--radius-small);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font: 0.8125rem/1.5 ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, Menlo, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.manage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.manage-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 0;
+}
+
+.manage-row + .manage-row {
+  border-top: 1px solid var(--border);
+}
+
+.manage-row .badge {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  font-size: 1.5rem;
+}
+
+.manage-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.manage-title {
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.manage-meta {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.manage-row .icon-btn {
+  margin-right: -0.625rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Einstellungen ---------- */
+
+.settings-group {
+  gap: 0;
+}
+
+.settings-group > .card-title {
+  margin-bottom: 0.25rem;
+}
+
+.setting {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.875rem 0;
+}
+
+.setting + .setting {
+  border-top: 1px solid var(--border);
+}
+
+.setting:last-child {
+  padding-bottom: 0;
+}
+
+.setting-text {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.setting-label {
+  font-weight: 600;
+}
+
+.setting-hint {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.setting .tempo-head {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.setting .tempo-head > span:first-child {
+  font-weight: 600;
+}
+
+.font-preview {
+  margin-top: 0.25rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-small);
+  background: var(--bg);
+}
+
+.setting > .btn {
+  justify-self: start;
+}
+
+.tempo-head {
+  gap: 0.75rem;
+}
+
+.tempo-value {
+  white-space: nowrap;
+}
+
+.segmented-option {
+  white-space: nowrap;
 }

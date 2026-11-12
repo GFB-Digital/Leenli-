@@ -11,6 +11,7 @@ import {
   pauseAfter,
   remainingMs,
   sentenceBackTarget,
+  splitCompound,
   splitWord,
   tokenize,
   wordDuration,
@@ -62,10 +63,10 @@ describe('Fokusbuchstabe nach Wortlänge', () => {
   })
 
   it('hält zusammengesetzte Zeichen zusammen (A + ¨ = Ä)', () => {
-    const decomposed = 'Ärger' // „Ärger“ mit kombinierendem Umlaut
+    const decomposed = 'A\u0308rger' // „Ärger“ mit kombinierendem Umlaut
     assert.equal(graphemes(decomposed).length, 5)
     const parts = splitWord(decomposed)
-    assert.equal(parts.before, 'Ä')
+    assert.equal(parts.before, 'A\u0308')
     assert.equal(parts.focus, 'r')
     assert.equal(parts.letters, 5)
   })
@@ -141,6 +142,37 @@ describe('Text in Wörter zerlegen', () => {
       ['Erst', 'das –', 'dann', 'jenes.', 'Fertig …'],
     )
     assert.equal(tokens[1].pause, 'clause')
+  })
+
+  it('trennt Bindestrich-Wörter in einzelne Anzeigewörter', () => {
+    assert.deepEqual(splitCompound('Wiederlese-Gruppe'), ['Wiederlese-', 'Gruppe'])
+    assert.deepEqual(splitCompound('Speed-Reader'), ['Speed-', 'Reader'])
+    assert.deepEqual(splitCompound('1970er-Jahren'), ['1970er-', 'Jahren'])
+    assert.deepEqual(splitCompound('„Speed-Reader“,'), ['„Speed-', 'Reader“,'])
+  })
+
+  it('lässt sehr kurze Teile verbunden', () => {
+    assert.deepEqual(splitCompound('E-Mail'), ['E-Mail'])
+    assert.deepEqual(splitCompound('E-Mail-Adresse'), ['E-Mail-', 'Adresse'])
+    assert.deepEqual(splitCompound('Ad-hoc-Lösung'), ['Ad-hoc-', 'Lösung'])
+    assert.deepEqual(splitCompound('Gruppe-B'), ['Gruppe-B'])
+    assert.deepEqual(splitCompound('3-D'), ['3-D'])
+  })
+
+  it('trennt nicht an Bindestrichen am Wortrand oder am geschützten Bindestrich', () => {
+    assert.deepEqual(splitCompound('Vor-'), ['Vor-'])
+    assert.deepEqual(splitCompound('-los'), ['-los'])
+    assert.deepEqual(splitCompound('Wiederlese\u2011Gruppe'), ['Wiederlese\u2011Gruppe'])
+  })
+
+  it('zeigt die Teile im Lesefluss nacheinander', () => {
+    const tokens = tokenize('Die Wiederlese-Gruppe lag „leicht“ vorn.')
+    assert.deepEqual(
+      tokens.map((t) => t.text),
+      ['Die', 'Wiederlese-', 'Gruppe', 'lag', '„leicht“', 'vorn.'],
+    )
+    assert.equal(tokens[1].pause, 'none')
+    assert.equal(tokens[1].focus, 'd') // 10 Buchstaben → 4.
   })
 
   it('macht aus „z. B.“ keinen Satzanfang', () => {

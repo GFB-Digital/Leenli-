@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import {
   clampWpm,
   formatDuration,
@@ -11,17 +18,11 @@ import {
   type Token,
 } from '../../lib/orp.ts'
 import { getAppState, updateSettings, useAppState } from '../../lib/store.ts'
-import { isOnButton, isOnSlider, useKeydown } from '../../lib/useKeydown.ts'
+import { isOnButton, isOnSlider, keepKeyboardFocus, useKeydown } from '../../lib/useKeydown.ts'
 import { Icon } from '../Icon.tsx'
+import { TempoControl } from '../TempoControl.tsx'
 import { LessonFooter } from '../lesson/LessonFooter.tsx'
-import { RsvpWord } from './RsvpWord.tsx'
-
-/**
- * Ein Mausklick soll die Bedien-Buttons nicht auswählen – sonst würde die
- * Leertaste danach diesen Button auslösen statt Start/Pause.
- * (Mit der Tab-Taste bleiben die Buttons trotzdem erreichbar.)
- */
-const keepFocus = (event: MouseEvent) => event.preventDefault()
+import { FOCUS_X, RsvpWord } from './RsvpWord.tsx'
 
 /** Zweimal „Satz zurück“ innerhalb dieser Zeit → einen Satz weiter zurück */
 const REPEAT_WINDOW_MS = 1500
@@ -173,7 +174,7 @@ export function SpeedReader({
   const position = tokens.length === 0 ? 0 : ended ? tokens.length : index + 1
   const remaining = ended ? 0 : remainingMs(tokens, index, wpm)
 
-  let hint = ' '
+  let hint = '\u00a0'
   if (tokens.length === 0) hint = 'Dieser Abschnitt enthält keinen Text.'
   else if (ended) hint = 'Fertig gelesen. Tippe auf das Wort für einen neuen Durchgang.'
   else if (!playing && index === 0) hint = 'Tippe auf das Wort, um zu starten.'
@@ -194,13 +195,15 @@ export function SpeedReader({
           <button
             type="button"
             className="rsvp-stage"
+            style={{ '--rsvp-focus-x': `${FOCUS_X * 100}%` } as CSSProperties}
             onClick={toggle}
-            onMouseDown={keepFocus}
+            onMouseDown={keepKeyboardFocus}
             aria-label={playing ? 'Pause' : 'Start'}
           >
-            <span className="rsvp-guide rsvp-guide--top" aria-hidden="true" />
+            {/* Führungslinien; die Markierungen sitzen genau über/unter dem Fokusbuchstaben */}
+            <span className="rsvp-line rsvp-line--top" aria-hidden="true" />
+            <span className="rsvp-line rsvp-line--bottom" aria-hidden="true" />
             <RsvpWord token={tokens[shownIndex]} />
-            <span className="rsvp-guide rsvp-guide--bottom" aria-hidden="true" />
           </button>
           <p className="rsvp-hint" aria-live="polite">
             {hint}
@@ -232,7 +235,7 @@ export function SpeedReader({
               type="button"
               className="rsvp-side-btn"
               onClick={sentenceBack}
-              onMouseDown={keepFocus}
+              onMouseDown={keepKeyboardFocus}
               disabled={tokens.length === 0}
             >
               <Icon name="sentenceBack" />
@@ -243,7 +246,7 @@ export function SpeedReader({
               className="rsvp-play"
               data-state={playing ? 'playing' : 'paused'}
               onClick={toggle}
-              onMouseDown={keepFocus}
+              onMouseDown={keepKeyboardFocus}
               disabled={tokens.length === 0}
               aria-label={playing ? 'Pause' : 'Start'}
             >
@@ -253,7 +256,7 @@ export function SpeedReader({
               type="button"
               className="rsvp-side-btn"
               onClick={toggleText}
-              onMouseDown={keepFocus}
+              onMouseDown={keepKeyboardFocus}
               aria-pressed={showText}
               title="Ganzen Text anzeigen"
             >
@@ -262,45 +265,8 @@ export function SpeedReader({
             </button>
           </div>
 
-          <div className="rsvp-tempo">
-            <div className="rsvp-tempo-head">
-              <span>Tempo</span>
-              <span>
-                <strong>{wpm}</strong> Wörter/Min.
-              </span>
-            </div>
-            <div className="rsvp-tempo-row">
-              <button
-                type="button"
-                className="round-btn"
-                onClick={() => changeWpmBy(-TIMING.wpmStep)}
-                onMouseDown={keepFocus}
-                disabled={wpm <= TIMING.minWpm}
-                aria-label="Langsamer"
-              >
-                −
-              </button>
-              <input
-                type="range"
-                className="slider"
-                min={TIMING.minWpm}
-                max={TIMING.maxWpm}
-                step={TIMING.wpmStep}
-                value={wpm}
-                onChange={(event) => changeWpm(Number(event.target.value))}
-                aria-label="Tempo in Wörtern pro Minute"
-              />
-              <button
-                type="button"
-                className="round-btn"
-                onClick={() => changeWpmBy(TIMING.wpmStep)}
-                onMouseDown={keepFocus}
-                disabled={wpm >= TIMING.maxWpm}
-                aria-label="Schneller"
-              >
-                +
-              </button>
-            </div>
+          <div className="rsvp-tempo-box">
+            <TempoControl wpm={wpm} onChange={changeWpm} />
           </div>
 
           {showText && (

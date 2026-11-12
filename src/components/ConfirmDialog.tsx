@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 /** Rückfrage als eigener Dialog (statt window.confirm – sieht überall gleich aus) */
 export function ConfirmDialog({
@@ -7,14 +7,17 @@ export function ConfirmDialog({
   message,
   confirmLabel,
   cancelLabel = 'Abbrechen',
+  alternative,
   onConfirm,
   onCancel,
 }: {
   open: boolean
   title: string
-  message: string
+  message: ReactNode
   confirmLabel: string
   cancelLabel?: string
+  /** Optionale dritte Möglichkeit, z. B. „Als neuen Kurs hinzufügen“ */
+  alternative?: { label: string; onClick: () => void }
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -46,11 +49,16 @@ export function ConfirmDialog({
         <h2 id="dialog-title" className="dialog-title">
           {title}
         </h2>
-        <p className="muted">{message}</p>
-        <div className="dialog-actions">
+        <div className="dialog-message">{message}</div>
+        <div className={alternative ? 'dialog-actions dialog-actions--stacked' : 'dialog-actions'}>
           <button type="button" className="btn btn-secondary" onClick={onCancel} autoFocus>
             {cancelLabel}
           </button>
+          {alternative && (
+            <button type="button" className="btn btn-secondary" onClick={alternative.onClick}>
+              {alternative.label}
+            </button>
+          )}
           <button type="button" className="btn btn-primary" onClick={onConfirm}>
             {confirmLabel}
           </button>
