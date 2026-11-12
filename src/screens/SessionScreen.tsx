@@ -284,7 +284,7 @@ function Summary({
   return (
     <>
       <div className="lesson-content summary step-enter">
-        <span className="summary-oct" style={{ '--course': color } as CSSProperties} aria-hidden="true">
+        <span className="summary-hex" style={{ '--course': color } as CSSProperties} aria-hidden="true">
           <Icon name={spec.kind === 'review' ? 'shield' : 'check'} size={40} />
         </span>
         <h2 className="summary-title">{title}</h2>
@@ -300,7 +300,7 @@ function Summary({
 
         {stampNow && (
           <p className="summary-stamp">
-            <Icon name="octFilled" size={18} />
+            <Icon name="hexFilled" size={18} />
             {!hadStampToday ? `Neuer Lerntag! Serie: ${streak} ${streak === 1 ? 'Tag' : 'Tage'}` : `Serie: ${streak} ${streak === 1 ? 'Tag' : 'Tage'}`}
           </p>
         )}

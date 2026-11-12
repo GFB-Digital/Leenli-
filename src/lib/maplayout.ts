@@ -1,20 +1,19 @@
-// Geometrie der Wissenskarte: Achtecke, die wie Waben ineinandergreifen.
+// Geometrie der Wissenskarte: Sechsecke (Spitze oben), die lückenlos aneinanderliegen.
 //
-// Die Zeilen sind um eine halbe Zelle versetzt und so eng gesetzt, dass jedes
-// Achteck seine Nachbarn links und rechts an den senkrechten Kanten und die
-// Nachbarn darüber und darunter an den schrägen Kanten berührt. Jede Zelle hat
-// damit sechs Nachbarn wie in einem Wabenmuster; gerechnet wird mit axialen
-// Koordinaten (q, r) wie bei Sechseck-Karten.
+// Die Zeilen sind um eine halbe Zelle versetzt; jede Zelle hat sechs Nachbarn.
+// Gerechnet wird mit axialen Koordinaten (q, r) wie bei üblichen Sechseck-Karten.
 //
 // Jeder Kurs ist eine rundliche Gruppe aus Kacheln (zeilenweise in
 // Lernreihenfolge), umgeben von einer Fläche („Gebiet“). Die Kurse werden so
 // angeordnet, dass zwischen ihren Gebieten immer eine Zelle frei bleibt.
 // Reine Funktionen → maplayout.test.ts.
 
-/** Breite einer Zelle (= Achteck) und Abstand zweier Nachbarn in einer Zeile, in Kartenpixeln bei Zoom 1 */
+/** Breite einer Zelle (Kante zu Kante) = Abstand zweier Nachbarn in einer Zeile, in Kartenpixeln bei Zoom 1 */
 export const CELL = 60
-/** Zeilenabstand: genau so eng, dass die schrägen Kanten aufeinanderliegen */
-export const ROW = CELL * (Math.SQRT2 - 0.5)
+/** Höhe eines Sechsecks (Spitze zu Spitze) */
+export const CELL_HEIGHT = (CELL * 2) / Math.sqrt(3)
+/** Zeilenabstand: die schrägen Kanten liegen genau aufeinander */
+export const ROW = (CELL * Math.sqrt(3)) / 2
 
 export interface Cell {
   q: number
@@ -49,39 +48,37 @@ export function cellDistance(a: Cell, b: Cell): number {
   return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2
 }
 
-function octagonCorners(cx: number, cy: number, width: number): [number, number][] {
-  const h = width / 2
-  const cut = width / (2 + Math.SQRT2)
+function hexagonCorners(cx: number, cy: number, width: number): [number, number][] {
+  const w = width / 2
+  const h = width / Math.sqrt(3)
   return [
-    [cx - h + cut, cy - h],
-    [cx + h - cut, cy - h],
-    [cx + h, cy - h + cut],
-    [cx + h, cy + h - cut],
-    [cx + h - cut, cy + h],
-    [cx - h + cut, cy + h],
-    [cx - h, cy + h - cut],
-    [cx - h, cy - h + cut],
+    [cx, cy - h],
+    [cx + w, cy - h / 2],
+    [cx + w, cy + h / 2],
+    [cx, cy + h],
+    [cx - w, cy + h / 2],
+    [cx - w, cy - h / 2],
   ]
 }
 
 const fmt = (n: number) => n.toFixed(2)
 
-/** Eckpunkte eines regelmäßigen Achtecks mit Breite `width` (Kante zu Kante), für `<polygon points>` */
-export function octagonPoints(cx: number, cy: number, width: number): string {
-  return octagonCorners(cx, cy, width)
+/** Eckpunkte eines Sechsecks mit Breite `width` (Kante zu Kante, Spitze oben), für `<polygon points>` */
+export function hexagonPoints(cx: number, cy: number, width: number): string {
+  return hexagonCorners(cx, cy, width)
     .map(([x, y]) => `${fmt(x)},${fmt(y)}`)
     .join(' ')
 }
 
 /**
- * Viele Achtecke als ein SVG-Pfad. Alle laufen im gleichen Drehsinn, deshalb
- * ergibt die Füllung ihre Vereinigung – eine Fläche, deren Rand den Achtecken folgt.
+ * Viele Sechsecke als ein SVG-Pfad. Alle laufen im gleichen Drehsinn, deshalb
+ * ergibt die Füllung ihre Vereinigung – eine Fläche, deren Rand den Sechsecken folgt.
  */
-export function octagonsPath(cells: Cell[], width: number): string {
+export function hexagonsPath(cells: Cell[], width: number): string {
   return cells
     .map((cell) => {
       const { x, y } = cellCenter(cell)
-      const [first, ...rest] = octagonCorners(x, y, width)
+      const [first, ...rest] = hexagonCorners(x, y, width)
       return `M${fmt(first[0])} ${fmt(first[1])}` + rest.map(([px, py]) => `L${fmt(px)} ${fmt(py)}`).join('') + 'Z'
     })
     .join('')
@@ -165,7 +162,7 @@ export interface CourseLayout {
   tiles: Cell[]
   /** Zellen der umgebenden Fläche (absolut, ohne Kacheln) */
   territory: Cell[]
-  /** Teil des Gebiets, auf dem zarte Achteck-Umrisse liegen (Schmuck) */
+  /** Teil des Gebiets, auf dem zarte Sechseck-Umrisse liegen (Schmuck) */
   decor: Cell[]
 }
 
@@ -183,7 +180,9 @@ function buildCourse(id: string, tileCount: number): CourseLayout {
   const ring1: Cell[] = []
   for (const t of tiles) for (const c of neighbors(t)) if (!taken.has(cellKey(c))) add(c), ring1.push(c)
   for (const t of ring1) for (const c of neighbors(t)) if (!taken.has(cellKey(c)) && random() < 0.5) add(c)
-  const decor = territory.filter(() => random() < 0.38)
+  // Zarte Umrisse nur abseits der Kacheln, damit sie nicht wie Kacheln wirken
+  const nearTiles = new Set(ring1.map(cellKey))
+  const decor = territory.filter((c) => !nearTiles.has(cellKey(c)) && random() < 0.5)
   return { id, tiles, territory, decor }
 }
 
@@ -258,8 +257,8 @@ export function cellBounds(cells: Cell[]) {
   const ys = cells.map((c) => cellCenter(c).y)
   const minX = Math.min(...xs) - CELL / 2
   const maxX = Math.max(...xs) + CELL / 2
-  const minY = Math.min(...ys) - CELL / 2
-  const maxY = Math.max(...ys) + CELL / 2
+  const minY = Math.min(...ys) - CELL_HEIGHT / 2
+  const maxY = Math.max(...ys) + CELL_HEIGHT / 2
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY }
 }
 
@@ -273,17 +272,18 @@ const MAX_PER_ROW = 6
 
 const rowWidth = (k: number) => k * MARK.pitch - (MARK.pitch - MARK.size) + 2 * MARK.pad
 
-/** Größter Maßstab, bei dem alle Reihen ins Achteck der Breite `width` passen */
+/** Größter Maßstab, bei dem alle Reihen ins Sechseck der Breite `width` passen */
 function fitScale(rows: number[], width: number): number {
-  const inner = width * 0.86
-  const half = inner / 2
-  const flat = (inner * (Math.SQRT2 - 1)) / 2
+  const half = (width * 0.84) / 2
+  const tip = (width * 0.84) / Math.sqrt(3)
+  // Halbe Breite des Sechsecks in der Höhe y: an den senkrechten Kanten voll, zu den Spitzen hin schmaler
+  const halfAt = (y: number) => (y <= tip / 2 ? half : (half * 2 * (tip - y)) / tip)
   const fits = (s: number) => {
     const total = s * (rows.length * MARK.height + (rows.length - 1) * MARK.gap)
     return rows.every((k, i) => {
       const top = -total / 2 + i * s * (MARK.height + MARK.gap)
       const far = Math.max(Math.abs(top), Math.abs(top + s * MARK.height))
-      return (s * rowWidth(k)) / 2 <= half - Math.max(0, far - flat)
+      return (s * rowWidth(k)) / 2 <= halfAt(far)
     })
   }
   let lo = 0.1

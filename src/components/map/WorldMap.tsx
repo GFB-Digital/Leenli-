@@ -10,7 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { courseColor } from '../../lib/colors.ts'
-import { CELL, MARK, cellBounds, cellCenter, layoutCourses, markRows, octagonPoints, octagonsPath, type CourseLayout } from '../../lib/maplayout.ts'
+import { CELL, MARK, cellBounds, cellCenter, layoutCourses, markRows, hexagonPoints, hexagonsPath, type CourseLayout } from '../../lib/maplayout.ts'
 import { nextTile, tileStatus } from '../../lib/model.ts'
 import { isQuestion, type Course, type LearnState, type Tile } from '../../lib/types.ts'
 
@@ -20,14 +20,8 @@ const MAX_K = 4
 const FIT_MAX_K = 2
 /** Bewegung (px), bis aus einem Tippen ein Ziehen wird */
 const TAP_SLOP = 8
-/** Kachel-Achteck im Verhältnis zur Zelle → schmale dunkle Fugen zwischen den Kacheln */
-const TILE = 0.9
-/** Dunkler Rand um die Kacheln eines Kurses (füllt auch die kleinen Lücken zwischen den Achtecken) */
-const RIM = 6
-/** Stärke der Umrandungslinie in Kursfarbe */
-const BORDER = 4
-/** Gebietsfläche etwas größer als die Zellen, damit sie lückenlos ist */
-const TERR = 6
+/** Gebiet minimal größer als die Zellen, damit keine haarfeinen Spalten entstehen */
+const TERR = 0.6
 
 interface View {
   x: number
@@ -60,7 +54,7 @@ const SHIELD = 'M0 -3.4L2.9 -2.3V0C2.9 1.8 1.7 3 0 3.6C-1.7 3 -2.9 1.8 -2.9 0V-2
 /** Zeichen in einer Kachel wie in der Leiste beim Lernen: Kreis = Leseseite, Schild = Frage */
 function TileContent({ tile, x, y }: { tile: Tile; x: number; y: number }) {
   const marks = tile.steps.map((step) => isQuestion(step))
-  const { rows, scale } = markRows(marks.length, CELL * TILE)
+  const { rows, scale } = markRows(marks.length, CELL)
   const total = rows.length * MARK.height + (rows.length - 1) * MARK.gap
   let index = 0
   return (
@@ -120,13 +114,9 @@ const MapLayer = memo(function MapLayer({
             className={classes.join(' ')}
             style={{ '--course': courseColor(data) } as CSSProperties}
           >
-            {/* Gebiet: Fläche aus Achtecken, darauf ein paar zarte Umrisse */}
-            <path className="map-terr" d={octagonsPath([...course.tiles, ...course.territory], CELL + 2 * TERR)} />
-            {detail > 0 && <path className="map-terr-oct" d={octagonsPath(course.decor, CELL * 0.84)} />}
-
-            {/* Umrandung: folgt den Achtecken (außen Kursfarbe, innen dunkel) */}
-            <path className="map-path-border" d={octagonsPath(course.tiles, CELL + 2 * (RIM + BORDER))} />
-            <path className="map-path-inner" d={octagonsPath(course.tiles, CELL + 2 * RIM)} />
+            {/* Gebiet: Fläche aus Sechsecken, darauf ein paar zarte Umrisse */}
+            <path className="map-terr" d={hexagonsPath([...course.tiles, ...course.territory], CELL + 2 * TERR)} />
+            {detail > 0 && <path className="map-terr-hex" d={hexagonsPath(course.decor, CELL * 0.84)} />}
 
             {/* Kacheln */}
             {course.tiles.map((cell, t) => {
@@ -136,7 +126,7 @@ const MapLayer = memo(function MapLayer({
               const isNext = next?.id === tile.id
               return (
                 <g key={tile.id} data-tile={tile.id} className={`map-tile map-tile--${status}${isNext ? ' map-tile--next' : ''}`}>
-                  <polygon className="map-tile-shape" points={octagonPoints(x, y, CELL * TILE)} />
+                  <polygon className="map-tile-shape" points={hexagonPoints(x, y, CELL)} />
                   {detail === 1 && status === 'done' && (
                     <path className="map-tile-check" d={`M${x - 10} ${y + 1} l7 7 l13 -14`} />
                   )}
@@ -144,6 +134,12 @@ const MapLayer = memo(function MapLayer({
                 </g>
               )
             })}
+
+            {/* Nächste Kachel: Ring obenauf, damit ihn die Nachbarn nicht verdecken */}
+            {next && (() => {
+              const { x, y } = cellCenter(course.tiles[data.tiles.indexOf(next)])
+              return <polygon className="map-next-ring" points={hexagonPoints(x, y, CELL - 3)} />
+            })()}
           </g>
         )
       })}
@@ -369,7 +365,7 @@ export function WorldMap({
         const data = courses[i]
         const box = cellBounds(course.tiles)
         const x = (box.minX + box.maxX) / 2
-        const y = box.minY - RIM - BORDER / 2
+        const y = box.minY - 8
         const dim = selectedId !== undefined && selectedId !== data.id
         return (
           <button

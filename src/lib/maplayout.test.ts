@@ -13,21 +13,24 @@ import {
   layoutCourses,
   markRows,
   neighbors,
-  octagonPoints,
-  octagonsPath,
+  hexagonPoints,
+  hexagonsPath,
   seededRandom,
   type Cell,
 } from './maplayout.ts'
 
-describe('Achteck-Waben', () => {
-  it('lässt Nachbarn genau aneinanderliegen', () => {
-    // Links/rechts: senkrechte Kanten berühren sich
-    const right = cellCenter({ q: 1, r: 0 })
-    assert.equal(right.x, CELL)
-    assert.equal(right.y, 0)
-    // Schräg darunter: Abstand senkrecht zur schrägen Kante = Breite eines Achtecks
+describe('Sechseck-Karte', () => {
+  it('lässt Nachbarn lückenlos aneinanderliegen', () => {
+    // Alle sechs Nachbarn haben denselben Abstand = Breite eines Sechsecks
+    for (const n of neighbors({ q: 0, r: 0 })) {
+      const { x, y } = cellCenter(n)
+      assert.ok(Math.abs(Math.hypot(x, y) - CELL) < 1e-9)
+    }
+    // Gemeinsame Ecken: die untere Spitze oben links ist eine obere Ecke der Zelle darunter
+    const top = hexagonPoints(0, 0, CELL).split(' ')[3]
     const below = cellCenter({ q: 0, r: 1 })
-    assert.ok(Math.abs((below.x + below.y) / Math.SQRT2 - CELL) < 1e-9)
+    const corner = hexagonPoints(below.x, below.y, CELL).split(' ')[5]
+    assert.equal(top, corner)
     assert.ok(Math.abs(below.y - ROW) < 1e-9)
   })
 
@@ -39,19 +42,19 @@ describe('Achteck-Waben', () => {
     assert.equal(cellDistance(origin, { q: 2, r: -1 }), 2)
   })
 
-  it('liefert Achtecke mit gleicher Breite und Höhe', () => {
-    const pts = octagonPoints(0, 0, 50)
+  it('liefert Sechsecke mit Spitze oben', () => {
+    const pts = hexagonPoints(0, 0, 60)
       .split(' ')
       .map((p) => p.split(',').map(Number))
-    assert.equal(pts.length, 8)
+    assert.equal(pts.length, 6)
     const xs = pts.map(([x]) => x)
     const ys = pts.map(([, y]) => y)
-    assert.equal(Math.max(...xs) - Math.min(...xs), 50)
-    assert.equal(Math.max(...ys) - Math.min(...ys), 50)
+    assert.equal(Math.max(...xs) - Math.min(...xs), 60)
+    assert.ok(Math.abs(Math.max(...ys) - Math.min(...ys) - 120 / Math.sqrt(3)) < 0.02)
   })
 
-  it('fasst viele Achtecke zu einem Pfad zusammen', () => {
-    const d = octagonsPath([{ q: 0, r: 0 }, { q: 1, r: 0 }], 60)
+  it('fasst viele Sechsecke zu einem Pfad zusammen', () => {
+    const d = hexagonsPath([{ q: 0, r: 0 }, { q: 1, r: 0 }], 60)
     assert.equal(d.match(/M/g)?.length, 2)
     assert.equal(d.match(/Z/g)?.length, 2)
   })
@@ -178,13 +181,13 @@ describe('Zeichen in einer Kachel', () => {
   })
 
   it('setzt wenige Zeichen nebeneinander in eine Reihe', () => {
-    assert.deepEqual(markRows(6, 54).rows, [6])
-    assert.equal(markRows(4, 54).scale, 1)
+    assert.deepEqual(markRows(6, 60).rows, [6])
+    assert.equal(markRows(4, 60).scale, 1)
   })
 
   it('verkleinert bei vielen Zeichen, statt über den Rand zu laufen', () => {
-    const many = markRows(30, 54)
+    const many = markRows(30, 60)
     assert.ok(many.scale < 1 && many.scale > 0.3)
-    assert.deepEqual(markRows(0, 54), { rows: [], scale: 1 })
+    assert.deepEqual(markRows(0, 60), { rows: [], scale: 1 })
   })
 })

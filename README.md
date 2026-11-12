@@ -1,6 +1,6 @@
 # Leenli
 
-Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Achtecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
+Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sechsecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
 
 - Läuft auf PC, iPhone, iPad und Android als installierbare Web-App (PWA)
 - Funktioniert komplett offline – kein Server, kein Konto, keine Synchronisierung
@@ -41,7 +41,7 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 ## So lernst du mit Leenli
 
-**Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Achtecken, die wie Waben ineinandergreifen – ein Achteck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah in jeder Kachel ihren Inhalt: einen Kreis je Leseseite und ein Schild je Frage, nebeneinander in der Reihenfolge, in der sie drankommen.
+**Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Sechsecken, die lückenlos aneinanderliegen – ein Sechseck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah in jeder Kachel ihren Inhalt: einen Kreis je Leseseite und ein Schild je Frage, nebeneinander in der Reihenfolge, in der sie drankommen.
 
 **Kurs antippen** öffnet das Kursblatt mit Anzahl der Kacheln, Fortschritt und Lernzeit, dazu „Kurs starten“ bzw. „Weiterlernen“. Tippst du eine Kachel an, kannst du sie lernen, nochmal lesen oder zurücksetzen.
 
@@ -323,11 +323,11 @@ src/
     ContentScreen.tsx     Import, Vorlage für Claude, Kurse verwalten
     SettingsScreen.tsx    Einstellungen
   components/
-    map/                  Achteck-Karte und Kursblatt
+    map/                  Sechseck-Karte und Kursblatt
     session/              Fortschrittsleiste, Seite, Fragekarte, „Du lernst …“/„Rückblick“
     speed/                Speed-Reader
   lib/
-    maplayout.ts          Geometrie der Karte (Achteck-Waben)      (+ maplayout.test.ts)
+    maplayout.ts          Geometrie der Karte (Sechseck-Raster)    (+ maplayout.test.ts)
     srs.ts                Wiederholung in wachsenden Abständen     (+ srs.test.ts)
     session.ts            Ablauf einer Sitzung, falsche Fragen anhängen
     smart.ts              Auswahl für „Wissen stärken“ und „Schlau lernen“

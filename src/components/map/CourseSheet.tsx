@@ -154,7 +154,7 @@ export function CourseSheet({
                   aria-expanded={open}
                   onClick={() => setOpenTile(open ? undefined : tile.id)}
                 >
-                  <span className={`tile-oct tile-oct--${status}`} aria-hidden="true">
+                  <span className={`tile-hex tile-hex--${status}`} aria-hidden="true">
                     {status === 'done' ? <Icon name="check" size={18} /> : i + 1}
                   </span>
                   <span className="tile-row-body">

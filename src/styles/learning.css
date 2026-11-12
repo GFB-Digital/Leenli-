@@ -3,9 +3,9 @@
    Farben kommen aus global.css; --course ist die Farbe des jeweiligen Kurses.
    ========================================================================== */
 
-/* Achteck-Form für Kacheln, Markierungen und Abzeichen */
+/* Sechseck-Form (Spitze oben) für Kacheln, Markierungen und Abzeichen */
 :root {
-  --oct: polygon(29.29% 0, 70.71% 0, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0 70.71%, 0 29.29%);
+  --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 
 /* ---------- Karte ---------- */
@@ -38,7 +38,8 @@
 .map-course {
   --terr: color-mix(in srgb, var(--course) 32%, var(--bg));
   --terr-line: color-mix(in srgb, var(--course) 18%, var(--bg));
-  --path-bg: color-mix(in srgb, var(--course) 14%, var(--bg));
+  --tile-new: color-mix(in srgb, var(--course) 15%, var(--bg));
+  --seam: color-mix(in srgb, var(--course) 8%, var(--bg));
   transition: opacity 0.3s ease;
 }
 
@@ -46,58 +47,47 @@
   opacity: 0.3;
 }
 
-/* Gebiet: Fläche mit zarten Achteck-Umrissen */
+/* Gebiet: Fläche mit zarten Sechseck-Umrissen */
 .map-terr {
   fill: var(--terr);
 }
 
-.map-terr-oct {
+.map-terr-hex {
   fill: none;
   stroke: var(--terr-line);
   stroke-width: 2.6;
   stroke-linejoin: round;
 }
 
-/* Umrandung eines Kurses */
-.map-path-border {
-  fill: var(--course);
-}
-
-.map-course--selected .map-path-border {
-  fill: var(--text);
-}
-
-.map-path-inner {
-  fill: var(--path-bg);
-}
-
-/* Kacheln */
+/* Kacheln: Sechsecke liegen direkt aneinander, nur eine feine Fuge trennt sie */
 .map-tile-shape {
-  fill: color-mix(in srgb, var(--course) 30%, var(--bg));
-  stroke: color-mix(in srgb, var(--course) 30%, var(--bg));
-  stroke-width: 3;
+  fill: var(--tile-new);
+  stroke: var(--seam);
+  stroke-width: 2;
   stroke-linejoin: round;
   transition: fill 0.2s ease;
 }
 
-.map-tile--next .map-tile-shape {
-  stroke: var(--course);
-}
-
 .map-tile--learning .map-tile-shape {
   fill: color-mix(in srgb, var(--course) 70%, var(--bg));
-  stroke: var(--course);
 }
 
-/* Gelernt: aus der Ferne in Kursfarbe mit Häkchen, aus der Nähe hell mit Punkten */
+/* Gelernt: aus der Ferne in Kursfarbe mit Häkchen, aus der Nähe hell mit Zeichen */
 .map-tile--done .map-tile-shape {
   fill: var(--course);
-  stroke: var(--course);
 }
 
 .map-d2 .map-tile--done .map-tile-shape {
   fill: color-mix(in srgb, var(--course) var(--map-done), #fff);
-  stroke: color-mix(in srgb, var(--course) var(--map-done), #fff);
+}
+
+/* Nächste Kachel */
+.map-next-ring {
+  fill: none;
+  stroke: var(--course);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 .map-tile-check {
@@ -405,9 +395,9 @@
   display: grid;
   place-items: center;
   width: 92px;
-  height: 92px;
+  height: 106px;
   margin: 0.25rem auto 0.6rem;
-  clip-path: var(--oct);
+  clip-path: var(--hex);
   background: rgb(255 255 255 / 0.2);
   font-size: 2.8rem;
 }
@@ -544,23 +534,23 @@
   transform: rotate(90deg);
 }
 
-.tile-oct {
+.tile-hex {
   display: grid;
   place-items: center;
   width: 40px;
-  height: 40px;
-  clip-path: var(--oct);
+  height: 46px;
+  clip-path: var(--hex);
   background: rgb(0 0 0 / 0.18);
   color: #fff;
   font-size: 0.95rem;
   font-weight: 800;
 }
 
-.tile-oct--learning {
+.tile-hex--learning {
   background: rgb(255 255 255 / 0.35);
 }
 
-.tile-oct--done {
+.tile-hex--done {
   background: #fff;
   color: var(--course);
 }
@@ -1061,12 +1051,12 @@
 
 /* ---------- Zusammenfassung ---------- */
 
-.summary-oct {
+.summary-hex {
   display: grid;
   place-items: center;
   width: 100px;
-  height: 100px;
-  clip-path: var(--oct);
+  height: 115px;
+  clip-path: var(--hex);
   background: var(--course);
   color: #fff;
   animation: pop-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
@@ -1216,27 +1206,27 @@
   font-weight: 600;
 }
 
-.kb-octes {
+.kb-hexes {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
-.kb-oct {
+.kb-hex {
   display: grid;
   place-items: center;
   width: 30px;
-  height: 30px;
-  clip-path: var(--oct);
+  height: 35px;
+  clip-path: var(--hex);
   background: color-mix(in srgb, var(--text) 14%, transparent);
   color: #fff;
 }
 
-.kb-oct--learning {
+.kb-hex--learning {
   background: color-mix(in srgb, var(--course) 50%, transparent);
 }
 
-.kb-oct--done {
+.kb-hex--done {
   background: var(--course);
 }
 

@@ -6,8 +6,8 @@ const PATHS = {
   close: <path d="M18 6L6 18M6 6l12 12" />,
   check: <path d="M20 6L9 17l-5-5" />,
   bolt: <path d="M13.5 2.5L5 13.5h6l-1.5 8L18 10.5h-6z" fill="currentColor" stroke="currentColor" strokeWidth="1" />,
-  oct: <path d="M8.6 3h6.8L21 8.6v6.8L15.4 21H8.6L3 15.4V8.6z" />,
-  octFilled: <path d="M8.6 3h6.8L21 8.6v6.8L15.4 21H8.6L3 15.4V8.6z" fill="currentColor" />,
+  hex: <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" />,
+  hexFilled: <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" fill="currentColor" />,
   calendar: (
     <>
       <rect x="4" y="5.5" width="16" height="15" rx="2.5" />

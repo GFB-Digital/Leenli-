@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Zweite Überarbeitung nach iPhone-Test: Achtecke greifen wie Waben ineinander, Umrandung folgt den Achtecken, Kreise/Schilde in den Kacheln, kleinere untere Leiste. Als Nächstes: erneuter Test auf dem iPhone.
+**Stand:** 12.11.2026 – Dritte Überarbeitung: zurück zu Sechsecken, lückenlos aneinander, ohne Umrandung. Als Nächstes: erneuter Test auf dem iPhone.
 
 ## Erledigt
 
@@ -88,6 +88,13 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Wissensbank-Symbol:** eigener Kopf im Profil, der sich hinten oben in Punkte auflöst (im Stil des Vorbilds, nicht kopiert).
 - **Heller Modus:** gelernte Kacheln kräftiger (`--map-done`), damit sie sich von neuen abheben.
 - Tests: 100 (maplayout neu: Nachbarn berühren sich, Gruppen zusammenhängend und rundlich, Abstand zwischen Kursen, Zeichenreihen).
+
+### Dritte Überarbeitung: Sechsecke ohne Umrandung (12.11.2026)
+- **Wunsch des Nutzers:** zurück zu Sechsecken, genau aneinanderliegend, und die doppelte Umrandung (Linie in Kursfarbe + dunkler Rand) weg.
+- **Sechsecke mit Spitze oben**, Zeilenabstand = Breite × √3/2 → lückenlos. Die Logik (axiale Koordinaten, rundliche Gruppen, Platzierung, Gebiet) blieb gleich, nur die Form wechselte ([maplayout.ts](src/lib/maplayout.ts): `hexagonPoints`, `hexagonsPath`, `CELL_HEIGHT`).
+- **Kacheln in voller Größe**, getrennt nur durch eine feine Fuge (`--seam`). Neue Kacheln sind dunkler als das Gebiet (`--tile-new`), damit man sie ohne Umrandung erkennt. Die nächste Kachel bekommt einen Ring in Kursfarbe, der über den Nachbarn liegt.
+- **Zarte Umrisse** im Gebiet nur noch abseits der Kacheln, damit sie nicht wie Kacheln wirken. Kursname sitzt knapp über der obersten Reihe.
+- **Auch sonst Sechsecke** statt Achtecke: Lerntage-Stempel, Kachel-Nummern im Kursblatt, Abzeichen in Zusammenfassung und Wissensbank (Icons `hex`/`hexFilled`, CSS-Form `--hex`).
 
 ## Entscheidungen und Abweichungen vom Plan
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
