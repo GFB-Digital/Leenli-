@@ -148,6 +148,8 @@ export interface Settings {
   theme: Theme
   /** Fragen pro Wiederholungsrunde */
   reviewBatch: number
+  /** Testmodus: Wissenskarte als 3D-Säulen */
+  map3d: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -156,6 +158,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fontSize: 'M',
   theme: 'auto',
   reviewBatch: 10,
+  map3d: false,
 }
 
 export function isQuestion(step: Step): step is QuestionStep {

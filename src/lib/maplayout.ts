@@ -48,7 +48,7 @@ export function cellDistance(a: Cell, b: Cell): number {
   return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2
 }
 
-function hexagonCorners(cx: number, cy: number, width: number): [number, number][] {
+export function hexagonCorners(cx: number, cy: number, width: number): [number, number][] {
   const w = width / 2
   const h = width / Math.sqrt(3)
   return [

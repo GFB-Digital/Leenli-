@@ -108,6 +108,14 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Bewusst nicht umbenannt:** Datenbank `leenli`, `localStorage`-Schlüssel `leenli-appearance`, Bilder-Cache `leenli-bilder`, die Kennung im Browser-Verlauf und `package.json`. Sonst wären gespeicherte Kurse, Fortschritt und Einstellungen weg. Der Ordner heißt weiter `Leenli-`. Das GitHub-Repo heißt seit 13.11.2026 `GFB-Digital/Locus`, die App liegt jetzt unter <https://gfb-digital.github.io/Locus/> (alte Adresse `…/Leenli-/` gibt 404). Im Browser bleiben gespeicherte Daten erhalten (gleiche Domain); eine auf dem Home-Bildschirm installierte App muss von der neuen Adresse neu hinzugefügt werden.
 - Das App-Icon (rotes „L“) passt weiter.
 
+### 3D-Karte als Testmodus (13.11.2026, Vorbild: Basaltsäulen, 3D-Mindmaps)
+- **Ziel:** sich optisch von Kinnu absetzen. Kacheln als **Sechseck-Säulen**, Höhe = Anzahl Seiten + Fragen der Kachel (`columnHeight`: 4 + 9 je Schritt, höchstens 130).
+- **Einschalten:** Einstellungen → Darstellung → „3D-Karte (Test)“ (`settings.map3d`, Standard aus). Die flache Karte bleibt unverändert.
+- **Feste Neigung 35°, dafür drehbar** (Wunsch des Nutzers): zwei Finger drehen (erst ab 12° Drehung, damit Zoomen nicht mitdreht), am PC Umschalt + Mausrad. Ein Kompass-Knopf unter den Kopf-Knöpfen zeigt nach Norden und dreht zurück.
+- **Technik:** kein echtes 3D und keine Bibliothek, sondern eine Projektion im bestehenden SVG ([map3d.ts](src/lib/map3d.ts), Tests in [map3d.test.ts](src/lib/map3d.test.ts)). Boden und Deckel werden per SVG-Transform gedreht und gestaucht, sichtbare Seiten (2–3 je Säule) berechnet, Säulen von hinten nach vorne gezeichnet. Licht von links: linke Seiten hell, rechte dunkel, weicher Schatten nach rechts.
+- **Geprüft** in Firefox (390 × 844, hell und dunkel, mit den drei Studienkursen, gedreht): Verdeckung, Zeichen auf den Deckeln, Kursnamen, Kompass. Tests: 108.
+- **Offen:** Im Dunkelmodus sind die Seiten sehr dunkel und schwer zu unterscheiden. Tempo beim Drehen auf dem iPhone noch nicht gemessen (beim Drehen wird jede Säule neu berechnet). Schatten fallen am Gebietsrand auch auf den Hintergrund.
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Eigene Studienkurse (12.11.2026):** Die Kurse aus den Vorlesungen (ABWL, Fertigungstechnik, Konstruktion) entstehen in `kurse/`. Der Ordner ist ein eigenes **privates** Repo (`GFB-Digital/Leenli-Kurse`) und hier per `.gitignore` ausgeschlossen, weil er urheberrechtlich geschützte Vorlesungsinhalte enthält. Die App selbst bleibt unverändert: Kurse kommen über „Inhalte → Datei wählen“ hinein. `kurse/werkzeuge/bauen.mjs` prüft jeden Kurs mit dem Importer aus `src/lib/importer.ts`.
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht. Seit 13.11.2026 sucht die App auch beim Zurückholen aus dem Hintergrund nach Updates (`visibilitychange` → `registration.update()` in [pwa.ts](src/lib/pwa.ts)), weil iOS sonst nur bei einem echten Neustart prüft.
@@ -147,6 +155,7 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Neue Styles** stehen in [learning.css](src/styles/learning.css), die Grundlagen weiter in global.css.
 
 ## Als Nächstes
+- **3D-Karte auf dem iPhone testen:** gefällt sie? Läuft das Drehen flüssig? Danach entscheiden: behalten, verbessern oder wieder entfernen
 - Rückmeldungen vom echten iPhone einarbeiten: Karte (Zoomen mit zwei Fingern), Kachel-Ablauf, Wischen bei Entweder-oder, Speed-Reader, Wissensbank
 - **Sicherung von Kursen und Lernstand als Datei** (wichtiger geworden: Neu-Installation wegen neuer Adresse)
 - Mögliche Ideen für später: Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS

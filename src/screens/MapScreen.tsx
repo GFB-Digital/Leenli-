@@ -17,7 +17,7 @@ export function MapScreen({
   selectedCourseId?: string
   focusTileId?: string
 }) {
-  const { courses, learn, storage } = useAppState()
+  const { courses, learn, storage, settings } = useAppState()
   const selected = courses.find((c) => c.id === selectedCourseId)
   const due = atRiskCards(courses, learn, Date.now()).length
   const stamps = totalStamps(learn.days)
@@ -34,6 +34,8 @@ export function MapScreen({
   return (
     <div className="map-screen">
       <WorldMap
+        key={settings.map3d ? '3d' : '2d'}
+        threeD={settings.map3d}
         courses={courses}
         learn={learn}
         selectedId={selected?.id}

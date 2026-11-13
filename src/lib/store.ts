@@ -80,6 +80,7 @@ function sanitizeSettings(stored: unknown): Settings {
     fontSize: pick(s.fontSize, ['S', 'M', 'L', 'XL'] as const, DEFAULT_SETTINGS.fontSize),
     theme: pick(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme),
     reviewBatch: pick(s.reviewBatch, [5, 10, 15, 20] as const, 10),
+    map3d: s.map3d === true,
   }
 }
 

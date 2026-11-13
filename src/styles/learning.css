@@ -128,6 +128,46 @@
   fill: color-mix(in srgb, var(--course) 72%, #000);
 }
 
+/* 3D-Karte (Testmodus): Säulen. --top ist die Deckelfarbe, die Seiten sind
+   je nach Licht (--shade, im Code berechnet) dunkler. */
+.map3d .map-tile {
+  --top: var(--tile-new);
+}
+
+.map3d .map-tile--learning {
+  --top: color-mix(in srgb, var(--course) 70%, var(--bg));
+}
+
+.map3d .map-tile--done {
+  --top: var(--course);
+}
+
+.map3d.map-d2 .map-tile--done {
+  --top: color-mix(in srgb, var(--course) var(--map-done), #fff);
+}
+
+.map3d .map-tile .map-tile-shape {
+  fill: var(--top);
+}
+
+.map-side {
+  fill: color-mix(in srgb, var(--top), #000 var(--shade));
+  /* gleiche Farbe als Rand → keine haarfeinen Spalten zwischen den Seiten */
+  stroke: color-mix(in srgb, var(--top), #000 var(--shade));
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+.map-shadow {
+  fill: rgb(0 0 0 / 0.13);
+}
+
+.map-compass {
+  position: absolute;
+  top: calc(1rem + var(--safe-top) + 2 * 52px + 1.2rem);
+  right: max(var(--gutter), var(--safe-right));
+}
+
 /* Kursname wie ein Reiter oben auf der Umrandung */
 .map-label {
   position: absolute;
