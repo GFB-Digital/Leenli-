@@ -1,8 +1,8 @@
 # Leenli – Projektplan
 
-> **Umbenannt am 13.11.2026:** Die App heißt jetzt **Locus** („Der Ort des Wissens“). Repo, Ordner und interne Speicher-Schlüssel heißen weiter `Leenli`/`leenli`.
+> **Umbenannt am 13.11.2026:** Die App heißt jetzt **Locus** („Dein Ort des Wissens“). Das GitHub-Repo heißt jetzt `GFB-Digital/Locus`; Ordner und interne Speicher-Schlüssel heißen weiter `Leenli-`/`leenli`.
 
-Du baust mit mir meine Lern-App „Leenli“. Ich bin Anfänger, arbeite auf Windows in VS Code im Ordner C:\Users\PCUser\Leenli- (schon mit GitHub verbunden: GFB-Digital/Leenli-, Branch main). Node.js, Git und VS Code sind installiert. Erkläre Terminal-Befehle kurz und für Windows (PowerShell).
+Du baust mit mir meine Lern-App „Leenli“. Ich bin Anfänger, arbeite auf Windows in VS Code im Ordner C:\Users\PCUser\Leenli- (schon mit GitHub verbunden: GFB-Digital/Locus, früher Leenli-, Branch main). Node.js, Git und VS Code sind installiert. Erkläre Terminal-Befehle kurz und für Windows (PowerShell).
 
 ## Ziel
 Eine Lern-App wie Kinnu: Lektionen bestehen aus kurzen Leseabschnitten, nach jedem Abschnitt kommt eine Frage. Besonderheit: Jeder Leseabschnitt kann normal ODER mit einem Speed-Reader gelesen werden (wie spreeder.com, aber besser). Ich will beliebig viele eigene Inhalte importieren, die ich mir von Claude als JSON erstellen lasse.

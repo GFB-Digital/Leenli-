@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 13.11.2026 – App heißt jetzt **Locus**, Startseite „Der Ort des Wissens“; davor: Lesetext, Fragen und Speed-Reader in Google Sans. Als Nächstes: erneuter Test auf dem iPhone.
+**Stand:** 13.11.2026 – App heißt jetzt **Locus**, Startseite „Dein Ort des Wissens“; davor: Lesetext, Fragen und Speed-Reader in Google Sans. Als Nächstes: erneuter Test auf dem iPhone.
 
 ## Erledigt
 
@@ -49,7 +49,7 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - Neue Bausteine: `TempoControl`, `ConfirmDialog` mit optionaler dritter Möglichkeit, `copyText` ([clipboard.ts](src/lib/clipboard.ts))
 
 ### Phase 6 – Feinschliff
-- **Veröffentlichung:** [.github/workflows/pages.yml](.github/workflows/pages.yml) testet, baut und veröffentlicht bei jedem Push auf `main` nach <https://gfb-digital.github.io/Leenli-/> (Node 26, `npm ci` → `npm test` → `npm run build`)
+- **Veröffentlichung:** [.github/workflows/pages.yml](.github/workflows/pages.yml) testet, baut und veröffentlicht bei jedem Push auf `main` nach <https://gfb-digital.github.io/Locus/> (Node 26, `npm ci` → `npm test` → `npm run build`)
 - **Kein Aufblitzen der Farben beim Start:** Darstellung und Schriftgröße werden zusätzlich in `localStorage` (`leenli-appearance`) gespiegelt; ein kleines Skript in [index.html](index.html) setzt sie vor dem ersten Zeichnen
 - **Handy im Querformat:** Wortgröße richtet sich auch nach der Höhe (`min(10vw, 9vh)`); bei niedriger Höhe scrollt die untere Leiste mit, statt Inhalt zu verdecken
 - **iOS:** kein Kopiermenü bei langem Druck auf das Wort (`-webkit-touch-callout: none`)
@@ -104,8 +104,8 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 
 ### Umbenennung in Locus (13.11.2026)
 - **Sichtbarer Name** jetzt „Locus“: Startseite, Fenstertitel, Name auf dem Home-Bildschirm (Manifest, `apple-mobile-web-app-title`), Claude-Vorlage, Beispielkurs, README.
-- **Startseite:** Untertitel „Der Ort des Wissens“ statt „Deine Wissenskarte“; Schriftzug kleiner in der Ecke oben links (2 rem statt 3,2 rem, Untertitel 0,9 rem).
-- **Bewusst nicht umbenannt:** Datenbank `leenli`, `localStorage`-Schlüssel `leenli-appearance`, Bilder-Cache `leenli-bilder`, die Kennung im Browser-Verlauf und `package.json`. Sonst wären gespeicherte Kurse, Fortschritt und Einstellungen weg. Ebenso bleiben Repo (`GFB-Digital/Leenli-`), Ordner und Web-Adresse gleich.
+- **Startseite:** Untertitel „Dein Ort des Wissens“ statt „Deine Wissenskarte“; Schriftzug kleiner in der Ecke oben links (2 rem statt 3,2 rem, Untertitel 0,9 rem).
+- **Bewusst nicht umbenannt:** Datenbank `leenli`, `localStorage`-Schlüssel `leenli-appearance`, Bilder-Cache `leenli-bilder`, die Kennung im Browser-Verlauf und `package.json`. Sonst wären gespeicherte Kurse, Fortschritt und Einstellungen weg. Der Ordner heißt weiter `Leenli-`. Das GitHub-Repo heißt seit 13.11.2026 `GFB-Digital/Locus`, die App liegt jetzt unter <https://gfb-digital.github.io/Locus/> (alte Adresse `…/Leenli-/` gibt 404). Im Browser bleiben gespeicherte Daten erhalten (gleiche Domain); eine auf dem Home-Bildschirm installierte App muss von der neuen Adresse neu hinzugefügt werden.
 - Das App-Icon (rotes „L“) passt weiter.
 
 ## Entscheidungen und Abweichungen vom Plan

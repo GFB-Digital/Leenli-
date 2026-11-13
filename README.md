@@ -7,7 +7,7 @@ Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sec
 - Eigene Kurse lässt du dir von Claude erstellen und importierst sie als JSON
 - Alle Daten bleiben auf deinem Gerät
 
-**App öffnen:** <https://gfb-digital.github.io/Leenli-/> (sobald GitHub Pages eingeschaltet ist, siehe unten)
+**App öffnen:** <https://gfb-digital.github.io/Locus/> (sobald GitHub Pages eingeschaltet ist, siehe unten)
 
 ---
 
@@ -301,7 +301,7 @@ Im Entwicklungsmodus ist der Offline-Speicher (Service Worker) absichtlich aus. 
 
 ## Veröffentlichen auf GitHub Pages
 
-Bei jedem `git push` auf `main` testet und baut GitHub die App automatisch und veröffentlicht sie unter <https://gfb-digital.github.io/Leenli-/>. Schlägt ein Test fehl, wird nichts veröffentlicht. Der Ablauf steht in [.github/workflows/pages.yml](.github/workflows/pages.yml).
+Bei jedem `git push` auf `main` testet und baut GitHub die App automatisch und veröffentlicht sie unter <https://gfb-digital.github.io/Locus/>. Schlägt ein Test fehl, wird nichts veröffentlicht. Der Ablauf steht in [.github/workflows/pages.yml](.github/workflows/pages.yml).
 
 **Einmalig einschalten:** Auf GitHub im Repo **Settings → Pages → Build and deployment → Source: „GitHub Actions“** wählen.
 

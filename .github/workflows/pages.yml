@@ -1,5 +1,5 @@
 # Veröffentlicht Locus bei jedem Push auf main automatisch auf GitHub Pages:
-# https://gfb-digital.github.io/Leenli-/
+# https://gfb-digital.github.io/Locus/
 # Ablauf: Abhängigkeiten installieren → Tests → Build → dist/ hochladen → veröffentlichen.
 # Schlägt ein Test fehl, wird nichts veröffentlicht.
 
