@@ -110,7 +110,8 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 
 ## Entscheidungen und Abweichungen vom Plan
 - **Eigene Studienkurse (12.11.2026):** Die Kurse aus den Vorlesungen (ABWL, Fertigungstechnik, Konstruktion) entstehen in `kurse/`. Der Ordner ist ein eigenes **privates** Repo (`GFB-Digital/Leenli-Kurse`) und hier per `.gitignore` ausgeschlossen, weil er urheberrechtlich geschützte Vorlesungsinhalte enthält. Die App selbst bleibt unverändert: Kurse kommen über „Inhalte → Datei wählen“ hinein. `kurse/werkzeuge/bauen.mjs` prüft jeden Kurs mit dem Importer aus `src/lib/importer.ts`.
-- **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
+- **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht. Seit 13.11.2026 sucht die App auch beim Zurückholen aus dem Hintergrund nach Updates (`visibilitychange` → `registration.update()` in [pwa.ts](src/lib/pwa.ts)), weil iOS sonst nur bei einem echten Neustart prüft.
+- **Alte Adresse `…/Leenli-/`** gibt seit der Umbenennung 404. Dort installierte Home-Bildschirm-Apps bekommen nie wieder Updates und müssen von `…/Locus/` neu hinzugefügt werden (Lernstand geht dabei vermutlich verloren, iOS trennt den Speicher je Home-Bildschirm-App).
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
 - **Farben:** Rot ist nur für den Fokusbuchstaben da. Bei falsch beantworteten Fragen kommt Bernstein/Orange (`--wrong`) zum Einsatz, für richtige Grün (`--correct`).
 - **Zeilenenden:** `.gitattributes` erzwingt LF, damit Git keine CRLF-Warnungen mehr zeigt.
@@ -147,7 +148,8 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 
 ## Als Nächstes
 - Rückmeldungen vom echten iPhone einarbeiten: Karte (Zoomen mit zwei Fingern), Kachel-Ablauf, Wischen bei Entweder-oder, Speed-Reader, Wissensbank
-- Mögliche Ideen für später: Sicherung von Kursen und Lernstand als Datei, Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS
+- **Sicherung von Kursen und Lernstand als Datei** (wichtiger geworden: Neu-Installation wegen neuer Adresse)
+- Mögliche Ideen für später: Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS
 
 ## Offene Punkte
 - **Abweichung von PLAN.md:** Der Plan sieht nur Systemschriften vor. Für Lesetext und Fragen gibt es jetzt Google Sans, wegen der Offline-Pflicht aber in der App gespeichert, nicht von einem CDN.

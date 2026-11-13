@@ -46,7 +46,15 @@ export function startServiceWorker() {
     onOfflineReady: () => setState({ offline: 'ready' }),
     onNeedRefresh: () => setState({ updateAvailable: true }),
     onRegisteredSW: (_url, registration) => {
-      if (registration?.active) setState({ offline: 'ready' })
+      if (!registration) return
+      if (registration.active) setState({ offline: 'ready' })
+      // iOS sucht sonst nur bei einem echten Neustart nach Updates. So auch,
+      // wenn die App aus dem Hintergrund zurückgeholt wird.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && navigator.onLine) {
+          registration.update().catch(() => {}) // offline o. Ä.: nächstes Mal
+        }
+      })
     },
     onRegisterError: () => setState({ offline: 'unsupported' }),
   })
