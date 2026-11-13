@@ -1,4 +1,4 @@
-// Vorlage, die man bei Claude einfügt, um einen Kurs im Locus-Format zu bekommen.
+// Vorlage, die man bei Claude einfügt, um einen Kurs im Topos-Format zu bekommen.
 // Das heutige Datum steckt in der ID → neue Kurse überschneiden sich nicht.
 
 import { COURSE_COLOR_NAMES } from '../lib/colors.ts'
@@ -10,7 +10,7 @@ function dateStamp(date: Date): string {
 
 export function claudeTemplate(today: Date = new Date()): string {
   const stamp = dateStamp(today)
-  return `Erstelle mir einen Lernkurs für meine Lern-App „Locus“.
+  return `Erstelle mir einen Lernkurs für meine Lern-App „ΤΟΠΟΣ“.
 
 Thema: [HIER DEIN THEMA EINTRAGEN]
 Umfang: [z. B. 6 Kacheln]

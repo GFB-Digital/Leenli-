@@ -48,7 +48,7 @@ export function MapScreen({
 
       <header className="map-header">
         <div className="map-brand">
-          <span className="map-logo">Locus</span>
+          <span className="map-logo">ΤΟΠΟΣ</span>
           <span className="map-tagline">Dein Ort des Wissens</span>
         </div>
         <div className="map-actions">

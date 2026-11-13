@@ -1,9 +1,9 @@
-# Locus (früher Leenli) – Fortschritt
+# ΤΟΠΟΣ (Topos, früher Locus und Leenli) – Fortschritt
 
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 13.11.2026 – App heißt jetzt **Locus**, Startseite „Dein Ort des Wissens“; davor: Lesetext, Fragen und Speed-Reader in Google Sans. Als Nächstes: erneuter Test auf dem iPhone.
+**Stand:** 13.11.2026 – App heißt jetzt **ΤΟΠΟΣ** (Topos) mit neuem Logo (Tempel); 3D-Karte als Testmodus; Repo heißt jetzt `GFB-Digital/Topos`, App unter <https://gfb-digital.github.io/Topos/>. Als Nächstes: App auf dem iPhone von der neuen Adresse neu installieren und testen.
 
 ## Erledigt
 
@@ -49,7 +49,7 @@ Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md
 - Neue Bausteine: `TempoControl`, `ConfirmDialog` mit optionaler dritter Möglichkeit, `copyText` ([clipboard.ts](src/lib/clipboard.ts))
 
 ### Phase 6 – Feinschliff
-- **Veröffentlichung:** [.github/workflows/pages.yml](.github/workflows/pages.yml) testet, baut und veröffentlicht bei jedem Push auf `main` nach <https://gfb-digital.github.io/Locus/> (Node 26, `npm ci` → `npm test` → `npm run build`)
+- **Veröffentlichung:** [.github/workflows/pages.yml](.github/workflows/pages.yml) testet, baut und veröffentlicht bei jedem Push auf `main` nach <https://gfb-digital.github.io/Topos/> (Node 26, `npm ci` → `npm test` → `npm run build`)
 - **Kein Aufblitzen der Farben beim Start:** Darstellung und Schriftgröße werden zusätzlich in `localStorage` (`leenli-appearance`) gespiegelt; ein kleines Skript in [index.html](index.html) setzt sie vor dem ersten Zeichnen
 - **Handy im Querformat:** Wortgröße richtet sich auch nach der Höhe (`min(10vw, 9vh)`); bei niedriger Höhe scrollt die untere Leiste mit, statt Inhalt zu verdecken
 - **iOS:** kein Kopiermenü bei langem Druck auf das Wort (`-webkit-touch-callout: none`)
@@ -116,10 +116,20 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Geprüft** in Firefox (390 × 844, hell und dunkel, mit den drei Studienkursen, gedreht): Verdeckung, Zeichen auf den Deckeln, Kursnamen, Kompass. Tests: 108.
 - **Offen:** Im Dunkelmodus sind die Seiten sehr dunkel und schwer zu unterscheiden. Tempo beim Drehen auf dem iPhone noch nicht gemessen (beim Drehen wird jede Säule neu berechnet). Schatten fallen am Gebietsrand auch auf den Hintergrund.
 
+### Umbenennung in ΤΟΠΟΣ und neues Logo (13.11.2026)
+- **Name:** sichtbar überall **ΤΟΠΟΣ** in griechischen Großbuchstaben (Fenstertitel, Name unter dem Icon im Manifest und `apple-mobile-web-app-title`, Startseite, Claude-Vorlage, Beispielkurs, README). „Topos“ in lateinischen Buchstaben nur in `package.json`, Kommentaren und Konsolen-Meldungen. Interne Schlüssel bleiben `leenli…`.
+- **Schriftzug auf der Startseite** wie im Logo: dünn (400) und weit gesperrt (0,16 em) statt fett.
+- **Logo:** Original mit Schriftzug liegt in [design/logo.png](design/logo.png) (1024 × 1024) und steht oben im README.
+- **App-Icons** erzeugt [scripts/generate-icons.mjs](scripts/generate-icons.mjs) jetzt aus dem Logo (eigener kleiner PNG-Decoder, keine Bibliothek): Schriftzug entfernt (Verlauf darüber und darunter überblendet), Tempel mittig auf 84 % der Breite, Rand des grauen Verlaufs fortgesetzt. Maskable-Icon mit 68 %, damit der Tempel in der runden Android-Maske bleibt. Favicon 32 px mit 96 %.
+- **Entfernt:** `public/favicon.svg` (altes rotes „L“); das Browser-Tab nutzt `icons/favicon-32.png`.
+- **Größe:** Die Icons sind zusammen rund 270 KB (vorher wenige KB), weil das Logo ein fein verrauschtes Bild ist. PNG-Zeilenfilter brachten nur ~5 % und wurden deshalb nicht eingebaut.
+- **Repo umbenannt:** `GFB-Digital/Locus` → `GFB-Digital/Topos` (per `gh repo rename`), Remote auf `https://github.com/GFB-Digital/Topos.git` umgestellt. Die App liegt jetzt unter <https://gfb-digital.github.io/Topos/>, `…/Locus/` gibt 404. Auf den Geräten muss die App von der neuen Adresse neu installiert werden. Der Ordner bleibt `C:UsersPCUserLocus`.
+- **Geprüft:** `npm run build` und `npm test` (108 Tests) fehlerfrei; gebautes Manifest heißt ΤΟΠΟΣ (echte griechische Buchstaben, keine lateinischen T/O).
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Eigene Studienkurse (12.11.2026):** Die Kurse aus den Vorlesungen (ABWL, Fertigungstechnik, Konstruktion) entstehen in `kurse/`. Der Ordner ist ein eigenes **privates** Repo (`GFB-Digital/Leenli-Kurse`) und hier per `.gitignore` ausgeschlossen, weil er urheberrechtlich geschützte Vorlesungsinhalte enthält. Die App selbst bleibt unverändert: Kurse kommen über „Inhalte → Datei wählen“ hinein. `kurse/werkzeuge/bauen.mjs` prüft jeden Kurs mit dem Importer aus `src/lib/importer.ts`.
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht. Seit 13.11.2026 sucht die App auch beim Zurückholen aus dem Hintergrund nach Updates (`visibilitychange` → `registration.update()` in [pwa.ts](src/lib/pwa.ts)), weil iOS sonst nur bei einem echten Neustart prüft.
-- **Alte Adresse `…/Leenli-/`** gibt seit der Umbenennung 404. Dort installierte Home-Bildschirm-Apps bekommen nie wieder Updates und müssen von `…/Locus/` neu hinzugefügt werden (Lernstand geht dabei vermutlich verloren, iOS trennt den Speicher je Home-Bildschirm-App).
+- **Alte Adressen `…/Leenli-/` und `…/Locus/`** geben seit den Umbenennungen 404. Dort installierte Home-Bildschirm-Apps bekommen nie wieder Updates und müssen von `…/Topos/` neu hinzugefügt werden (Lernstand geht dabei vermutlich verloren, iOS trennt den Speicher je Home-Bildschirm-App).
 - **Relative Pfade** (`base: './'`): Die App läuft in jedem Unterordner (z. B. GitHub Pages) und unverändert in Capacitor.
 - **Farben:** Rot ist nur für den Fokusbuchstaben da. Bei falsch beantworteten Fragen kommt Bernstein/Orange (`--wrong`) zum Einsatz, für richtige Grün (`--correct`).
 - **Zeilenenden:** `.gitattributes` erzwingt LF, damit Git keine CRLF-Warnungen mehr zeigt.

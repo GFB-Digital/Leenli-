@@ -218,11 +218,12 @@
   text-shadow: 0 1px 14px var(--bg);
 }
 
+/* Schriftzug wie im Logo: dünn und weit gesperrt */
 .map-logo {
   font-family: var(--font-ui);
   font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   line-height: 1;
 }
 

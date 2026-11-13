@@ -83,7 +83,7 @@ async function run<T>(
 
 function fallBackToMemory(error: unknown) {
   if (mode === 'memory') return
-  console.warn('Locus: Speichern auf dem Gerät nicht möglich, nutze Arbeitsspeicher.', error)
+  console.warn('Topos: Speichern auf dem Gerät nicht möglich, nutze Arbeitsspeicher.', error)
   mode = 'memory'
 }
 

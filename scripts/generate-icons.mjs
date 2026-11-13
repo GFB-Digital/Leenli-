@@ -1,103 +1,157 @@
-// Erzeugt alle App-Icons (PNG + SVG) ohne Zusatzbibliotheken.
+// Erzeugt alle App-Icons aus dem Logo design/logo.png – ohne Zusatzbibliotheken.
 // Aufruf: npm run icons
 //
-// Motiv: der Speed-Reader im Kleinen – zwei Führungslinien mit Markierung,
-// dazwischen ein „L“ als roter Fokusbuchstabe auf Papierton.
-// Alle Maße beziehen sich auf eine 512×512-Fläche.
+// Das Logo (1024 × 1024) zeigt einen Tempel auf grauem Verlauf, darüber den
+// Schriftzug „ΤΟΠΟΣ“. Für die Icons wird der Schriftzug entfernt (der Verlauf
+// darüber und darunter wird überblendet) und der Tempel mittig gesetzt – auf dem
+// Home-Bildschirm wäre Schrift winzig, der Name steht ohnehin darunter.
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { deflateSync } from 'node:zlib'
+import { deflateSync, inflateSync } from 'node:zlib'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const COLORS = {
-  paper: '#f7f3ea',
-  indigo: '#4b3fd1',
-  focus: '#cc3b4e',
-}
-
-// Rechteck: x/y = linke obere Ecke, w/h = Größe, r = Eckenradius
-const rect = (x, y, w, h, r) => ({ x, y, w, h, r })
-
-// Vordergrund – Ebenen werden in dieser Reihenfolge gezeichnet.
-// Eine Ebene kann aus mehreren Rechtecken bestehen (werden vereinigt).
-const FOREGROUND = [
-  {
-    color: COLORS.indigo,
-    rects: [
-      rect(120, 146, 272, 10, 5), // obere Führungslinie
-      rect(223, 146, 10, 32, 5), // Markierung oben
-      rect(120, 356, 272, 10, 5), // untere Führungslinie
-      rect(223, 334, 10, 32, 5), // Markierung unten
-    ],
-  },
-  {
-    color: COLORS.focus,
-    rects: [
-      rect(208, 194, 40, 124, 6), // Stamm des L (mittig unter den Markierungen)
-      rect(208, 282, 98, 36, 6), // Fuß des L
-    ],
-  },
-]
+/** Lage im Logo (Pixel, gemessen): Schriftzug-Streifen und Umriss des Tempels */
+const TEXT_BAND = { top: 90, bottom: 210 }
+const TEMPLE = { left: 42, right: 981, top: 260, bottom: 871 }
 
 // ---------------------------------------------------------------------------
-// Rasterisierung über Abstandsfunktionen (weiche Kanten ohne Treppeneffekt)
+// Minimaler PNG-Decoder (8 Bit, RGB oder RGBA, ohne Zeilensprung) → RGB
 
-function sdRoundRect(px, py, { x, y, w, h, r }) {
-  const cx = x + w / 2
-  const cy = y + h / 2
-  const qx = Math.abs(px - cx) - w / 2 + r
-  const qy = Math.abs(py - cy) - h / 2 + r
-  const outside = Math.hypot(Math.max(qx, 0), Math.max(qy, 0))
-  const inside = Math.min(Math.max(qx, qy), 0)
-  return outside + inside - r
+function decodePng(buf) {
+  let pos = 8
+  let width = 0
+  let height = 0
+  let type = 0
+  const idat = []
+  while (pos < buf.length) {
+    const len = buf.readUInt32BE(pos)
+    const name = buf.toString('ascii', pos + 4, pos + 8)
+    const data = buf.subarray(pos + 8, pos + 8 + len)
+    if (name === 'IHDR') {
+      width = data.readUInt32BE(0)
+      height = data.readUInt32BE(4)
+      type = data[9]
+      if (data[8] !== 8 || (type !== 2 && type !== 6) || data[12] !== 0) {
+        throw new Error('Logo muss ein PNG mit 8 Bit RGB/RGBA ohne Zeilensprung sein')
+      }
+    }
+    if (name === 'IDAT') idat.push(data)
+    pos += 12 + len
+  }
+  const channels = type === 6 ? 4 : 3
+  const stride = width * channels
+  const raw = inflateSync(Buffer.concat(idat))
+  const rgb = new Float64Array(width * height * 3)
+  let prev = new Uint8Array(stride)
+  for (let y = 0; y < height; y++) {
+    const filter = raw[y * (stride + 1)]
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1))
+    const cur = new Uint8Array(stride)
+    for (let i = 0; i < stride; i++) {
+      const a = i >= channels ? cur[i - channels] : 0
+      const b = prev[i]
+      const c = i >= channels ? prev[i - channels] : 0
+      const p = a + b - c
+      const pa = Math.abs(p - a)
+      const pb = Math.abs(p - b)
+      const pc = Math.abs(p - c)
+      const paeth = pa <= pb && pa <= pc ? a : pb <= pc ? b : c
+      const predict = [0, a, b, (a + b) >> 1, paeth][filter]
+      cur[i] = (line[i] + predict) & 255
+    }
+    for (let x = 0; x < width; x++) {
+      for (let k = 0; k < 3; k++) rgb[(y * width + x) * 3 + k] = cur[x * channels + k]
+    }
+    prev = cur
+  }
+  return { width, height, rgb }
 }
 
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16)
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+// ---------------------------------------------------------------------------
+// Bildbearbeitung
+
+/** Schriftzug entfernen: je Spalte zwischen der Zeile darüber und darunter überblenden */
+function removeText(img) {
+  const { width, rgb } = img
+  const { top, bottom } = TEXT_BAND
+  for (let x = 0; x < width; x++) {
+    for (let y = top; y <= bottom; y++) {
+      const t = (y - top + 1) / (bottom - top + 2)
+      for (let k = 0; k < 3; k++) {
+        const above = rgb[((top - 1) * width + x) * 3 + k]
+        const below = rgb[((bottom + 1) * width + x) * 3 + k]
+        rgb[(y * width + x) * 3 + k] = above + (below - above) * t
+      }
+    }
+  }
 }
 
-function render(size, { rounded }) {
-  const scale = size / 512
-  const layers = [
-    {
-      color: COLORS.paper,
-      rects: [rounded ? rect(0, 0, 512, 512, 112) : rect(-8, -8, 528, 528, 0)],
-    },
-    ...FOREGROUND,
-  ].map((layer) => ({ ...layer, rgb: hexToRgb(layer.color) }))
+/** Farbe an (x, y) mit bilinearer Interpolation; außerhalb gilt der nächste Randpixel */
+function sample(img, x, y, out) {
+  const { width, height, rgb } = img
+  const cx = Math.min(width - 1, Math.max(0, x - 0.5))
+  const cy = Math.min(height - 1, Math.max(0, y - 0.5))
+  const x0 = Math.floor(cx)
+  const y0 = Math.floor(cy)
+  const x1 = Math.min(width - 1, x0 + 1)
+  const y1 = Math.min(height - 1, y0 + 1)
+  const fx = cx - x0
+  const fy = cy - y0
+  for (let k = 0; k < 3; k++) {
+    const top = rgb[(y0 * width + x0) * 3 + k] * (1 - fx) + rgb[(y0 * width + x1) * 3 + k] * fx
+    const bottom = rgb[(y1 * width + x0) * 3 + k] * (1 - fx) + rgb[(y1 * width + x1) * 3 + k] * fx
+    out[k] = top * (1 - fy) + bottom * fy
+  }
+}
 
+/**
+ * Icon der Größe `size`: Tempel mittig, `fill` = Anteil der Icon-Breite, den der Tempel einnimmt.
+ * Der Hintergrund-Verlauf wird am Rand fortgesetzt. `radius` (Anteil) rundet die Ecken transparent ab.
+ */
+function renderIcon(img, size, { fill, radius = 0 }) {
+  const templeW = TEMPLE.right - TEMPLE.left
+  const scale = (size * fill) / templeW // Icon-Pixel je Logo-Pixel
+  const srcCx = (TEMPLE.left + TEMPLE.right) / 2
+  const srcCy = (TEMPLE.top + TEMPLE.bottom) / 2
+  const sub = Math.max(1, Math.ceil(1 / scale)) // Unterabtastung → sauberes Verkleinern
   const pixels = new Uint8Array(size * size * 4)
+  const color = [0, 0, 0]
+  const r = radius * size
   for (let py = 0; py < size; py++) {
     for (let px = 0; px < size; px++) {
-      const u = (px + 0.5) / scale
-      const v = (py + 0.5) / scale
-      let r = 0
-      let g = 0
-      let b = 0
-      let a = 0
-      for (const layer of layers) {
-        let d = Infinity
-        for (const shape of layer.rects) d = Math.min(d, sdRoundRect(u, v, shape))
-        const cover = Math.min(1, Math.max(0, 0.5 - d * scale))
-        if (cover === 0) continue
-        const outA = cover + a * (1 - cover)
-        r = (layer.rgb[0] * cover + r * a * (1 - cover)) / outA
-        g = (layer.rgb[1] * cover + g * a * (1 - cover)) / outA
-        b = (layer.rgb[2] * cover + b * a * (1 - cover)) / outA
-        a = outA
+      let sr = 0
+      let sg = 0
+      let sb = 0
+      for (let j = 0; j < sub; j++) {
+        for (let i = 0; i < sub; i++) {
+          const u = px + (i + 0.5) / sub
+          const v = py + (j + 0.5) / sub
+          sample(img, srcCx + (u - size / 2) / scale, srcCy + (v - size / 2) / scale, color)
+          sr += color[0]
+          sg += color[1]
+          sb += color[2]
+        }
       }
-      const i = (py * size + px) * 4
-      pixels[i] = Math.round(r)
-      pixels[i + 1] = Math.round(g)
-      pixels[i + 2] = Math.round(b)
-      pixels[i + 3] = Math.round(a * 255)
+      const n = sub * sub
+      const o = (py * size + px) * 4
+      pixels[o] = Math.round(sr / n)
+      pixels[o + 1] = Math.round(sg / n)
+      pixels[o + 2] = Math.round(sb / n)
+      pixels[o + 3] = r > 0 ? Math.round(255 * roundedCover(px + 0.5, py + 0.5, size, r)) : 255
     }
   }
   return encodePng(size, size, pixels)
+}
+
+/** Deckung eines Pixels in einem Quadrat mit abgerundeten Ecken (weiche Kante) */
+function roundedCover(x, y, size, r) {
+  const qx = Math.abs(x - size / 2) - size / 2 + r
+  const qy = Math.abs(y - size / 2) - size / 2 + r
+  const d = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r
+  return Math.min(1, Math.max(0, 0.5 - d))
 }
 
 // ---------------------------------------------------------------------------
@@ -145,34 +199,20 @@ function encodePng(width, height, rgba) {
 }
 
 // ---------------------------------------------------------------------------
-// SVG-Variante (für das Browser-Tab)
 
-function renderSvg() {
-  const shapes = [
-    { color: COLORS.paper, rects: [rect(0, 0, 512, 512, 112)] },
-    ...FOREGROUND,
-  ]
-    .flatMap((layer) =>
-      layer.rects.map(
-        (s) =>
-          `  <rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.r}" fill="${layer.color}"/>`,
-      ),
-    )
-    .join('\n')
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">\n${shapes}\n</svg>\n`
-}
-
-// ---------------------------------------------------------------------------
+const logo = decodePng(readFileSync(join(root, 'design/logo.png')))
+removeText(logo)
 
 const outputs = [
-  ['public/icons/icon-192.png', () => render(192, { rounded: true })],
-  ['public/icons/icon-512.png', () => render(512, { rounded: true })],
-  // Maskable: vollflächig, Motiv liegt komplett in der sicheren Zone (Kreis mit 80 %)
-  ['public/icons/maskable-512.png', () => render(512, { rounded: false })],
+  // Abgerundet für Browser, PC und Android-Launcher ohne Maske
+  ['public/icons/icon-192.png', () => renderIcon(logo, 192, { fill: 0.84, radius: 0.22 })],
+  ['public/icons/icon-512.png', () => renderIcon(logo, 512, { fill: 0.84, radius: 0.22 })],
+  // Maskable: vollflächig, Tempel komplett in der sicheren Zone (Kreis mit 80 % Durchmesser)
+  ['public/icons/maskable-512.png', () => renderIcon(logo, 512, { fill: 0.68 })],
   // iOS rundet die Ecken selbst ab und mag keine Transparenz
-  ['public/icons/apple-touch-icon.png', () => render(180, { rounded: false })],
-  ['public/icons/favicon-32.png', () => render(32, { rounded: true })],
-  ['public/favicon.svg', renderSvg],
+  ['public/icons/apple-touch-icon.png', () => renderIcon(logo, 180, { fill: 0.84 })],
+  // Browser-Tab: so groß wie möglich, sonst ist der Tempel nicht zu erkennen
+  ['public/icons/favicon-32.png', () => renderIcon(logo, 32, { fill: 0.96, radius: 0.18 })],
 ]
 
 for (const [file, make] of outputs) {

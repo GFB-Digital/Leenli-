@@ -19,8 +19,8 @@ export default defineConfig({
       includeManifestIcons: false, // Icons erfasst bereits globPatterns unten
       manifest: {
         id: './',
-        name: 'Locus',
-        short_name: 'Locus',
+        name: 'ΤΟΠΟΣ',
+        short_name: 'ΤΟΠΟΣ',
         description: 'Lernen in kurzen Abschnitten – mit eingebautem Speed-Reader.',
         lang: 'de',
         dir: 'ltr',

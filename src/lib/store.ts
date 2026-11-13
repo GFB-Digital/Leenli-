@@ -110,7 +110,7 @@ function loadCourses(stored: unknown): { courses: Course[]; converted: boolean }
     if (isRecord(raw) && 'lessons' in raw) converted = true
     const result = validateCourses(raw)
     if (result.ok) courses.push(...result.courses)
-    else console.warn('Locus: gespeicherter Kurs konnte nicht gelesen werden', result.errors)
+    else console.warn('Topos: gespeicherter Kurs konnte nicht gelesen werden', result.errors)
   }
   return { courses, converted }
 }

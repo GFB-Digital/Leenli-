@@ -1,4 +1,4 @@
-// Datenmodell von Locus: Kurs → Kacheln → Schritte (Seiten und Fragen)
+// Datenmodell von Topos: Kurs → Kacheln → Schritte (Seiten und Fragen)
 
 // ---------------------------------------------------------------------------
 // Inhalte

@@ -140,7 +140,7 @@ export const SAMPLE_COURSE: Course = {
           title: 'So nutzt du den Testeffekt',
           text:
             'Der Testeffekt lässt sich leicht in den Alltag einbauen. Klappe nach einem Abschnitt das Buch zu und fasse in eigenen Worten zusammen, was drinstand. Beantworte Übungsfragen, bevor du die Lösung ansiehst. Nutze Karteikarten und sprich die Antwort aus, bevor du die Karte umdrehst.\n\n' +
-            'Fehler sind dabei kein Problem, sondern Teil des Lernens – besonders dann, wenn du anschließend die richtige Antwort siehst. **Rückmeldung** verstärkt den Effekt. Genau deshalb folgt in Locus auf jeden Leseabschnitt eine Frage: Du liest, rufst ab und bekommst sofort eine Rückmeldung.',
+            'Fehler sind dabei kein Problem, sondern Teil des Lernens – besonders dann, wenn du anschließend die richtige Antwort siehst. **Rückmeldung** verstärkt den Effekt. Genau deshalb folgt in ΤΟΠΟΣ auf jeden Leseabschnitt eine Frage: Du liest, rufst ab und bekommst sofort eine Rückmeldung.',
         },
         {
           type: 'choice',
