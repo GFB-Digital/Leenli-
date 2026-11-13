@@ -99,3 +99,34 @@ Vorbild für die Lernprinzipien sind die Screenshots von Kinnu. Übernommen wird
 
 Phasen: 7 Kursformat · 8 Kachel-Ablauf · 9 Karte · 10 Wiederholung · 11 Wissensbank + Lerntage · 12 „Schlau lernen“ + Feinschliff.
 Der Nutzer hat am 12.11.2026 gebeten, diese Phasen ohne Pause nacheinander umzusetzen.
+
+## Erweiterung (13.11.2026): 3D-Welt, Lernsystem, Ausbau
+
+Auftrag: Die App auf Basis einer vollständigen Analyse gezielt verbessern. Kinnu bleibt das wichtigste Vorbild für die Mechanik; das Erscheinungsbild bleibt eigen. Keine laufenden Kosten, keine neuen Bibliotheken, weiter alles lokal. Der Nutzer hat den Plan am 13.11.2026 freigegeben und gebeten, alle Phasen ohne Pause umzusetzen.
+
+**Entschieden vom Nutzer:**
+1. Die Säulenhöhe zeigt, wie fest das Wissen einer Kachel sitzt. Sie sinkt nur nach Fehlern; „Wiederholung fällig“ zeigt die Säule durch Verblassen.
+2. Ungelernte Kurse sind flach – die Höhenunterschiede entstehen durch das Lernen.
+3. Die Sicherung als Datei kommt direkt nach der 3D-Welt.
+
+**Phase 13 – 3D-Welt perfektionieren**
+- Nur noch die 3D-Ansicht, flache Karte und Umschalter entfernen.
+- Blaues Gebiet rund um die Säulen entfernen.
+- Säulen organischer anordnen: gewachsene Gruppen, reproduzierbar, neue Kacheln verschieben keine alten.
+- Höhe = Beherrschung, begrenzt und nichtlinear: `h = 12 + 108 × m^0,7` (0 % → 12, 50 % → 78, 100 % → 120 Kartenpixel bei 60 Pixel Zellbreite). Wachstum nach einer Sitzung animiert.
+- Zeichen in den Kacheln stufenlos einblenden statt in harten Stufen.
+- Kamera: Nachgleiten, Grenzen, Drehen am PC, Tastatur, Kursnamen ohne Überlappung.
+
+**Phase 14 – Lernsystem gezielt verbessern**
+- Sicherung als Datei (Kurse, Lernstand, Einstellungen) speichern und einspielen.
+- Abgebrochene Wiederholungsrunden speichern ihre Antworten.
+- Neuer Fragetyp Karteikarte (freies Abrufen mit Selbstbewertung).
+- Ratekorrektur bei Fragen mit wenigen Antworten.
+- Liste schwieriger Fragen.
+
+**Phase 15 – Ausbau**
+- Prüfung über einen Kurs (gemischt, Auswertung am Ende) und Prüfungstermin mit Tagespensum.
+- Neuer Fragetyp Reihenfolge.
+- Vorschau der anstehenden Wiederholungen, Themengebiete (`group`), Suche, Import-Hinweise, Tastatur für die Karte.
+
+**Bewusst nicht gemacht:** grafischer Kurseditor, Kurse aus PDFs ohne Claude, lokale KI im Browser, Ligen/Herzen/Punkte, Wechsel auf eine 3D-Bibliothek.

@@ -15,7 +15,19 @@ import {
   startSession,
   tileItems,
 } from './session.ts'
-import { atRiskCards, pickForReview, planSmartSession } from './smart.ts'
+import {
+  atRiskCards,
+  daysUntilExam,
+  dueCards,
+  dueForecast,
+  examPlan,
+  examPlanText,
+  hardCards,
+  learnedCards,
+  pickForExam,
+  pickForReview,
+  planSmartSession,
+} from './smart.ts'
 import { DAY, newCard } from './srs.ts'
 import { addDays, currentStreak, dayKey, hasStamp, monthGrid, totalStamps, weekKeys } from './streak.ts'
 import { EMPTY_LEARN, isQuestion, type LearnState } from './types.ts'
@@ -160,5 +172,119 @@ describe('Auswahl für Wiederholung und „Schlau lernen“', () => {
     const picked = pickForReview(courses, learn, T0, 3, undefined, fixed)
     assert.ok(picked.every((ref) => ref.tileId === t1.id))
     assert.equal(pickForReview(courses, learn, T0, 50, SAMPLE_COURSE.id).length, tileQuestions(t1).length + tileQuestions(t2).length)
+  })
+
+  it('holt Fragen ohne Gedächtnis-Stand sofort nach (z. B. nach einem überarbeiteten Kurs)', () => {
+    const learn = learnedTile(EMPTY_LEARN, 0, T0)
+    const [firstKey] = Object.keys(learn.cards)
+    const { [firstKey]: _removed, ...cards } = learn.cards
+    const refs = learnedCards(courses, { ...learn, cards })
+    assert.equal(refs.length, tileQuestions(t1).length)
+    const fresh = refs.find((ref) => ref.key === firstKey)!
+    assert.equal(fresh.card.reps, 0)
+    assert.equal(dueCards(courses, { ...learn, cards }, T0 + DAY).some((ref) => ref.key === firstKey), true)
+  })
+
+  it('sammelt schwierige Fragen: mehrfach falsch, die häufigsten Fehler zuerst', () => {
+    const learn = learnedTile(EMPTY_LEARN, 0, T0)
+    const keys = Object.keys(learn.cards)
+    const cards = {
+      ...learn.cards,
+      [keys[0]]: { ...learn.cards[keys[0]], lapses: 2 },
+      [keys[1]]: { ...learn.cards[keys[1]], lapses: 5 },
+      [keys[2]]: { ...learn.cards[keys[2]], lapses: 1 },
+    }
+    const hard = hardCards(courses, { ...learn, cards })
+    assert.deepEqual(hard.map((ref) => ref.key), [keys[1], keys[0]])
+  })
+
+  it('sagt voraus, wie viele Wiederholungen anstehen', () => {
+    // 09:00 Uhr gelernt, erste Wiederholung nach 3 Tagen
+    const learn = learnedTile(EMPTY_LEARN, 0, T0)
+    const count = tileQuestions(t1).length
+    assert.deepEqual(dueForecast(courses, learn, T0), { today: 0, tomorrow: 0, week: count })
+    assert.deepEqual(dueForecast(courses, learn, T0 + 2 * DAY), { today: 0, tomorrow: count, week: count })
+    assert.deepEqual(dueForecast(courses, learn, T0 + 3 * DAY), { today: count, tomorrow: 0, week: count })
+  })
+})
+
+describe('Prüfung', () => {
+  const courses = [SAMPLE_COURSE]
+  const [t1] = SAMPLE_COURSE.tiles
+  const day = (offset: number) => dayKey(T0 + offset * DAY)
+
+  function learnedAll(at: number): LearnState {
+    const cards: LearnState['cards'] = {}
+    const tiles: LearnState['tiles'][string] = {}
+    for (const tile of SAMPLE_COURSE.tiles) {
+      for (const { step } of tileQuestions(tile)) cards[cardKey(SAMPLE_COURSE.id, tile.id, step)] = newCard(true, at)
+      tiles[tile.id] = { status: 'done', startedAt: at, completedAt: at }
+    }
+    return { ...EMPTY_LEARN, cards, tiles: { [SAMPLE_COURSE.id]: tiles } }
+  }
+
+  it('zählt die Tage bis zum Termin', () => {
+    assert.equal(daysUntilExam(day(0), T0), 0)
+    assert.equal(daysUntilExam(day(12), T0), 12)
+    assert.equal(daysUntilExam(day(-2), T0), -2)
+    assert.equal(daysUntilExam(undefined, T0), null)
+    assert.equal(daysUntilExam('bald', T0), null)
+  })
+
+  it('rechnet das Tagespensum so, dass vor der Prüfung Zeit zum Wiederholen bleibt', () => {
+    const plan = (offset: number, learn: LearnState = EMPTY_LEARN) =>
+      examPlan(SAMPLE_COURSE, { ...learn, examDates: { [SAMPLE_COURSE.id]: day(offset) } }, T0)
+    assert.equal(examPlan(SAMPLE_COURSE, EMPTY_LEARN, T0), null)
+    // 3 Kacheln, 9 Tage, 3 Tage Reserve → 6 Lerntage → 1 pro Tag
+    assert.deepEqual(plan(9), { days: 9, remaining: 3, perDay: 1 })
+    // nur noch 4 Tage → 1 Lerntag → alle 3 heute
+    assert.deepEqual(plan(4), { days: 4, remaining: 3, perDay: 3 })
+    assert.deepEqual(plan(5, learnedAll(T0)), { days: 5, remaining: 0, perDay: 0 })
+    assert.match(examPlanText(plan(9)!), /in 9 Tagen · noch 3 Kacheln, am besten 1 pro Tag/)
+    assert.match(examPlanText(plan(5, learnedAll(T0))!), /alles gelernt/)
+    assert.match(examPlanText(plan(-1)!), /vorbei/)
+  })
+
+  it('holt in der Woche vor der Prüfung jede Frage noch einmal', () => {
+    // Fest gelernt (lange Abstände) und vor 10 Tagen zuletzt wiederholt → nicht gefährdet
+    const learn = learnedAll(T0 - 10 * DAY)
+    for (const key of Object.keys(learn.cards)) learn.cards[key] = { ...learn.cards[key], s: 200, due: T0 + 190 * DAY }
+    assert.equal(dueCards(courses, learn, T0).length, 0)
+    // Prüfung in 5 Tagen → alle offen; Prüfung in 20 Tagen → noch nicht
+    const soon = { ...learn, examDates: { [SAMPLE_COURSE.id]: day(5) } }
+    assert.equal(dueCards(courses, soon, T0).length, Object.keys(learn.cards).length)
+    assert.equal(dueCards(courses, { ...learn, examDates: { [SAMPLE_COURSE.id]: day(20) } }, T0).length, 0)
+    assert.equal(planSmartSession(courses, soon, T0, 5, fixed).kind, 'review')
+    // In dieser Woche schon wiederholt → nicht noch einmal
+    const key = Object.keys(soon.cards)[0]
+    const done = { ...soon, cards: { ...soon.cards, [key]: { ...soon.cards[key], last: T0 - DAY } } }
+    assert.equal(dueCards(courses, done, T0).length, Object.keys(learn.cards).length - 1)
+  })
+
+  it('lernt im Kurs mit der nächsten Prüfung zuerst weiter', () => {
+    const other = { ...SAMPLE_COURSE, id: 'anderer-kurs', title: 'Anderer Kurs' }
+    const learn: LearnState = { ...EMPTY_LEARN, lastCourseId: SAMPLE_COURSE.id, examDates: { [other.id]: day(10) } }
+    const plan = planSmartSession([SAMPLE_COURSE, other], learn, T0, 10, fixed)
+    assert.equal(plan.kind === 'tile' && plan.course.id, other.id)
+  })
+
+  it('mischt Prüfungsfragen aus allen Kacheln', () => {
+    const all = SAMPLE_COURSE.tiles.reduce((sum, tile) => sum + tileQuestions(tile).length, 0)
+    const small = pickForExam(SAMPLE_COURSE, 3, fixed)
+    assert.equal(small.length, 3)
+    assert.equal(new Set(small.map((ref) => ref.tileId)).size, 3) // jede Kachel einmal
+    const full = pickForExam(SAMPLE_COURSE, 100, fixed)
+    assert.equal(full.length, all)
+    assert.equal(new Set(full.map((ref) => `${ref.tileId}/${ref.step}`)).size, all)
+  })
+
+  it('fragt in der Prüfung jede Frage nur einmal, auch nach einem Fehler', () => {
+    const refs = tileQuestions(t1).slice(0, 2).map(({ index }) => ({ courseId: SAMPLE_COURSE.id, tileId: t1.id, step: index }))
+    let s = startSession(reviewItems(refs))
+    const key = lookupQuestion(courses, s.items[0] as never)!.key
+    s = answer(s, key, false, false)
+    assert.equal(s.items.length, 2)
+    assert.equal(pendingRetries(s), 0)
+    assert.deepEqual(firstTryStats(s), { correct: 0, total: 1 })
   })
 })

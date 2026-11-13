@@ -11,5 +11,5 @@ Claude Code liest diese Datei zu Beginn jeder Sitzung automatisch. Die beiden fo
 - In Phasen arbeiten und nach jeder Phase anhalten: sagen, was getestet werden soll, und einen Commit vorschlagen (`git add`, `commit`, `push`). Der Nutzer committet selbst.
 - Vor größeren Umbauten nachfragen.
 - Nach jeder Phase **FORTSCHRITT.md aktualisieren**: Erledigtes, Entscheidungen, nächste Schritte.
-- Vor dem Abschluss einer Phase prüfen: `npm run build` (enthält die Typprüfung) und `npm test` (Speed-Reader, Import, Wiederholung, Sitzung, Karte).
+- Vor dem Abschluss einer Phase prüfen: `npm run build` (enthält die Typprüfung) und `npm test` (Speed-Reader, Import, Wiederholung, Sitzung, Karte, Beherrschung, Sicherung, Suche).
 - Achtung beim Schreiben von Dateien: Escape-Folgen wie `\u00a0` im Code wurden beim Speichern zu unsichtbaren Zeichen. Danach mit `grep -F '\u'` prüfen oder die Zeichen per Node-Skript (`String.fromCharCode`) einsetzen.

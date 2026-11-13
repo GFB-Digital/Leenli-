@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { courseColor } from '../../lib/colors.ts'
+import { LEVEL_LABEL, masteryLevel, tileMastery } from '../../lib/mastery.ts'
 import { cardKey, courseStats, formatStudyTime, nextTile, plural, tileQuestions, tileStats, tileStatus } from '../../lib/model.ts'
 import type { Navigation } from '../../lib/navigation.ts'
-import { atRiskCards } from '../../lib/smart.ts'
+import { dueCards, examPlan, examPlanText } from '../../lib/smart.ts'
 import { formatDue } from '../../lib/srs.ts'
-import { resetTile, useAppState } from '../../lib/store.ts'
+import { resetTile, setExamDate, useAppState } from '../../lib/store.ts'
+import { dayKey } from '../../lib/streak.ts'
 import type { Course, Tile } from '../../lib/types.ts'
 import { useKeydown } from '../../lib/useKeydown.ts'
 import { ConfirmDialog } from '../ConfirmDialog.tsx'
@@ -50,8 +52,12 @@ export function CourseSheet({
   const { done, total, percent } = courseStats(course, learn)
   const next = nextTile(course, learn)
   const now = Date.now()
-  const atRisk = atRiskCards(courses, learn, now, course.id).length
+  const atRisk = dueCards(courses, learn, now, course.id).length
   const color = courseColor(course)
+  const examDate = learn.examDates?.[course.id] ?? ''
+  const plan = examPlan(course, learn, now)
+  const lastExam = learn.exams?.[course.id]
+  const hasQuestions = course.tiles.some((tile) => tileQuestions(tile).length > 0)
 
   useEffect(() => setOpenTile(focusTileId), [focusTileId])
 
@@ -123,7 +129,7 @@ export function CourseSheet({
             onClick={() => nav.navigate({ name: 'review', courseId: course.id, round: 1 })}
           >
             <Icon name="shield" size={20} />
-            Wissen stärken{atRisk > 0 ? ` (${atRisk} gefährdet)` : ''}
+            Wissen stärken{atRisk > 0 ? ` (${atRisk} fällig)` : ''}
           </button>
         )}
 
@@ -135,11 +141,12 @@ export function CourseSheet({
             const dues = tileQuestions(tile)
               .map(({ step }) => learn.cards[cardKey(course.id, tile.id, step)]?.due)
               .filter((due): due is number => due !== undefined)
+            const level = LEVEL_LABEL[masteryLevel(tileMastery(course, tile, learn, now))]
             const meta =
               status === 'done'
                 ? dues.length > 0
-                  ? `Gelernt · Wiederholung ${formatDue(Math.min(...dues), now)}`
-                  : 'Gelernt'
+                  ? `${level} · Wiederholung ${formatDue(Math.min(...dues), now)}`
+                  : level
                 : status === 'learning'
                   ? 'Angefangen'
                   : [plural(pages, 'Seite', 'Seiten'), questions > 0 ? plural(questions, 'Frage', 'Fragen') : '']
@@ -185,6 +192,36 @@ export function CourseSheet({
             )
           })}
         </ol>
+
+        <h3 className="section-label">Prüfung</h3>
+        {/* Prüfung: Termin, Tagespensum, Probe-Prüfung */}
+        <div className="sheet-exam">
+          <label className="sheet-exam-date">
+            <span>Prüfungstermin</span>
+            <input
+              type="date"
+              value={examDate}
+              min={dayKey(now)}
+              onChange={(event) => void setExamDate(course.id, event.target.value || null)}
+            />
+          </label>
+          {plan && <p className="sheet-exam-plan">{examPlanText(plan)}</p>}
+          {hasQuestions && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-course"
+              onClick={() => nav.navigate({ name: 'exam', courseId: course.id, round: 1 })}
+            >
+              <Icon name="check" size={20} />
+              Prüfung starten
+            </button>
+          )}
+          <p className="sheet-exam-note">
+            {lastExam
+              ? `Letzte Prüfung: ${lastExam.correct} von ${lastExam.total} richtig (${new Date(lastExam.at).toLocaleDateString('de-DE')})`
+              : 'Gemischte Fragen aus allen Kacheln, Auswertung erst am Ende.'}
+          </p>
+        </div>
       </section>
 
       <ConfirmDialog

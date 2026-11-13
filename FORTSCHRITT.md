@@ -3,7 +3,7 @@
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 13.11.2026 – App heißt jetzt **ΤΟΠΟΣ** (Topos) mit neuem Logo (Tempel); 3D-Karte als Testmodus; Repo heißt jetzt `GFB-Digital/Topos`, App unter <https://gfb-digital.github.io/Topos/>. Als Nächstes: App auf dem iPhone von der neuen Adresse neu installieren und testen.
+**Stand:** 13.11.2026 – Großer Ausbau in drei Phasen umgesetzt (Phasen 13–15, siehe unten): Die 3D-Karte ist die einzige Ansicht, Säulenhöhe = Beherrschung, dazu Sicherung als Datei, Karteikarte, Reihenfolge-Frage, Prüfung mit Termin, Suche. Noch **nicht committet** und **nicht auf dem iPhone getestet**. Als Nächstes: am PC und iPhone testen, committen, dann als Erstes eine Sicherung speichern.
 
 ## Erledigt
 
@@ -126,7 +126,47 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Repo umbenannt:** `GFB-Digital/Locus` → `GFB-Digital/Topos` (per `gh repo rename`), Remote auf `https://github.com/GFB-Digital/Topos.git` umgestellt. Die App liegt jetzt unter <https://gfb-digital.github.io/Topos/>, `…/Locus/` gibt 404. Auf den Geräten muss die App von der neuen Adresse neu installiert werden. Der Ordner heißt seit 13.11.2026 `C:\Users\PCUser\Topos` (vorher `Locus`, davor `Leenli-`).
 - **Geprüft:** `npm run build` und `npm test` (108 Tests) fehlerfrei; gebautes Manifest heißt ΤΟΠΟΣ (echte griechische Buchstaben, keine lateinischen T/O).
 
+### Phasen 13–15 – 3D-Welt, Lernsystem, Ausbau (13.11.2026)
+Auftrag des Nutzers: erst Analyse und Plan (siehe PLAN.md, „Erweiterung 13.11.2026“), nach Freigabe alle Phasen ohne Pause. Seine drei Entscheidungen: Höhe zeigt, wie fest etwas sitzt (sinkt nicht von selbst); flacher Start ist in Ordnung; Sicherung direkt nach Phase 1.
+
+**Phase 13 – 3D-Welt**
+- **Nur noch 3D:** flache Karte, Umschalter und `settings.map3d` entfernt. [WorldMap.tsx](src/components/map/WorldMap.tsx) hat nur noch die Säulen-Ebene. Die doppelte CSS-Klasse `.map-side` ist aufgelöst (Säulenseiten heißen `.map-col-side`).
+- **Blaues Gebiet entfernt** (`territory`, `decor`, `hexagonsPath`). Den Abstand regelt jetzt `COURSE_GAP` = 3 freie Zellen zwischen zwei Kursen. Schatten sind kürzer und heller.
+- **Organische Anordnung:** `growCells(seed, n)` in [maplayout.ts](src/lib/maplayout.ts) lässt jede Kursgruppe Zelle für Zelle wachsen – zufällig, aber mit festem Startwert aus der Kurs-ID. Gleicher Kurs = gleiche Form; neue Kacheln hängen sich an, ohne alte zu verschieben; fast eingeschlossene Zellen werden zuerst gefüllt (keine Löcher). Die Karte sieht dadurch **einmalig anders** aus als vorher.
+- **Säulenhöhe = Beherrschung:** neue Datei [mastery.ts](src/lib/mastery.ts). Wert einer Frage = ihre Stelle auf der Skala der Gedächtnis-Prognose direkt nach der letzten Wiederholung (also aus der Stabilität, kein zweites System). Kachel = Mittel ihrer Fragen, ungelernt = 0. Höhe: `12 + 108 × m^0,7` (`HEIGHT` in [map3d.ts](src/lib/map3d.ts)) → 0 % = 12, 10 % = 34, 25 % = 53, 50 % = 78, 75 % = 100, 90 % = 112, 100 % = 120. Frisch gelernt ≈ 16 % ≈ Höhe 41.
+- **Fällig = verblasst:** Kacheln mit fälligen Fragen behalten ihre Höhe, die Säule wird blasser (`.map-tile--due`), das Häkchen verschwindet.
+- **Säulen wachsen sichtbar:** Nach einer Sitzung fahren geänderte Säulen in 0,8 s auf die neue Höhe (`useGrowingHeights`; die zuletzt gezeigten Höhen merkt sich ein Modul-Speicher, weil die Karte während einer Sitzung nicht existiert).
+- **Stufenlose Zeichen:** keine drei harten Detailstufen mehr. Die Karte setzt zwei CSS-Variablen (`--marks`, `--check`) aus der Zellgröße; Häkchen, heller Deckel und Zeichen blenden damit weich ein und aus. Eingehängt werden die Zeichen schon etwas früher, als sie sichtbar werden.
+- **Kamera:** Nachgleiten nach dem Loslassen, die Karte bleibt immer mindestens 90 px im Bild (`keepInView`), herauszoomen höchstens auf die halbe eingepasste Größe, Drehen am PC mit rechter Maustaste/Umschalt + Ziehen, Tasten (Pfeile, + / −, Q / E, N).
+- **Kursnamen:** über der Gruppe, sonst darunter; Vorfahrt haben der gewählte Kurs und die größeren Kurse; wer keinen Platz hat, blendet aus (`placeLabels`). Weit herausgezoomt sind die Namen kleiner. **Bekannt:** In der Gesamtübersicht auf dem Handy ist der Name des kleinen Beispielkurses deshalb ausgeblendet, bis man hineinzoomt.
+- **Gemessen** (Firefox am PC, 89 Säulen, gebaute App): Drehen und Zoomen je 16,5–17 ms pro Bild, also 60 Bilder/s. Im Entwicklungsmodus ist Drehen langsamer (23 ms), das liegt an React im Dev-Modus.
+
+**Phase 14 – Lernsystem**
+- **Sicherung als Datei:** [backup.ts](src/lib/backup.ts) (Format `topos-sicherung`, Version 1: importierte Kurse, Lernstand, Einstellungen), [files.ts](src/lib/files.ts) (Handy: Teilen-Menü, PC: Download). Oberfläche in „Inhalte“; Einspielen zeigt vorher, was drinsteckt, und ersetzt alles. Hinweis, wenn die letzte Sicherung älter als 14 Tage ist. Eine Sicherung im Kurs-Importfeld wird erkannt.
+- **Abgebrochene Runden zählen:** Beim Verlassen einer Wiederholungsrunde oder Prüfung werden die schon gegebenen Antworten gespeichert (ohne Lerntag-Stempel). Nebenbei behoben: Eine leere Runde gab früher einen Stempel.
+- **Karteikarte** (`recall`): Frage, selbst überlegen, aufdecken, „Gewusst / Nicht gewusst“. Erster Fragetyp mit freiem Abrufen.
+- **Ratekorrektur:** `reviewCard(…, guess)` – bei richtig beantworteten Fragen mit Ratechance wächst der Abstand langsamer (2 Antworten: −25 % Zuwachs, 4 Antworten: −12,5 %, Karteikarte/Reihenfolge: keine Kürzung).
+- **Schwierige Fragen:** Wissensbank zeigt Fragen mit mindestens 2 Fehlern (`hardCards`), antippen = Kachel nochmal lesen, dazu „Schwierige Fragen üben“.
+- **Fragen ohne Gedächtnis-Stand** in gelernten Kacheln (neu dazugekommen oder Text geändert) gelten jetzt als sofort fällig, statt nie mehr dranzukommen (`learnedCards`).
+
+**Phase 15 – Ausbau**
+- **Prüfung:** 20 gemischte Fragen aus allen Kacheln eines Kurses (`pickForExam`), keine Rückmeldung zwischendurch, am Ende Ergebnis je Kachel. Antworten zählen für die Wiederholung, aber nur bei gelernten Kacheln. Das letzte Ergebnis steht im Kursblatt.
+- **Prüfungstermin je Kurs** (`learn.examDates`): Tagespensum mit 3 Tagen Reserve; „Schlau lernen“ nimmt den Kurs mit der nächsten Prüfung zuerst; in den 7 Tagen davor ist jede Frage einmal fällig (`dueCards`).
+- **Reihenfolge-Frage** (`order`): Einträge in der richtigen Reihenfolge antippen. Im Kurs stehen sie richtig, die App mischt.
+- **Fälligkeits-Vorschau** in der Wissensbank (heute, morgen, 7 Tage).
+- **Themengebiete:** Kursfeld `group`; Kurse mit gleichem Gebiet suchen ihren Platz rund um den ersten Kurs des Gebiets.
+- **Suche:** [search.ts](src/lib/search.ts), [SearchScreen.tsx](src/screens/SearchScreen.tsx), Lupe oben rechts auf der Karte.
+- **Import-Hinweise** (blockieren nicht): Seiten über 160 Wörter, Kacheln ohne Frage.
+- **Beispielkurs** hat in Kachel 2 je eine Reihenfolge-Frage und eine Karteikarte. **Claude-Vorlage** und README kennen die neuen Typen und `group`. Das README wurde per Skript aus `claude-template.ts` aktualisiert.
+- **Geprüft:** `npm test` 147 Tests, `npm run build` fehlerfrei. Im Browser (Firefox, 390 px hell/dunkel, 360 px, 1280 px, mit den drei Studienkursen und erfundenem Lernstand): Karte in allen Zoomstufen und gedreht; eine Kachel komplett gelernt (Reihenfolge erst falsch, dann richtig; Karteikarte), Säule wuchs von 7 auf 20 Bildschirm-px; Prüfung mit Termin; Wissensbank; Abbruch einer Runde (2 Antworten gespeichert); Suche; Sicherung gespeichert, alles gelöscht, eingespielt – Lernstand identisch. Keine Fehler in der Konsole, kein seitliches Scrollen.
+- **Nicht geprüft:** echtes iPhone (Tempo beim Drehen, Teilen-Menü der Sicherung, Datumsfeld im Kursblatt), Zwei-Finger-Gesten (im Test nur Maus und Mausrad).
+
 ## Entscheidungen und Abweichungen vom Plan
+- **Säulenhöhe (entschieden 13.11.2026):** zeigt, wie fest das Wissen sitzt, nicht den Umfang der Kachel und nicht den Tagesstand. Sie sinkt nur nach Fehlern. Folge: Ohne Lernstand ist die Welt flach.
+- **Sicherung ersetzt, sie mischt nicht:** Einspielen überschreibt Kurse, Lernstand und Einstellungen des Geräts (nach Rückfrage). Zwei Geräte lassen sich damit nicht zusammenführen – das wäre Synchronisierung, und die ist laut Plan nicht gewollt.
+- **Alte Gedächtnis-Stände bleiben liegen:** Ändert sich ein Fragetext, bleibt der alte Stand im Speicher (unsichtbar, winzig). Bewusst nicht automatisch gelöscht: Ein versehentlich importierter Teilkurs mit gleicher ID würde sonst Lernstand vernichten.
+- **Selbstbewertung bei Karteikarten** ist Vertrauenssache. Dafür gibt es bei ihnen keine Ratekorrektur.
+- **Kein Technologiewechsel für die Karte:** weiter SVG mit eigener Projektion, keine 3D-Bibliothek. Reicht laut Messung für rund 90 Säulen mit 60 Bildern/s am PC. Falls das iPhone ruckelt: zuerst Säulen außerhalb des Bildes weglassen, dann Canvas.
 - **Eigene Studienkurse (12.11.2026):** Die Kurse aus den Vorlesungen (ABWL, Fertigungstechnik, Konstruktion) entstehen in `kurse/`. Der Ordner ist ein eigenes **privates** Repo (`GFB-Digital/Topos-Kurse`, bis 13.11.2026 `Leenli-Kurse`) und hier per `.gitignore` ausgeschlossen, weil er urheberrechtlich geschützte Vorlesungsinhalte enthält. Die App selbst bleibt unverändert: Kurse kommen über „Inhalte → Datei wählen“ hinein. `kurse/werkzeuge/bauen.mjs` prüft jeden Kurs mit dem Importer aus `src/lib/importer.ts`.
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht. Seit 13.11.2026 sucht die App auch beim Zurückholen aus dem Hintergrund nach Updates (`visibilitychange` → `registration.update()` in [pwa.ts](src/lib/pwa.ts)), weil iOS sonst nur bei einem echten Neustart prüft.
 - **Alte Adressen `…/Leenli-/` und `…/Locus/`** geben seit den Umbenennungen 404. Dort installierte Home-Bildschirm-Apps bekommen nie wieder Updates und müssen von `…/Topos/` neu hinzugefügt werden (Lernstand geht dabei vermutlich verloren, iOS trennt den Speicher je Home-Bildschirm-App).
@@ -165,10 +205,10 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Neue Styles** stehen in [learning.css](src/styles/learning.css), die Grundlagen weiter in global.css.
 
 ## Als Nächstes
-- **3D-Karte auf dem iPhone testen:** gefällt sie? Läuft das Drehen flüssig? Danach entscheiden: behalten, verbessern oder wieder entfernen
-- Rückmeldungen vom echten iPhone einarbeiten: Karte (Zoomen mit zwei Fingern), Kachel-Ablauf, Wischen bei Entweder-oder, Speed-Reader, Wissensbank
-- **Sicherung von Kursen und Lernstand als Datei** (wichtiger geworden: Neu-Installation wegen neuer Adresse)
-- Mögliche Ideen für später: Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS
+- **Auf dem iPhone testen:** Drehen und Zoomen mit zwei Fingern (flüssig?), Nachgleiten, Sicherung über das Teilen-Menü, Datumsfeld für den Prüfungstermin, Reihenfolge-Frage und Karteikarte
+- **Kurse erweitern:** Claude mit der neuen Vorlage bitten, in die Studienkurse Karteikarten und Reihenfolge-Fragen einzubauen (IDs beibehalten) und ihnen bei Bedarf ein `group` zu geben
+- Rückmeldungen einarbeiten, v. a. zur Optik der Säulen (Farben, Schatten, Höhe) und zu den Kursnamen in der Gesamtübersicht
+- Mögliche Ideen für später: Säulen außerhalb des Bildes nicht zeichnen (nur falls das iPhone ruckelt), kleiner Korrektur-Editor für einzelne Fragen, Lückentext zum Eintippen, Startbildschirme für iOS
 
 ## Offene Punkte
 - **Abweichung von PLAN.md:** Der Plan sieht nur Systemschriften vor. Für Lesetext und Fragen gibt es jetzt Google Sans, wegen der Offline-Pflicht aber in der App gespeichert, nicht von einem CDN.

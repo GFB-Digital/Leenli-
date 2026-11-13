@@ -76,6 +76,40 @@ describe('Gültige Kurse importieren', () => {
     assert.deepEqual(result.notes, [])
   })
 
+  it('liest Karteikarte, Reihenfolge und Themengebiet', () => {
+    const steps = [
+      { type: 'text', text: 'Seite.' },
+      { type: 'recall', question: ' Warum ist der Himmel blau? ', answer: 'Weil kurzwelliges Licht stärker gestreut wird.', explanation: 'Rayleigh-Streuung.' },
+      { type: 'recall', question: 'Wie viele Seiten hat ein Sechseck?', answer: 6 },
+      { type: 'order', question: 'Vom Rohteil zum Fertigteil:', items: ['Gießen', ' Entgraten ', 'Schleifen'] },
+    ]
+    const result = parseCourses(json(course({ group: ' Fertigung ', tiles: [tile({ steps })] })))
+    assert.ok(result.ok, result.ok ? '' : result.errors.join('\n'))
+    assert.equal(result.courses[0].group, 'Fertigung')
+    const [, recall, numeric, order] = result.courses[0].tiles[0].steps
+    assert.deepEqual(recall, {
+      type: 'recall',
+      question: 'Warum ist der Himmel blau?',
+      answer: 'Weil kurzwelliges Licht stärker gestreut wird.',
+      explanation: 'Rayleigh-Streuung.',
+    })
+    assert.deepEqual(numeric, { type: 'recall', question: 'Wie viele Seiten hat ein Sechseck?', answer: '6' })
+    assert.deepEqual(order, { type: 'order', question: 'Vom Rohteil zum Fertigteil:', items: ['Gießen', 'Entgraten', 'Schleifen'] })
+  })
+
+  it('gibt Hinweise zu langen Seiten und Kacheln ohne Frage, importiert aber trotzdem', () => {
+    const long = Array.from({ length: 200 }, (_, i) => `Wort${i}`).join(' ')
+    const tiles = [
+      tile({ id: 'a', title: 'Mit langer Seite', steps: [{ type: 'text', text: 'Kurz.' }, { type: 'text', text: long }, { type: 'truefalse', statement: 'S', answer: true }] }),
+      tile({ id: 'b', title: 'Nur zum Lesen', steps: [{ type: 'text', text: 'Nur Text.' }] }),
+    ]
+    const result = parseCourses(json(course({ tiles })))
+    assert.ok(result.ok)
+    assert.equal(result.notes.length, 2)
+    assert.match(result.notes[0], /1 Seite ist länger als 160 Wörter.*„Mit langer Seite“, Seite 2 \(200 Wörter\)/)
+    assert.match(result.notes[1], /1 Kachel hat keine Frage.*„Nur zum Lesen“/)
+  })
+
   it('nimmt ältere Kurse mit „lessons“ an', () => {
     const old = { id: 'alt', title: 'Alt', lessons: [{ id: 'l1', title: 'L', steps: [{ type: 'text', text: 'T' }] }] }
     const result = parseCourses(json(old))
@@ -188,6 +222,20 @@ describe('Fehler verständlich melden', () => {
     assert.ok(errors.some((e) => /Unbekannter Typ „quiz“/.test(e)))
     assert.ok(errors.some((e) => /true oder false sein – ohne Anführungszeichen/.test(e)))
     assert.ok(errors.some((e) => /Schritt 4: Die Angabe „type“ fehlt/.test(e)))
+  })
+
+  it('prüft Karteikarte und Reihenfolge', () => {
+    const steps = [
+      { type: 'recall', question: 'Warum?' },
+      { type: 'order', question: 'Ordne.', items: ['a', 'b'] },
+      { type: 'order', question: 'Ordne.', items: ['a', 'b', 'a'] },
+      { type: 'order', question: 'Ordne.', items: ['a', '', 'c'] },
+    ]
+    const errors = errorsOf(json(course({ tiles: [tile({ steps })] })))
+    assert.ok(errors.some((e) => /Schritt 1 \(Frage\): Die Antwort \(„answer“\) fehlt/.test(e)), errors.join('\n'))
+    assert.ok(errors.some((e) => /Schritt 2 \(Frage\): „items“ muss eine Liste mit 3 bis 6 Einträgen/.test(e)))
+    assert.ok(errors.some((e) => /Schritt 3 \(Frage\): In „items“ kommt ein Eintrag doppelt vor/.test(e)))
+    assert.ok(errors.some((e) => /Schritt 4 \(Frage\): Eintrag 2 in „items“ ist leer/.test(e)))
   })
 
   it('prüft Entweder-oder und Lückentext', () => {

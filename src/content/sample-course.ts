@@ -162,6 +162,24 @@ export const SAMPLE_COURSE: Course = {
           answer: 0,
           explanation: 'Der Testeffekt: Sich selbst abzufragen ist selbst ein Lernvorgang.',
         },
+        {
+          type: 'order',
+          question: 'Bringe den Ablauf der Studie von Roediger und Karpicke in die richtige Reihenfolge.',
+          items: [
+            'Studierende lesen einen kurzen Sachtext',
+            'Eine Gruppe liest erneut, die andere schreibt aus dem Gedächtnis auf',
+            'Nach fünf Minuten liegt die Wiederlese-Gruppe leicht vorn',
+            'Nach einer Woche erinnert sich die Abruf-Gruppe deutlich besser',
+          ],
+          explanation: 'Kurzfristig wirkt Wiederlesen etwas besser, langfristig ist das Abrufen klar überlegen.',
+        },
+        {
+          type: 'recall',
+          question: 'Warum überschätzt man nach bloßem Wiederlesen leicht, wie viel man weiß?',
+          answer: 'Weil der Text vertraut wirkt. Vertrautheit fühlt sich wie Wissen an, ist aber nicht dasselbe wie Erinnern.',
+          explanation:
+            'Eine Karteikarte wie diese nutzt den Testeffekt besonders stark: Du rufst die Antwort frei ab, statt sie nur unter Vorgaben wiederzuerkennen.',
+        },
       ],
       recap: [
         'Sich selbst abzufragen festigt Wissen stärker als Wiederlesen.',

@@ -51,6 +51,18 @@ describe('Wiederholen', () => {
     near(later.due, card.due + later.s * DAY)
   })
 
+  it('lässt den Abstand langsamer wachsen, wenn man die Antwort hätte raten können', () => {
+    const card = newCard(true, T0)
+    const free = reviewCard(card, true, card.due) // frei abgerufen (Karteikarte)
+    const four = reviewCard(card, true, card.due, 0.25) // eine von vier Antworten
+    const two = reviewCard(card, true, card.due, 0.5) // Stimmt / Stimmt nicht
+    assert.ok(free.s > four.s && four.s > two.s && two.s > card.s)
+    // bei zwei Antworten ein Viertel weniger Zuwachs
+    near(two.s - card.s, (free.s - card.s) * 0.75)
+    // ein Fehler wiegt immer gleich schwer
+    assert.deepEqual(reviewCard(card, false, card.due, 0.5), reviewCard(card, false, card.due))
+  })
+
   it('bringt bei sofortigem Wiederholen kaum Zuwachs – aber auch keinen Schaden', () => {
     const card = newCard(true, T0)
     const again = reviewCard(card, true, T0 + 60_000)

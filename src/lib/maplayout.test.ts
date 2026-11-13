@@ -4,17 +4,17 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   CELL,
+  COURSE_GAP,
   ROW,
-  blockCells,
   cellBounds,
   cellCenter,
   cellDistance,
   cellKey,
+  growCells,
   layoutCourses,
   markRows,
   neighbors,
   hexagonPoints,
-  hexagonsPath,
   seededRandom,
   type Cell,
 } from './maplayout.ts'
@@ -53,12 +53,6 @@ describe('Sechseck-Karte', () => {
     assert.ok(Math.abs(Math.max(...ys) - Math.min(...ys) - 120 / Math.sqrt(3)) < 0.02)
   })
 
-  it('fasst viele Sechsecke zu einem Pfad zusammen', () => {
-    const d = hexagonsPath([{ q: 0, r: 0 }, { q: 1, r: 0 }], 60)
-    assert.equal(d.match(/M/g)?.length, 2)
-    assert.equal(d.match(/Z/g)?.length, 2)
-  })
-
   it('erzeugt wiederholbare Zufallszahlen', () => {
     assert.equal(seededRandom('kurs')(), seededRandom('kurs')())
     assert.notEqual(seededRandom('x')(), seededRandom('y')())
@@ -80,38 +74,52 @@ describe('Kachel-Gruppe eines Kurses', () => {
   }
 
   it('legt jede Kachel auf eine eigene Zelle, zusammenhängend', () => {
-    for (const n of [1, 2, 3, 5, 7, 12, 20, 30]) {
-      const cells = blockCells(n)
+    for (const n of [1, 2, 3, 5, 7, 12, 20, 36]) {
+      const cells = growCells('kurs-a', n)
       assert.equal(cells.length, n)
       assert.equal(new Set(cells.map(cellKey)).size, n)
       assert.ok(connected(cells), `${n} Kacheln hängen nicht zusammen`)
     }
   })
 
-  it('ordnet zeilenweise von oben links nach unten rechts', () => {
-    const cells = blockCells(12)
-    assert.equal(cells[0].r, 0)
-    for (let i = 1; i < cells.length; i++) {
-      const a = cellCenter(cells[i - 1])
-      const b = cellCenter(cells[i])
-      assert.ok(a.y < b.y || (a.y === b.y && a.x < b.x))
-    }
+  it('ist für denselben Kurs immer gleich, für verschiedene Kurse verschieden', () => {
+    assert.deepEqual(growCells('abwl', 27), growCells('abwl', 27))
+    assert.notDeepEqual(growCells('abwl', 27), growCells('konstruktion', 27))
   })
 
-  it('bildet eine rundliche Form ohne Lücken in den Zeilen', () => {
-    for (const n of [7, 12, 19]) {
-      const cells = blockCells(n)
-      const rows = new Map<number, number[]>()
-      for (const c of cells) rows.set(c.r, [...(rows.get(c.r) ?? []), c.q])
-      for (const qs of rows.values()) assert.equal(Math.max(...qs) - Math.min(...qs) + 1, qs.length)
-      const box = cellBounds(cells)
-      assert.ok(box.width / box.height < 1.6 && box.height / box.width < 1.6, `${n}: zu langgestreckt`)
+  it('hängt neue Kacheln an, ohne alte zu verschieben', () => {
+    const big = growCells('fertigungstechnik', 36)
+    for (const n of [1, 5, 20, 35]) assert.deepEqual(growCells('fertigungstechnik', n), big.slice(0, n))
+  })
+
+  it('führt den Lernweg von Kachel zu Nachbarkachel, soweit es geht', () => {
+    // Jede Kachel dockt an der Gruppe an; oft direkt neben der vorherigen
+    const cells = growCells('abwl', 27)
+    let adjacent = 0
+    for (let i = 1; i < cells.length; i++) {
+      assert.ok(cells.slice(0, i).some((c) => cellDistance(c, cells[i]) === 1))
+      if (cellDistance(cells[i - 1], cells[i]) === 1) adjacent++
     }
-    // 7 Kacheln → Wabe 2-3-2
-    assert.deepEqual(
-      [...new Set(blockCells(7).map((c) => c.r))].map((r) => blockCells(7).filter((c) => c.r === r).length),
-      [2, 3, 2],
-    )
+    assert.ok(adjacent >= cells.length / 3, `nur ${adjacent} direkte Schritte`)
+  })
+
+  it('bleibt kompakt und ohne eingeschlossene Löcher', () => {
+    for (const seed of ['abwl', 'fertigungstechnik', 'konstruktion', 'lernen-lernen', 'x']) {
+      for (const n of [12, 27, 36]) {
+        const cells = growCells(seed, n)
+        const keys = new Set(cells.map(cellKey))
+        // kein freies Feld, das rundum von Kacheln umgeben ist
+        for (const cell of cells) {
+          for (const free of neighbors(cell)) {
+            if (keys.has(cellKey(free))) continue
+            assert.ok(neighbors(free).some((c) => !keys.has(cellKey(c))), `${seed}/${n}: Loch bei ${cellKey(free)}`)
+          }
+        }
+        // nicht langgestreckt: Spannweite höchstens zwei Drittel der Kachelzahl
+        const span = Math.max(...cells.flatMap((x) => cells.map((y) => cellDistance(x, y))))
+        assert.ok(span <= Math.max(4, (n * 2) / 3), `${seed}/${n}: Spannweite ${span}`)
+      }
+    }
   })
 })
 
@@ -128,41 +136,36 @@ describe('Kurse auf der Karte', () => {
     layout.forEach((course, i) => assert.equal(course.tiles.length, courses[i].tileCount))
   })
 
-  it('lässt Gebiete nicht überlappen und hält eine Zelle Abstand', () => {
-    const owner = new Map<string, string>()
-    for (const course of layout) {
-      for (const cell of [...course.tiles, ...course.territory]) {
-        const key = cellKey(cell)
-        assert.ok(!owner.has(key), `Zelle ${key} doppelt belegt`)
-        owner.set(key, course.id)
+  it('lässt Kurse nicht überlappen und hält drei Zellen Abstand', () => {
+    const all = layout.flatMap((course) => course.tiles.map((cell) => ({ cell, id: course.id })))
+    assert.equal(new Set(all.map(({ cell }) => cellKey(cell))).size, all.length)
+    for (const a of all) {
+      for (const b of all) {
+        if (a.id !== b.id) assert.ok(cellDistance(a.cell, b.cell) > COURSE_GAP, `${a.id} zu nah an ${b.id}`)
       }
-    }
-    for (const course of layout) {
-      for (const cell of [...course.tiles, ...course.territory]) {
-        for (const n of neighbors(cell)) {
-          const other = owner.get(cellKey(n))
-          assert.ok(!other || other === course.id, `${course.id} berührt ${other}`)
-        }
-      }
-    }
-  })
-
-  it('umgibt die Kacheln vollständig mit Gebiet', () => {
-    for (const course of layout) {
-      const all = new Set([...course.tiles, ...course.territory].map(cellKey))
-      for (const t of course.tiles) for (const n of neighbors(t)) assert.ok(all.has(cellKey(n)))
-    }
-  })
-
-  it('legt Schmuck-Umrisse nur auf das Gebiet', () => {
-    for (const course of layout) {
-      const territory = new Set(course.territory.map(cellKey))
-      for (const c of course.decor) assert.ok(territory.has(cellKey(c)))
     }
   })
 
   it('ist bei gleichen Kursen immer gleich', () => {
     assert.deepEqual(layoutCourses(courses), layout)
+  })
+
+  it('verschiebt frühere Kurse nicht, wenn hinten einer dazukommt', () => {
+    const more = layoutCourses([...courses, { id: 'neu', tileCount: 9 }])
+    assert.deepEqual(more.slice(0, layout.length), layout)
+  })
+
+  it('stellt Kurse desselben Themengebiets nebeneinander', () => {
+    const center = (cells: Cell[]) => {
+      const points = cells.map(cellCenter)
+      return { x: points.reduce((s, p) => s + p.x, 0) / points.length, y: points.reduce((s, p) => s + p.y, 0) / points.length }
+    }
+    const distance = (a: Cell[], b: Cell[]) => Math.hypot(center(a).x - center(b).x, center(a).y - center(b).y)
+    const filler = Array.from({ length: 6 }, (_, i) => ({ id: `anderes-${i}`, tileCount: 10 }))
+    const grouped = layoutCourses([{ id: 'ft-1', tileCount: 10, group: 'Fertigung' }, ...filler, { id: 'ft-2', tileCount: 10, group: 'Fertigung' }])
+    const plain = layoutCourses([{ id: 'ft-1', tileCount: 10 }, ...filler, { id: 'ft-2', tileCount: 10 }])
+    const last = grouped.length - 1
+    assert.ok(distance(grouped[0].tiles, grouped[last].tiles) <= distance(plain[0].tiles, plain[last].tiles))
   })
 
   it('berechnet das umgebende Rechteck', () => {

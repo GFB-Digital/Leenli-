@@ -2,7 +2,7 @@
 
 <img src="design/logo.png" alt="Logo von ΤΟΠΟΣ: weißer Tempel mit rotem Punkt im Giebel" width="220">
 
-**ΤΟΠΟΣ** (Topos) ist griechisch und heißt „Ort“ – dein Ort des Wissens. Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sechsecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
+**ΤΟΠΟΣ** (Topos) ist griechisch und heißt „Ort“ – dein Ort des Wissens. Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **drehbare Wissenslandschaft aus Sechseck-Säulen** vor dir: Jeder Kurs ist eine Gruppe, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen – und je fester ihr Wissen sitzt, desto höher ragt ihre Säule. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
 
 - Läuft auf PC, iPhone, iPad und Android als installierbare Web-App (PWA)
 - Funktioniert komplett offline – kein Server, kein Konto, keine Synchronisierung
@@ -17,13 +17,14 @@
 
 1. [Auf dem Handy installieren](#auf-dem-handy-installieren)
 2. [So lernst du mit ΤΟΠΟΣ](#so-lernst-du-mit-τοπος)
-3. [Eigene Kurse mit Claude erstellen](#eigene-kurse-mit-claude-erstellen)
-4. [Das Kursformat](#das-kursformat)
-5. [Der Speed-Reader](#der-speed-reader)
-6. [Entwicklung am PC](#entwicklung-am-pc)
-7. [Veröffentlichen auf GitHub Pages](#veröffentlichen-auf-github-pages)
-8. [Projektaufbau](#projektaufbau)
-9. [Später als echte App (Capacitor)](#später-als-echte-app-capacitor)
+3. [Sicherung](#sicherung)
+4. [Eigene Kurse mit Claude erstellen](#eigene-kurse-mit-claude-erstellen)
+5. [Das Kursformat](#das-kursformat)
+6. [Der Speed-Reader](#der-speed-reader)
+7. [Entwicklung am PC](#entwicklung-am-pc)
+8. [Veröffentlichen auf GitHub Pages](#veröffentlichen-auf-github-pages)
+9. [Projektaufbau](#projektaufbau)
+10. [Später als echte App (Capacitor)](#später-als-echte-app-capacitor)
 
 ---
 
@@ -37,13 +38,34 @@
 
 Nach dem ersten Öffnen funktioniert ΤΟΠΟΣ auch ohne Internet. Gibt es eine neue Version, erscheint unten der Hinweis „Neue Version verfügbar → Aktualisieren“. Die App lädt nie ungefragt neu, damit keine laufende Kachel verloren geht.
 
-> **Wichtig:** Deine Kurse und dein Fortschritt liegen nur auf dem jeweiligen Gerät. Wird die App vom Home-Bildschirm gelöscht, sind auch die Daten weg.
+> **Wichtig:** Deine Kurse und dein Fortschritt liegen nur auf dem jeweiligen Gerät. Wird die App vom Home-Bildschirm gelöscht, sind auch die Daten weg. Speichere deshalb regelmäßig eine **Sicherung** (Inhalte → „Sicherung speichern“) – damit holst du alles auf jedem Gerät zurück.
 
 ---
 
 ## So lernst du mit ΤΟΠΟΣ
 
-**Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Sechsecken, die lückenlos aneinanderliegen – ein Sechseck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah in jeder Kachel ihren Inhalt: einen Kreis je Leseseite und ein Schild je Frage, nebeneinander in der Reihenfolge, in der sie drankommen.
+**Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Sechseck-Säulen, eine Säule pro Kachel. Jede Gruppe ist anders gewachsen, bleibt aber immer gleich; kommen Kacheln dazu, docken sie an, ohne die alten zu verschieben.
+
+**Die Höhe einer Säule zeigt, wie fest das Wissen sitzt** – nicht, wie viel in der Kachel steht:
+
+| Zustand der Kachel | Säule |
+| --- | --- |
+| neu oder angefangen | flach |
+| frisch gelernt | wächst sichtbar (etwa ein Drittel der vollen Höhe) |
+| nach jeder richtigen Wiederholung | höher – volle Höhe, wenn das Wissen auf Jahre sitzt |
+| nach einem Fehler | niedriger |
+| Wiederholung fällig | gleich hoch, aber **verblasst**, bis du das Wissen wieder stärkst |
+
+Nach einer Sitzung siehst du die betroffenen Säulen wachsen. Die Zeichen in einer Kachel (Kreis = Leseseite, Schild = Frage) blenden beim Hineinzoomen stufenlos ein.
+
+| Aktion | Touch | PC |
+| --- | --- | --- |
+| Verschieben | ein Finger (gleitet kurz nach) | ziehen oder Pfeiltasten |
+| Zoomen | zwei Finger, Doppeltippen | Mausrad, `+` / `−` |
+| Drehen | zwei Finger drehen | rechte Maustaste ziehen, Umschalt + Mausrad oder `Q` / `E` |
+| Zurück nach Norden | Kompass antippen | `N` |
+
+**Suche** (Lupe oben rechts) durchsucht Kurstitel, Kacheln, Leseseiten und Fragen aller Kurse.
 
 **Kurs antippen** öffnet das Kursblatt mit Anzahl der Kacheln, Fortschritt und Lernzeit, dazu „Kurs starten“ bzw. „Weiterlernen“. Tippst du eine Kachel an, kannst du sie lernen, nochmal lesen oder zurücksetzen.
 
@@ -54,14 +76,21 @@ Nach dem ersten Öffnen funktioniert ΤΟΠΟΣ auch ohne Internet. Gibt es eine
 3. **Rückblick** – die Kernaussagen zum Aufdecken
 4. **Falsch beantwortete Fragen** (auch „Weiß ich nicht“) werden hinten angehängt und kommen so lange wieder, bis sie sitzen. Oben rechts zeigt ein oranges Schild, wie viele noch offen sind.
 
-**Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch und Lückentext.
+**Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch, Lückentext, **Reihenfolge** (Einträge in der richtigen Reihenfolge antippen) und **Karteikarte** (Antwort erst selbst überlegen, dann aufdecken und ehrlich bewerten – das festigt am stärksten, weil du frei abrufst statt wiederzuerkennen).
 
-**Wiederholen (Spaced Repetition).** Nach einer Kachel bekommt jede ihrer Fragen einen Gedächtnis-Stand. ΤΟΠΟΣ rechnet aus, wann du sie voraussichtlich vergisst, und holt sie kurz vorher wieder. Richtig beantwortet → der Abstand wächst (Tage → Wochen → Monate). Falsch → er schrumpft deutlich. Die Kachel musst du dafür nicht noch einmal lesen.
+**Wiederholen (Spaced Repetition).** Nach einer Kachel bekommt jede ihrer Fragen einen Gedächtnis-Stand. ΤΟΠΟΣ rechnet aus, wann du sie voraussichtlich vergisst, und holt sie kurz vorher wieder. Richtig beantwortet → der Abstand wächst (Tage → Wochen → Monate). Falsch → er schrumpft deutlich. Die Kachel musst du dafür nicht noch einmal lesen. Bei Fragen, die man hätte raten können (zwei Antworten), wächst der Abstand etwas langsamer. Brichst du eine Runde ab, zählen die schon gegebenen Antworten trotzdem.
+
+**Prüfung** (im Kursblatt ganz unten):
+
+- **Prüfungstermin** eintragen → ΤΟΠΟΣ zeigt, wie viele Kacheln pro Tag nötig sind, damit vor der Prüfung noch drei Tage zum Wiederholen bleiben. „Schlau lernen“ nimmt dann zuerst den Kurs mit der nächsten Prüfung, und in der letzten Woche kommt jede Frage noch einmal dran.
+- **Prüfung starten** → 20 gemischte Fragen aus allen Kacheln, ohne Rückmeldung zwischendurch. Am Ende siehst du das Ergebnis je Kachel, die schwächsten zuerst.
 
 **Wissensbank** (Knopf unten links):
 
 - **Dein Wissen:** jede gelernte Kachel als Kette von Punkten – gefüllt = sicher, Ring = droht vergessen zu werden
 - **Wissen stärken:** so oft du willst, die schwächsten Fragen kommen zuerst
+- **Vorschau:** wie viele Wiederholungen heute, morgen und in den nächsten sieben Tagen anstehen
+- **Schwierige Fragen:** was schon mehrfach falsch war – zum Nachlesen oder gezielten Üben
 - **Gerade am Lernen:** Fortschritt pro Kurs
 - **Gedächtnis-Prognose:** wie lange du einen Kurs voraussichtlich noch weißt
 - **Lerntage und Lernstatistik**
@@ -69,6 +98,17 @@ Nach dem ersten Öffnen funktioniert ΤΟΠΟΣ auch ohne Internet. Gibt es eine
 **Schlau lernen** (großer Knopf unten) startet automatisch das Sinnvollste: zuerst fällige Wiederholungen, dann eine angefangene Kachel, dann die nächste neue. Die Zahl am Knopf zeigt, wie viele Fragen gerade fällig sind.
 
 **Lerntage** (Knopf unten rechts): Jeder Tag mit mindestens einer abgeschlossenen Kachel oder Wiederholungsrunde bekommt einen Stempel. Dazu gibt es Serie, Wochenleiste und Monatskalender.
+
+---
+
+## Sicherung
+
+Unter **Inhalte → Sicherung**:
+
+- **Sicherung speichern** legt eine Datei `topos-sicherung-JJJJ-MM-TT.json` an – mit deinen importierten Kursen, dem kompletten Lernstand (Kacheln, Wiederholungsstand jeder Frage, Lerntage, Prüfungstermine) und den Einstellungen. Auf dem Handy öffnet sich das Teilen-Menü (z. B. „In Dateien sichern“), am PC landet die Datei im Download-Ordner.
+- **Sicherung einspielen** liest eine solche Datei wieder ein. Vorher zeigt ΤΟΠΟΣ, was darin steckt, und fragt nach – denn die Daten auf dem Gerät werden dadurch **ersetzt**.
+
+So ziehst du auch von einem Gerät aufs andere um: am alten Gerät speichern, Datei übertragen, am neuen einspielen. Ist die letzte Sicherung älter als zwei Wochen, weist die App darauf hin.
 
 ---
 
@@ -82,6 +122,8 @@ Nach dem ersten Öffnen funktioniert ΤΟΠΟΣ auch ohne Internet. Gibt es eine
 Findet ΤΟΠΟΣ Fehler, steht genau da, wo: zum Beispiel
 „Kurs („Photosynthese“) › Kachel 2 › Schritt 3 (Frage): „answer“ ist 4, erlaubt sind aber nur 0 bis 3.“
 Diese Meldung kannst du Claude einfach zurückgeben und um Korrektur bitten.
+
+Dazu gibt es **Hinweise**, die den Import nicht verhindern: Seiten mit mehr als 160 Wörtern (kürzere lernen sich leichter) und Kacheln ohne Frage (die lassen sich nicht wiederholen).
 
 ### Kurse überarbeiten statt doppelt anlegen
 
@@ -108,7 +150,7 @@ Umfang: [z. B. 6 Kacheln]
 So ist ein Kurs aufgebaut:
 - Ein Kurs besteht aus Kacheln. Jede Kachel ist eine kurze Lerneinheit zu einem Teilthema (z. B. beim Kurs „Das Gehirn“ eine Kachel pro Hirnregion). Ordne die Kacheln so, dass sie aufeinander aufbauen.
 - Jede Kachel beginnt mit 2 Leitfragen („intro“): Was lernt man in dieser Kachel?
-- Dann folgen 3 bis 4 Leseseiten. Nach jeder Seite kommt genau eine Frage zu genau dieser Seite. Am Ende darf noch eine zusätzliche Frage zur ganzen Kachel stehen.
+- Dann folgen 3 bis 4 Leseseiten. Nach jeder Seite kommt genau eine Frage zu genau dieser Seite. Am Ende dürfen noch ein bis zwei Fragen zur ganzen Kachel stehen.
 - Jede Kachel endet mit einem Rückblick („recap“): 3 kurze Kernaussagen.
 
 Inhalt:
@@ -123,6 +165,8 @@ Inhalt:
   - "binary": Entweder-oder mit genau 2 Antworten, gut für Fallbeispiele („Anna macht … – was passiert?“).
   - "truefalse": eine Aussage, die stimmt oder nicht stimmt.
   - "cloze": ein Satz mit genau einer Lücke ___ und 3 Antworten zum Einsetzen.
+  - "recall": Karteikarte. Eine offene Frage ("question") und die Musterantwort ("answer", 1–2 Sätze). Man überlegt sich die Antwort selbst, deckt sie auf und bewertet sich. Gut für „Warum …?“, „Erkläre …“, Definitionen und Formeln. Etwa eine pro Kachel, am besten als letzte Frage.
+  - "order": Reihenfolge. Eine Aufgabe ("question") und 3 bis 5 kurze Einträge ("items") in der RICHTIGEN Reihenfolge – die App mischt sie. Gut für Abläufe, Prozessketten und zeitliche Abfolgen. Nur verwenden, wenn die Reihenfolge eindeutig ist.
 
 Bilder (freiwillig):
 - Nur wenn du dir sicher bist, dass es das Bild gibt: "image" mit einer direkten Adresse von upload.wikimedia.org und einer Quellenangabe in "credit" (Wer, Lizenz, „via Wikimedia Commons“).
@@ -151,7 +195,9 @@ Antworte ausschließlich mit gültigem JSON in einem ```json-Codeblock, ohne Tex
         { "type": "binary", "question": "Ein Fallbeispiel – was ist richtig?", "options": ["Erste Möglichkeit", "Zweite Möglichkeit"], "answer": 0, "explanation": "Warum." },
         { "type": "text", "title": "Dritte Seite", "text": "…" },
         { "type": "cloze", "text": "Ein Satz mit einer ___ darin.", "options": ["Lücke", "Wand", "Tür"], "answer": 0, "explanation": "Warum." },
-        { "type": "truefalse", "statement": "Eine Aussage zur ganzen Kachel.", "answer": false, "explanation": "Warum sie nicht stimmt." }
+        { "type": "truefalse", "statement": "Eine Aussage zur ganzen Kachel.", "answer": false, "explanation": "Warum sie nicht stimmt." },
+        { "type": "order", "question": "Bringe die Schritte in die richtige Reihenfolge.", "items": ["Erster Schritt", "Zweiter Schritt", "Dritter Schritt"], "explanation": "Warum diese Reihenfolge." },
+        { "type": "recall", "question": "Eine offene Frage zur ganzen Kachel – warum ist das so?", "answer": "Die Musterantwort in ein bis zwei Sätzen.", "explanation": "Optional: ein zusätzlicher Hinweis." }
       ],
       "recap": ["Erste Kernaussage.", "Zweite Kernaussage.", "Dritte Kernaussage."]
     }
@@ -166,6 +212,8 @@ Regeln für das JSON:
 - "answer" bei "choice", "binary" und "cloze" ist die Nummer der richtigen Antwort in "options", gezählt ab 0 (0 = erste Antwort).
 - "answer" bei "truefalse" ist true oder false (ohne Anführungszeichen).
 - Der Lückentext enthält genau eine Lücke aus drei Unterstrichen: ___
+- "recall" hat "question" und "answer" (beides Text), keine "options". "order" hat "question" und "items" (3 bis 6 verschiedene Einträge in der richtigen Reihenfolge), kein "answer".
+- Gehören mehrere Kurse zum selben Themengebiet (z. B. mehrere Teile einer Vorlesung), gib ihnen dasselbe "group" (z. B. "group": "Fertigungstechnik") – sie stehen dann auf der Karte beieinander. Sonst lass "group" weg.
 - Nur gerade Anführungszeichen ("), keine Kommentare, kein Komma nach dem letzten Element einer Liste.
 
 Wenn ich dich später bitte, einen bestehenden Kurs zu überarbeiten, behalte seine "id" und die IDs der Kacheln bei – dann ersetzt die App den alten Kurs und mein Fortschritt bleibt erhalten.
@@ -186,7 +234,8 @@ Kurs → Kacheln → Schritte (Seiten und Fragen). Ein Import kann ein einzelner
 | `title` | ja | Titel des Kurses |
 | `emoji` | nein | Symbol auf Karte und Kursblatt, z. B. `"🌱"` |
 | `description` | nein | Ein Satz zum Inhalt |
-| `color` | nein | Farbe des Clusters: indigo, violett, blau, tuerkis, gruen, oliv, gold, orange, rost, rosa, schiefer |
+| `color` | nein | Farbe der Gruppe: indigo, violett, blau, tuerkis, gruen, oliv, gold, orange, rost, rosa, schiefer |
+| `group` | nein | Themengebiet, z. B. `"Fertigungstechnik"`. Kurse mit demselben Namen stehen auf der Karte beieinander. |
 | `tiles` | ja | Liste der Kacheln (mindestens eine) |
 
 ### Kachel
@@ -235,7 +284,19 @@ Absätze werden mit einer Leerzeile getrennt – im JSON als `\n\n` geschrieben.
 { "type": "cloze", "text": "Die Vergessenskurve stammt von Hermann ___.", "options": ["Ebbinghaus", "Leitner", "Karpicke"], "answer": 0 }
 ```
 
-`answer` ist bei `choice`, `binary` und `cloze` die Nummer der richtigen Antwort, **gezählt ab 0**. Bei `truefalse` ist es `true` oder `false` – ohne Anführungszeichen.
+**Reihenfolge** (3 bis 6 verschiedene Einträge **in der richtigen Reihenfolge** – ΤΟΠΟΣ mischt sie)
+
+```json
+{ "type": "order", "question": "Vom Rohteil zum Fertigteil:", "items": ["Gießen", "Entgraten", "Schleifen"], "explanation": "Optional: warum." }
+```
+
+**Karteikarte** (offene Frage mit Musterantwort; man bewertet sich selbst)
+
+```json
+{ "type": "recall", "question": "Warum wirkt verteiltes Lernen besser?", "answer": "Weil jede Wiederholung kurz vor dem Vergessen das Gedächtnis am stärksten festigt." }
+```
+
+`answer` ist bei `choice`, `binary` und `cloze` die Nummer der richtigen Antwort, **gezählt ab 0**. Bei `truefalse` ist es `true` oder `false` – ohne Anführungszeichen. Bei `recall` ist es der Antworttext; `order` hat kein `answer`.
 
 ---
 
@@ -292,7 +353,7 @@ Dann <http://localhost:5173> öffnen. Fürs iPhone im selben WLAN die „Network
 | --- | --- |
 | `npm run dev` | Entwicklungsserver nur auf diesem PC |
 | `npm run dev:handy` | Entwicklungsserver, auch im WLAN erreichbar |
-| `npm test` | Automatische Tests (Speed-Reader- und Import-Logik) |
+| `npm test` | Automatische Tests (Speed-Reader, Import, Wiederholung, Karte, Sicherung, Suche) |
 | `npm run build` | Typprüfung und fertige App in `dist/` bauen |
 | `npm run preview` | Gebaute App starten – hier funktioniert auch der Offline-Modus |
 | `npm run icons` | App-Icons aus dem Logo [design/logo.png](design/logo.png) neu erzeugen ([scripts/generate-icons.mjs](scripts/generate-icons.mjs)) |
@@ -317,23 +378,29 @@ Den Stand siehst du im Repo unter **Actions**. Ein grüner Haken heißt: veröff
 
 ```
 src/
-  App.tsx                 Ansichts-Steuerung (Karte, Kachel, Wiederholen, Wissensbank, Inhalte, Einstellungen)
+  App.tsx                 Ansichts-Steuerung (Karte, Kachel, Wiederholen, Prüfung, Wissensbank, Suche, Inhalte, Einstellungen)
   screens/
     MapScreen.tsx         Startseite: Wissenskarte, „Schlau lernen“, Kursblatt
-    SessionScreen.tsx     Lernsitzung: Kachel lernen/lesen, Wissen stärken, Schlau lernen
-    KnowledgeScreen.tsx   Wissensbank, Prognose, Lerntage, Statistik
-    ContentScreen.tsx     Import, Vorlage für Claude, Kurse verwalten
+    SessionScreen.tsx     Lernsitzung: Kachel lernen/lesen, Wissen stärken, Prüfung, Schlau lernen
+    KnowledgeScreen.tsx   Wissensbank, Vorschau, schwierige Fragen, Prognose, Lerntage, Statistik
+    SearchScreen.tsx      Suche über alle Kurse
+    ContentScreen.tsx     Import, Sicherung, Vorlage für Claude, Kurse verwalten
     SettingsScreen.tsx    Einstellungen
   components/
-    map/                  Sechseck-Karte und Kursblatt
+    map/                  3D-Karte (Säulen) und Kursblatt
     session/              Fortschrittsleiste, Seite, Fragekarte, „Du lernst …“/„Rückblick“
     speed/                Speed-Reader
   lib/
-    maplayout.ts          Geometrie der Karte (Sechseck-Raster)    (+ maplayout.test.ts)
-    srs.ts                Wiederholung in wachsenden Abständen     (+ srs.test.ts)
+    maplayout.ts          Anordnung der Kacheln und Kurse (Sechseck-Raster)  (+ maplayout.test.ts)
+    map3d.ts              Säulen: Höhe, Projektion, Drehen, Grenzen          (+ map3d.test.ts)
+    mastery.ts            Beherrschung einer Kachel → Säulenhöhe             (+ mastery.test.ts)
+    srs.ts                Wiederholung in wachsenden Abständen               (+ srs.test.ts)
     session.ts            Ablauf einer Sitzung, falsche Fragen anhängen
-    smart.ts              Auswahl für „Wissen stärken“ und „Schlau lernen“
-    streak.ts             Lerntage, Serie, Kalender                (+ learning.test.ts)
+    smart.ts              Auswahl für „Wissen stärken“, Prüfung, Prüfungstermin, „Schlau lernen“
+    streak.ts             Lerntage, Serie, Kalender                          (+ learning.test.ts)
+    backup.ts, files.ts   Sicherung als Datei, Datei speichern               (+ backup.test.ts)
+    search.ts             Suche                                              (+ search.test.ts)
+    sanitize.ts           Gespeicherte Daten prüfen
     orp.ts                Speed-Reader-Logik                       (+ orp.test.ts)
     importer.ts           Kurs-Import und Prüfung                  (+ importer.test.ts)
     db.ts                 Speicher (IndexedDB) – einzige Stelle mit Speicherzugriff
@@ -380,6 +447,7 @@ Danach nach jeder Änderung: `npm run build` und `npx cap sync`.
 
 **Empfehlungen für die App-Version:**
 
+- **Sicherung speichern:** [src/lib/files.ts](src/lib/files.ts) nutzt das Teilen-Menü des Browsers bzw. einen Download. In der App-Hülle braucht es dafür `@capacitor/filesystem` und `@capacitor/share` – nur diese eine Datei wäre anzupassen.
 - **Speicher:** In der App kann das System IndexedDB bei Speichermangel leeren. Sicherer ist ein nativer Speicher (z. B. `@capacitor/preferences` oder SQLite). Dafür muss nur [src/lib/db.ts](src/lib/db.ts) ausgetauscht werden – der Rest der App spricht ausschließlich über `getItem`/`setItem`/`removeItem`.
 - **Android-Zurück-Taste** mit `@capacitor/app` an `history.back()` koppeln, damit sie am Startbildschirm die App schließt.
 - **App-Icons und Startbildschirme** aus [public/icons/icon-512.png](public/icons/icon-512.png) erzeugen, z. B. mit `@capacitor/assets`.

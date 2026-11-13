@@ -3,7 +3,7 @@ import { Icon } from '../components/Icon.tsx'
 import { CourseSheet } from '../components/map/CourseSheet.tsx'
 import { WorldMap } from '../components/map/WorldMap.tsx'
 import type { Navigation } from '../lib/navigation.ts'
-import { atRiskCards } from '../lib/smart.ts'
+import { dueCards } from '../lib/smart.ts'
 import { useAppState } from '../lib/store.ts'
 import { dayKey, hasStamp, totalStamps } from '../lib/streak.ts'
 
@@ -17,9 +17,9 @@ export function MapScreen({
   selectedCourseId?: string
   focusTileId?: string
 }) {
-  const { courses, learn, storage, settings } = useAppState()
+  const { courses, learn, storage } = useAppState()
   const selected = courses.find((c) => c.id === selectedCourseId)
-  const due = atRiskCards(courses, learn, Date.now()).length
+  const due = dueCards(courses, learn, Date.now()).length
   const stamps = totalStamps(learn.days)
   const stampedToday = hasStamp(learn.days[dayKey()])
 
@@ -34,8 +34,6 @@ export function MapScreen({
   return (
     <div className="map-screen">
       <WorldMap
-        key={settings.map3d ? '3d' : '2d'}
-        threeD={settings.map3d}
         courses={courses}
         learn={learn}
         selectedId={selected?.id}
@@ -52,6 +50,9 @@ export function MapScreen({
           <span className="map-tagline">Dein Ort des Wissens</span>
         </div>
         <div className="map-actions">
+          <button type="button" className="round-btn round-btn--glass" aria-label="Suche" title="Suche" onClick={() => nav.navigate({ name: 'search' })}>
+            <Icon name="search" />
+          </button>
           <button type="button" className="round-btn round-btn--glass" aria-label="Inhalte" title="Inhalte" onClick={() => nav.navigate({ name: 'content' })}>
             <Icon name="import" />
           </button>

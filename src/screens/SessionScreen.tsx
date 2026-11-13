@@ -8,7 +8,7 @@ import { RevealCard } from '../components/session/RevealCard.tsx'
 import { SessionProgress } from '../components/session/SessionProgress.tsx'
 import { IconButton } from '../components/TopBar.tsx'
 import { courseColor } from '../lib/colors.ts'
-import { cardKey, nextTile, tileQuestions } from '../lib/model.ts'
+import { cardKey, guessChance, nextTile, tileQuestions, tileStatus } from '../lib/model.ts'
 import type { Navigation } from '../lib/navigation.ts'
 import {
   advance,
@@ -24,14 +24,34 @@ import {
   type TileMode,
 } from '../lib/session.ts'
 import { formatDue } from '../lib/srs.ts'
-import { pickForReview, planSmartSession } from '../lib/smart.ts'
-import { addReadingTime, finishReview, finishTile, getAppState, startTile, useAppState } from '../lib/store.ts'
+import { EXAM, hardCards, pickForExam, pickForReview, planSmartSession } from '../lib/smart.ts'
+import { addReadingTime, finishReview, finishTile, getAppState, startTile, useAppState, type ReviewResult } from '../lib/store.ts'
 import { currentStreak, dayKey, hasStamp } from '../lib/streak.ts'
 import { isQuestion, type Course, type ReadingMode, type Tile } from '../lib/types.ts'
 
 export type SessionSpec =
   | { kind: 'tile'; course: Course; tile: Tile; mode: TileMode }
-  | { kind: 'review'; refs: QuestionRef[]; title: string; round: number; courseId?: string }
+  | { kind: 'review'; refs: QuestionRef[]; title: string; round: number; courseId?: string; hard?: boolean }
+  /** Prüfung: jede Frage einmal, Rückmeldung erst am Ende */
+  | { kind: 'exam'; course: Course; refs: QuestionRef[]; round: number }
+
+/** Antworten einer Runde für den Speicher aufbereiten (Ratewahrscheinlichkeit, Kachel gelernt?) */
+function toResults(firstTry: Record<string, boolean>, refs: QuestionRef[]): ReviewResult[] {
+  const { courses, learn } = getAppState()
+  const results: ReviewResult[] = []
+  for (const ref of refs) {
+    const found = lookupQuestion(courses, ref)
+    if (!found || !(found.key in firstTry)) continue
+    results.push({
+      key: found.key,
+      courseId: ref.courseId,
+      correct: firstTry[found.key],
+      guess: guessChance(found.step),
+      learned: tileStatus(learn, ref.courseId, ref.tileId) === 'done',
+    })
+  }
+  return results
+}
 
 /** Pausen über 3 Minuten zählen nicht als Lernzeit */
 const MAX_STEP_MS = 180_000
@@ -56,6 +76,8 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
   }
 
   const finished = isFinished(session)
+  const sessionRef = useRef(session)
+  sessionRef.current = session
 
   // Kachel als „gerade am Lernen“ markieren
   useEffect(() => {
@@ -72,14 +94,24 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
       if (spec.mode === 'learn') void finishTile(spec.course.id, spec.tile.id, session.firstTry, ms)
       else void addReadingTime(spec.course.id, ms)
     } else {
-      const results = Object.entries(session.firstTry).map(([key, correct]) => ({
-        key,
-        correct,
-        courseId: key.split('::')[0],
-      }))
-      void finishReview(results, ms)
+      void finishReview(toResults(session.firstTry, spec.refs), ms, {
+        examOf: spec.kind === 'exam' ? spec.course.id : undefined,
+      })
     }
   }, [finished, spec, session.firstTry])
+
+  // Runde vorzeitig verlassen (Schließen oder Zurück-Taste): Was schon beantwortet
+  // ist, zählt trotzdem für die Wiederholung – nur der Lerntag-Stempel entfällt.
+  useEffect(
+    () => () => {
+      if (saved.current || spec.kind === 'tile') return
+      const results = toResults(sessionRef.current.firstTry, spec.refs)
+      if (results.length === 0) return
+      saved.current = true
+      void finishReview(results, activeMs.current, { complete: false })
+    },
+    [spec],
+  )
 
   // Neuer Schritt beginnt oben
   useEffect(() => {
@@ -99,7 +131,7 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
   const item = session.items[session.index]
   const itemCourse = item ? app.courses.find((c) => c.id === item.courseId) : undefined
   const itemTile = itemCourse?.tiles.find((t) => t.id === item?.tileId)
-  const color = courseColor(itemCourse ?? (spec.kind === 'tile' ? spec.course : { id: 'leenli' }))
+  const color = courseColor(itemCourse ?? (spec.kind === 'review' ? { id: 'leenli' } : spec.course))
 
   // Seitenzählung je Kachel („Seite 2 / 3“)
   const pageNumbers = useMemo(() => {
@@ -112,10 +144,16 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
   }, [spec])
 
   let content: ReactNode = null
-  if (spec.kind === 'review' && spec.refs.length === 0) {
+  if (spec.kind !== 'tile' && spec.refs.length === 0) {
     content = (
       <Empty
-        text="Noch nichts zu wiederholen. Lerne zuerst eine Kachel – danach kannst du dein Wissen hier stärken."
+        text={
+          spec.kind === 'exam'
+            ? 'Dieser Kurs hat noch keine Fragen, die sich prüfen lassen.'
+            : spec.hard
+              ? 'Keine schwierigen Fragen – bisher lag keine Frage mehrfach daneben.'
+              : 'Noch nichts zu wiederholen. Lerne zuerst eine Kachel – danach kannst du dein Wissen hier stärken.'
+        }
         onDone={nav.back}
       />
     )
@@ -156,9 +194,16 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
         <QuestionCard
           key={session.index}
           step={found.step}
-          context={spec.kind === 'review' ? `${itemCourse.title} · ${itemTile.title}` : itemTile.title}
+          context={
+            spec.kind === 'review'
+              ? `${itemCourse.title} · ${itemTile.title}`
+              : spec.kind === 'exam'
+                ? `Frage ${session.index + 1} von ${session.items.length}`
+                : itemTile.title
+          }
           retry={item.retry}
-          onAnswer={(correct) => setSession((s) => answer(s, found.key, correct))}
+          exam={spec.kind === 'exam'}
+          onAnswer={(correct) => setSession((s) => answer(s, found.key, correct, spec.kind !== 'exam'))}
           onNext={goNext}
         />
       ) : null
@@ -179,7 +224,7 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
         </div>
       </header>
 
-      <main className="lesson-main" aria-label={spec.kind === 'tile' ? spec.tile.title : spec.title}>
+      <main className="lesson-main" aria-label={spec.kind === 'tile' ? spec.tile.title : spec.kind === 'exam' ? 'Prüfung' : spec.title}>
         {content}
       </main>
 
@@ -188,9 +233,13 @@ export function SessionScreen({ spec, nav }: { spec: SessionSpec; nav: Navigatio
         title="Sitzung beenden?"
         message={
           <p>
-            {spec.kind === 'tile' && spec.mode === 'learn'
-              ? 'Die Kachel bleibt angefangen. Beim nächsten Mal beginnt sie von vorn.'
-              : 'Die bisherigen Antworten dieser Runde werden nicht gezählt.'}
+            {spec.kind === 'tile'
+              ? spec.mode === 'learn'
+                ? 'Die Kachel bleibt angefangen. Beim nächsten Mal beginnt sie von vorn.'
+                : 'Du kannst die Kachel jederzeit wieder öffnen.'
+              : spec.kind === 'exam'
+                ? 'Die Prüfung wird dann nicht gewertet. Deine bisherigen Antworten zählen trotzdem für die Wiederholung.'
+                : 'Deine bisherigen Antworten bleiben gespeichert.'}
           </p>
         }
         confirmLabel="Beenden"
@@ -244,8 +293,28 @@ function Summary({
   let upNext: string | null = null
   let primary: { label: string; onClick: () => void }
   let secondary: { label: string; onClick: () => void } | null = null
+  /** Prüfung: Ergebnis je Kachel, schwächste zuerst */
+  let breakdown: { title: string; correct: number; total: number }[] = []
 
-  if (spec.kind === 'tile') {
+  if (spec.kind === 'exam') {
+    title = 'Prüfung beendet'
+    subtitle = spec.course.title
+    const perTile = new Map<string, { title: string; correct: number; total: number }>()
+    for (const ref of spec.refs) {
+      const found = lookupQuestion(courses, ref)
+      if (!found || !(found.key in session.firstTry)) continue
+      const entry = perTile.get(ref.tileId) ?? { title: found.tile.title, correct: 0, total: 0 }
+      entry.total++
+      if (session.firstTry[found.key]) entry.correct++
+      perTile.set(ref.tileId, entry)
+    }
+    breakdown = [...perTile.values()].sort((a, b) => a.correct / a.total - b.correct / b.total)
+    primary = { label: 'Fertig', onClick: nav.back }
+    secondary = {
+      label: 'Neue Prüfung',
+      onClick: () => nav.replace({ name: 'exam', courseId: spec.course.id, round: spec.round + 1 }),
+    }
+  } else if (spec.kind === 'tile') {
     const course = courses.find((c) => c.id === spec.course.id) ?? spec.course
     if (spec.mode === 'read') {
       title = 'Gelesen'
@@ -275,25 +344,42 @@ function Summary({
     primary = { label: 'Fertig', onClick: nav.back }
     secondary = {
       label: 'Noch eine Runde',
-      onClick: () => nav.replace({ name: 'review', courseId: spec.courseId, round: spec.round + 1 }),
+      onClick: () => nav.replace({ name: 'review', courseId: spec.courseId, round: spec.round + 1, hard: spec.hard }),
     }
   }
 
-  const color = courseColor(spec.kind === 'tile' ? spec.course : { id: 'leenli', color: 'indigo' })
+  const color = courseColor(spec.kind === 'review' ? { id: 'leenli', color: 'indigo' } : spec.course)
+  const percent = total > 0 ? Math.round((correct / total) * 100) : 0
 
   return (
     <>
       <div className="lesson-content summary step-enter">
         <span className="summary-hex" style={{ '--course': color } as CSSProperties} aria-hidden="true">
-          <Icon name={spec.kind === 'review' ? 'shield' : 'check'} size={40} />
+          <Icon name={spec.kind === 'tile' ? 'check' : 'shield'} size={40} />
         </span>
         <h2 className="summary-title">{title}</h2>
         {subtitle && <p className="eyebrow">{subtitle}</p>}
 
         {total > 0 && (
           <p className="summary-score">
-            <span className="summary-number">{correct}</span> von {total} {spec.kind === 'review' ? 'sofort gewusst' : 'auf Anhieb richtig'}
+            <span className="summary-number">{correct}</span> von {total}{' '}
+            {spec.kind === 'exam' ? `richtig (${percent} %)` : spec.kind === 'review' ? 'sofort gewusst' : 'auf Anhieb richtig'}
           </p>
+        )}
+        {breakdown.length > 0 && (
+          <ul className="exam-breakdown" aria-label="Ergebnis je Kachel">
+            {breakdown.map((entry) => (
+              <li key={entry.title} className={entry.correct < entry.total ? 'exam-row exam-row--weak' : 'exam-row'}>
+                <span>{entry.title}</span>
+                <strong>
+                  {entry.correct} / {entry.total}
+                </strong>
+              </li>
+            ))}
+          </ul>
+        )}
+        {spec.kind === 'exam' && breakdown.some((entry) => entry.correct < entry.total) && (
+          <p className="summary-text">Kacheln mit Fehlern stehen oben. Im Kursblatt kannst du sie nochmal lesen.</p>
         )}
         {nextReview && <p className="summary-text">{nextReview}</p>}
         {upNext && <p className="summary-text">{upNext}</p>}
@@ -321,13 +407,33 @@ function Summary({
 }
 
 /** „Wissen stärken“: wählt die Fragen der Runde einmal beim Öffnen */
-export function ReviewSession({ courseId, round, nav }: { courseId?: string; round: number; nav: Navigation }) {
+export function ReviewSession({
+  courseId,
+  round,
+  hard = false,
+  nav,
+}: {
+  courseId?: string
+  round: number
+  /** nur Fragen, die schon mehrfach falsch waren */
+  hard?: boolean
+  nav: Navigation
+}) {
   const [spec] = useState<SessionSpec>(() => {
     const { courses, learn, settings } = getAppState()
-    const refs = pickForReview(courses, learn, Date.now(), settings.reviewBatch, courseId)
+    const refs = hard
+      ? hardCards(courses, learn, courseId).slice(0, settings.reviewBatch)
+      : pickForReview(courses, learn, Date.now(), settings.reviewBatch, courseId)
     const course = courseId ? courses.find((c) => c.id === courseId) : undefined
-    return { kind: 'review', refs, title: course ? `Wissen stärken: ${course.title}` : 'Wissen stärken', round, courseId }
+    const what = hard ? 'Schwierige Fragen' : 'Wissen stärken'
+    return { kind: 'review', refs, title: course ? `${what}: ${course.title}` : what, round, courseId, hard }
   })
+  return <SessionScreen spec={spec} nav={nav} />
+}
+
+/** Prüfung über einen Kurs: wählt die Fragen einmal beim Öffnen */
+export function ExamSession({ course, round, nav }: { course: Course; round: number; nav: Navigation }) {
+  const [spec] = useState<SessionSpec>(() => ({ kind: 'exam', course, refs: pickForExam(course, EXAM.size), round }))
   return <SessionScreen spec={spec} nav={nav} />
 }
 

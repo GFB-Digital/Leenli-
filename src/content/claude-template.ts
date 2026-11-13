@@ -18,7 +18,7 @@ Umfang: [z. B. 6 Kacheln]
 So ist ein Kurs aufgebaut:
 - Ein Kurs besteht aus Kacheln. Jede Kachel ist eine kurze Lerneinheit zu einem Teilthema (z. B. beim Kurs „Das Gehirn“ eine Kachel pro Hirnregion). Ordne die Kacheln so, dass sie aufeinander aufbauen.
 - Jede Kachel beginnt mit 2 Leitfragen („intro“): Was lernt man in dieser Kachel?
-- Dann folgen 3 bis 4 Leseseiten. Nach jeder Seite kommt genau eine Frage zu genau dieser Seite. Am Ende darf noch eine zusätzliche Frage zur ganzen Kachel stehen.
+- Dann folgen 3 bis 4 Leseseiten. Nach jeder Seite kommt genau eine Frage zu genau dieser Seite. Am Ende dürfen noch ein bis zwei Fragen zur ganzen Kachel stehen.
 - Jede Kachel endet mit einem Rückblick („recap“): 3 kurze Kernaussagen.
 
 Inhalt:
@@ -33,6 +33,8 @@ Inhalt:
   - "binary": Entweder-oder mit genau 2 Antworten, gut für Fallbeispiele („Anna macht … – was passiert?“).
   - "truefalse": eine Aussage, die stimmt oder nicht stimmt.
   - "cloze": ein Satz mit genau einer Lücke ___ und 3 Antworten zum Einsetzen.
+  - "recall": Karteikarte. Eine offene Frage ("question") und die Musterantwort ("answer", 1–2 Sätze). Man überlegt sich die Antwort selbst, deckt sie auf und bewertet sich. Gut für „Warum …?“, „Erkläre …“, Definitionen und Formeln. Etwa eine pro Kachel, am besten als letzte Frage.
+  - "order": Reihenfolge. Eine Aufgabe ("question") und 3 bis 5 kurze Einträge ("items") in der RICHTIGEN Reihenfolge – die App mischt sie. Gut für Abläufe, Prozessketten und zeitliche Abfolgen. Nur verwenden, wenn die Reihenfolge eindeutig ist.
 
 Bilder (freiwillig):
 - Nur wenn du dir sicher bist, dass es das Bild gibt: "image" mit einer direkten Adresse von upload.wikimedia.org und einer Quellenangabe in "credit" (Wer, Lizenz, „via Wikimedia Commons“).
@@ -61,7 +63,9 @@ Antworte ausschließlich mit gültigem JSON in einem \`\`\`json-Codeblock, ohne 
         { "type": "binary", "question": "Ein Fallbeispiel – was ist richtig?", "options": ["Erste Möglichkeit", "Zweite Möglichkeit"], "answer": 0, "explanation": "Warum." },
         { "type": "text", "title": "Dritte Seite", "text": "…" },
         { "type": "cloze", "text": "Ein Satz mit einer ___ darin.", "options": ["Lücke", "Wand", "Tür"], "answer": 0, "explanation": "Warum." },
-        { "type": "truefalse", "statement": "Eine Aussage zur ganzen Kachel.", "answer": false, "explanation": "Warum sie nicht stimmt." }
+        { "type": "truefalse", "statement": "Eine Aussage zur ganzen Kachel.", "answer": false, "explanation": "Warum sie nicht stimmt." },
+        { "type": "order", "question": "Bringe die Schritte in die richtige Reihenfolge.", "items": ["Erster Schritt", "Zweiter Schritt", "Dritter Schritt"], "explanation": "Warum diese Reihenfolge." },
+        { "type": "recall", "question": "Eine offene Frage zur ganzen Kachel – warum ist das so?", "answer": "Die Musterantwort in ein bis zwei Sätzen.", "explanation": "Optional: ein zusätzlicher Hinweis." }
       ],
       "recap": ["Erste Kernaussage.", "Zweite Kernaussage.", "Dritte Kernaussage."]
     }
@@ -76,6 +80,8 @@ Regeln für das JSON:
 - "answer" bei "choice", "binary" und "cloze" ist die Nummer der richtigen Antwort in "options", gezählt ab 0 (0 = erste Antwort).
 - "answer" bei "truefalse" ist true oder false (ohne Anführungszeichen).
 - Der Lückentext enthält genau eine Lücke aus drei Unterstrichen: ___
+- "recall" hat "question" und "answer" (beides Text), keine "options". "order" hat "question" und "items" (3 bis 6 verschiedene Einträge in der richtigen Reihenfolge), kein "answer".
+- Gehören mehrere Kurse zum selben Themengebiet (z. B. mehrere Teile einer Vorlesung), gib ihnen dasselbe "group" (z. B. "group": "Fertigungstechnik") – sie stehen dann auf der Karte beieinander. Sonst lass "group" weg.
 - Nur gerade Anführungszeichen ("), keine Kommentare, kein Komma nach dem letzten Element einer Liste.
 
 Wenn ich dich später bitte, einen bestehenden Kurs zu überarbeiten, behalte seine "id" und die IDs der Kacheln bei – dann ersetzt die App den alten Kurs und mein Fortschritt bleibt erhalten.`

@@ -4,9 +4,11 @@ import { CourseBadge } from '../components/CourseBadge.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { IconButton, TopBar } from '../components/TopBar.tsx'
 import { claudeTemplate } from '../content/claude-template.ts'
+import { backupFileName, createBackup, isBackup, parseBackup, type BackupOutcome } from '../lib/backup.ts'
 import { copyText } from '../lib/clipboard.ts'
 import { requestPersistentStorage } from '../lib/db.ts'
-import { MAX_ERRORS, parseCourses, withFreshIds } from '../lib/importer.ts'
+import { saveTextFile } from '../lib/files.ts'
+import { MAX_ERRORS, extractJson, parseCourses, withFreshIds } from '../lib/importer.ts'
 import { plural } from '../lib/model.ts'
 import type { Navigation } from '../lib/navigation.ts'
 import {
@@ -14,6 +16,8 @@ import {
   getAppState,
   importCourses,
   isBuiltinCourse,
+  restoreBackup,
+  updateSettings,
   useAppState,
 } from '../lib/store.ts'
 import type { Course } from '../lib/types.ts'
@@ -28,8 +32,21 @@ interface PendingImport {
   notes: string[]
 }
 
+type ReadBackup = Extract<BackupOutcome, { ok: true }>
+
+const formatDate = (time: number) => new Date(time).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+
+/** Ist der eingefügte Text eine Sicherung statt eines Kurses? */
+function looksLikeBackup(raw: string): boolean {
+  try {
+    return isBackup(JSON.parse(extractJson(raw)))
+  } catch {
+    return false
+  }
+}
+
 export function ContentScreen({ nav }: { nav: Navigation }) {
-  const { courses, importedCourses } = useAppState()
+  const { courses, importedCourses, learn, settings } = useAppState()
   const [input, setInput] = useState('')
   const [result, setResult] = useState<Result | null>(null)
   const [pending, setPending] = useState<PendingImport | null>(null)
@@ -37,6 +54,9 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const fileRef = useRef<HTMLInputElement>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const backupFileRef = useRef<HTMLInputElement>(null)
+  const [pendingBackup, setPendingBackup] = useState<ReadBackup | null>(null)
+  const [backupNote, setBackupNote] = useState<{ ok: boolean; lines: string[] } | null>(null)
 
   const template = useMemo(() => claudeTemplate(), [])
   const importedIds = new Set(importedCourses.map((c) => c.id))
@@ -49,6 +69,12 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
   // ---- Import ----
 
   const runImport = (raw: string) => {
+    // Eine Sicherung im Kurs-Feld → richtig einordnen statt mit Kurs-Fehlern zu antworten
+    if (looksLikeBackup(raw)) {
+      openBackup(extractJson(raw))
+      setInput('')
+      return
+    }
     const outcome = parseCourses(raw)
     if (!outcome.ok) {
       showResult({ kind: 'error', errors: outcome.errors })
@@ -91,6 +117,62 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
       runImport(input)
     }
   }
+
+  // ---- Sicherung ----
+
+  const saveBackup = async () => {
+    const now = new Date()
+    const backup = createBackup({ courses: importedCourses, learn, settings }, now)
+    try {
+      const saved = await saveTextFile(backupFileName(now), JSON.stringify(backup))
+      if (saved === 'cancelled') return
+      await updateSettings({ lastBackupAt: now.getTime() })
+      setBackupNote({
+        ok: true,
+        lines: [
+          saved === 'shared'
+            ? 'Sicherung übergeben. Lege sie am besten in „Dateien“ oder in deiner Cloud ab.'
+            : `Sicherung gespeichert: ${backupFileName(now)} (im Download-Ordner).`,
+        ],
+      })
+    } catch {
+      setBackupNote({ ok: false, lines: ['Die Sicherung konnte nicht gespeichert werden.'] })
+    }
+  }
+
+  const openBackup = (text: string) => {
+    const outcome = parseBackup(text)
+    if (outcome.ok) {
+      setBackupNote(null)
+      setPendingBackup(outcome)
+    } else {
+      setBackupNote({ ok: false, lines: outcome.errors })
+    }
+  }
+
+  const onBackupChosen = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      openBackup(await file.text())
+    } catch {
+      setBackupNote({ ok: false, lines: ['Die Datei konnte nicht gelesen werden.'] })
+    }
+  }
+
+  const applyBackup = async () => {
+    if (!pendingBackup) return
+    const { backup } = pendingBackup
+    setPendingBackup(null)
+    await restoreBackup({ courses: backup.courses, learn: backup.learn, settings: backup.settings })
+    void requestPersistentStorage()
+    setResult(null)
+    setBackupNote({ ok: true, lines: ['Sicherung eingespielt. Kurse, Lernstand und Einstellungen sind wiederhergestellt.'] })
+  }
+
+  const hasProgress = Object.keys(learn.cards).length > 0
+  const backupAge = settings.lastBackupAt ? Math.floor((Date.now() - settings.lastBackupAt) / 86_400_000) : null
 
   // ---- Vorlage ----
 
@@ -202,6 +284,42 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
           </div>
         </section>
 
+        {/* Sicherung */}
+        <section className="card">
+          <h2 className="card-title">Sicherung</h2>
+          <p className="muted">
+            Deine Kurse und dein Lernstand liegen nur auf diesem Gerät. Eine Sicherungsdatei schützt sie, wenn du die App neu
+            installierst, das Gerät wechselst oder der Browser seinen Speicher leert.
+          </p>
+          <p className={hasProgress && (backupAge === null || backupAge > 14) ? 'backup-age backup-age--old' : 'backup-age'}>
+            {settings.lastBackupAt
+              ? `Letzte Sicherung: ${formatDate(settings.lastBackupAt)}${backupAge !== null && backupAge > 14 ? ` – das ist ${backupAge} Tage her` : ''}`
+              : hasProgress
+                ? 'Du hast noch keine Sicherung gespeichert.'
+                : 'Noch keine Sicherung.'}
+          </p>
+          <div className="button-row">
+            <button type="button" className="btn btn-primary" onClick={() => void saveBackup()}>
+              <Icon name="export" size={20} />
+              Sicherung speichern
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => backupFileRef.current?.click()}>
+              <Icon name="import" size={20} />
+              Sicherung einspielen
+            </button>
+            <input ref={backupFileRef} type="file" accept=".json,application/json,text/plain" hidden onChange={onBackupChosen} />
+          </div>
+          {backupNote && (
+            <div className={backupNote.ok ? 'result result--success' : 'result result--error'} role={backupNote.ok ? 'status' : 'alert'}>
+              <ul className="result-list">
+                {backupNote.lines.slice(0, MAX_ERRORS).map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+
         {/* Vorlage */}
         <section className="card">
           <h2 className="card-title">Vorlage für Claude</h2>
@@ -301,6 +419,30 @@ export function ContentScreen({ nav }: { nav: Navigation }) {
         }}
         onConfirm={() => pending && void finishImport(pending.courses, pending.notes)}
         onCancel={() => setPending(null)}
+      />
+
+      {/* Rückfrage: Sicherung einspielen */}
+      <ConfirmDialog
+        open={pendingBackup !== null}
+        title="Sicherung einspielen?"
+        message={
+          pendingBackup && (
+            <>
+              <p>
+                {pendingBackup.summary.exportedAt ? `Sicherung vom ${formatDate(pendingBackup.summary.exportedAt)}: ` : 'Die Sicherung enthält: '}
+                {plural(pendingBackup.summary.courses, 'Kurs', 'Kurse')}, {plural(pendingBackup.summary.tiles, 'gelernte Kachel', 'gelernte Kacheln')},{' '}
+                {plural(pendingBackup.summary.cards, 'Frage', 'Fragen')} mit Wiederholungsstand.
+              </p>
+              <p>
+                Deine jetzigen Kurse, dein Lernstand und deine Einstellungen auf diesem Gerät werden dadurch <strong>ersetzt</strong>. Das
+                lässt sich nicht rückgängig machen.
+              </p>
+            </>
+          )
+        }
+        confirmLabel="Einspielen"
+        onConfirm={() => void applyBackup()}
+        onCancel={() => setPendingBackup(null)}
       />
 
       {/* Rückfrage: Kurs löschen */}

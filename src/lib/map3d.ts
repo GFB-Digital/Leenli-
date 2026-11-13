@@ -1,4 +1,4 @@
-// 3D-Karte (Testmodus): Kacheln als Sechseck-Säulen, leicht gekippt, drehbar.
+// Wissenskarte in 3D: Kacheln als Sechseck-Säulen, leicht gekippt, drehbar.
 //
 // Kein echtes 3D, sondern eine einfache Projektion in die SVG-Ebene:
 //   1. um den Ursprung drehen (Winkel `rot`, Bogenmaß, im Uhrzeigersinn)
@@ -14,11 +14,23 @@ export const TILT = (35 * Math.PI) / 180
 const COS_T = Math.cos(TILT)
 const SIN_T = Math.sin(TILT)
 
-/** Säulenhöhe in Kartenpixeln je nach Anzahl Seiten + Fragen der Kachel */
-export const HEIGHT = { base: 4, perStep: 9, max: 130 }
+/**
+ * Säulenhöhe in Kartenpixeln (eine Zelle ist 60 breit).
+ * - min: Auch eine ungelernte Kachel bleibt als flache Säule sichtbar.
+ * - max: zwei Zellbreiten – eine volle Säule verdeckt höchstens die Reihe direkt dahinter.
+ * - gamma < 1: Die Höhe wächst unten schneller als oben. Dort liegen die meisten
+ *   Kacheln (frisch gelernt ≈ 16 %, nach einem Monat ≈ 55 %), dort sollen die
+ *   Unterschiede am deutlichsten sein.
+ */
+export const HEIGHT = { min: 12, max: 120, gamma: 0.7 }
 
-export function columnHeight(steps: number): number {
-  return Math.min(HEIGHT.max, HEIGHT.base + Math.max(0, steps) * HEIGHT.perStep)
+/**
+ * Höhe einer Säule aus der Beherrschung der Kachel (0–1, siehe mastery.ts).
+ * Hängt nur von der eigenen Kachel ab: Gleicher Lernstand → gleiche Höhe.
+ */
+export function columnHeight(mastery: number): number {
+  const m = Math.min(1, Math.max(0, mastery || 0))
+  return HEIGHT.min + (HEIGHT.max - HEIGHT.min) * Math.pow(m, HEIGHT.gamma)
 }
 
 export interface Point {
@@ -86,7 +98,7 @@ export function sideFaces(cx: number, cy: number, width: number, h: number, rot:
 }
 
 /** Schattenwurf je Höhe-Einheit nach rechts, leicht nach vorne (in der gedrehten Ansicht) */
-const SHADOW = { x: 0.8, y: 0.15 }
+const SHADOW = { x: 0.45, y: 0.1 }
 
 /** Konvexe Hülle (Andrew), Ergebnis immer im selben Drehsinn */
 function convexHull(points: [number, number][]): [number, number][] {
@@ -155,4 +167,58 @@ export function rotateView(v: View3, px: number, py: number, delta: number): Vie
   const nx = mx * c - my * s
   const ny = (mx * s + my * c) * COS_T
   return { k: v.k, r: v.r + delta, x: px - nx * v.k, y: py - ny * v.k }
+}
+
+/**
+ * Ansicht so verschieben, dass vom Rechteck `box` (Kartenebene) immer mindestens
+ * `margin` Pixel im Bild bleiben – die Karte lässt sich nicht „verlieren“.
+ */
+export function keepInView<V extends { x: number; y: number; k: number }>(
+  v: V,
+  box: { minX: number; minY: number; maxX: number; maxY: number },
+  width: number,
+  height: number,
+  margin: number,
+): V {
+  const mx = Math.min(margin, width / 2)
+  const my = Math.min(margin, height / 2)
+  let { x, y } = v
+  if (box.maxX * v.k + x < mx) x = mx - box.maxX * v.k
+  else if (box.minX * v.k + x > width - mx) x = width - mx - box.minX * v.k
+  if (box.maxY * v.k + y < my) y = my - box.maxY * v.k
+  else if (box.minY * v.k + y > height - my) y = height - my - box.minY * v.k
+  return x === v.x && y === v.y ? v : { ...v, x, y }
+}
+
+/** Weicher Übergang von 0 (bei `from`) nach 1 (bei `to`) */
+export function smoothstep(from: number, to: number, value: number): number {
+  const t = Math.min(1, Math.max(0, (value - from) / (to - from)))
+  return t * t * (3 - 2 * t)
+}
+
+export interface LabelBox {
+  /** Mitte waagrecht, Oberkante senkrecht (Bildschirm) */
+  x: number
+  top: number
+  width: number
+  height: number
+}
+
+/**
+ * Beschriftungen platzieren: der Reihe nach (wichtigste zuerst) bekommt jede die
+ * erste ihrer möglichen Stellen, an der sie keine schon gesetzte überdeckt.
+ * Ergebnis je Beschriftung: Nummer der gewählten Stelle, oder -1 = kein Platz.
+ */
+export function placeLabels(options: LabelBox[][], order: number[]): number[] {
+  const chosen: number[] = options.map(() => -1)
+  const kept: LabelBox[] = []
+  const overlaps = (a: LabelBox, b: LabelBox) =>
+    Math.abs(a.x - b.x) < (a.width + b.width) / 2 && a.top < b.top + b.height && b.top < a.top + a.height
+  for (const i of order) {
+    const index = options[i].findIndex((box) => !kept.some((other) => overlaps(box, other)))
+    if (index < 0) continue
+    chosen[i] = index
+    kept.push(options[i][index])
+  }
+  return chosen
 }

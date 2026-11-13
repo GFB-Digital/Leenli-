@@ -33,6 +33,8 @@ export const SRS = {
   lapseFactor: 0.3,
   minStability: 0.5,
   maxStability: 3650,
+  /** Wie stark die Ratewahrscheinlichkeit den Zuwachs dämpft (bei 2 Antworten: −25 %) */
+  guessWeight: 0.5,
 } as const
 
 /** Erinnerungswahrscheinlichkeit (0–1) zum Zeitpunkt `now` */
@@ -60,13 +62,19 @@ export function newCard(firstTryCorrect: boolean, now: number): CardState {
   })
 }
 
-/** Ergebnis einer Wiederholung einrechnen */
-export function reviewCard(card: CardState, correct: boolean, now: number): CardState {
+/**
+ * Ergebnis einer Wiederholung einrechnen. `guess` ist die Wahrscheinlichkeit,
+ * die Frage durch Raten richtig zu haben (siehe guessChance in model.ts):
+ * Eine richtige Antwort bei „Stimmt / Stimmt nicht“ beweist weniger als eine
+ * frei abgerufene – der Abstand wächst dann etwas langsamer.
+ */
+export function reviewCard(card: CardState, correct: boolean, now: number, guess = 0): CardState {
   const elapsed = Math.max(0, now - card.last) / DAY
   if (correct) {
     // 0 = sofort wiederholt, 1 = genau zur Fälligkeit, bis 2 = deutlich überfällig
     const timing = Math.min(2, elapsed / card.s)
-    const s = Math.min(SRS.maxStability, card.s * (1 + (card.ease - 1) * timing))
+    const proof = 1 - SRS.guessWeight * Math.min(1, Math.max(0, guess))
+    const s = Math.min(SRS.maxStability, card.s * (1 + (card.ease - 1) * timing * proof))
     return schedule({
       s: Math.max(card.s, s),
       ease: Math.min(SRS.maxEase, card.ease + 0.05),

@@ -7,6 +7,7 @@ import { SAMPLE_COURSE } from '../content/sample-course.ts'
 import { getItem, getStorageMode, removeItem, setItem, type StorageMode } from './db.ts'
 import { validateCourses } from './importer.ts'
 import { cardKey, tileQuestions } from './model.ts'
+import { isRecord, sanitizeLearn, sanitizeSettings } from './sanitize.ts'
 import { newCard, reviewCard } from './srs.ts'
 import { dayKey } from './streak.ts'
 import {
@@ -63,42 +64,6 @@ function setState(patch: Partial<AppState>) {
 function combineCourses(imported: Course[]): Course[] {
   const builtins = BUILTIN_COURSES.filter((b) => !imported.some((c) => c.id === b.id))
   return [...builtins, ...imported]
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-/** Gespeicherte Einstellungen prüfen – Unbekanntes fällt auf den Standard zurück */
-function sanitizeSettings(stored: unknown): Settings {
-  const s = isRecord(stored) ? stored : {}
-  const pick = <T,>(value: unknown, allowed: readonly T[], fallback: T): T =>
-    allowed.includes(value as T) ? (value as T) : fallback
-  return {
-    readingMode: pick(s.readingMode, ['normal', 'speed'] as const, DEFAULT_SETTINGS.readingMode),
-    wpm: typeof s.wpm === 'number' && Number.isFinite(s.wpm) ? s.wpm : DEFAULT_SETTINGS.wpm,
-    fontSize: pick(s.fontSize, ['S', 'M', 'L', 'XL'] as const, DEFAULT_SETTINGS.fontSize),
-    theme: pick(s.theme, ['auto', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme),
-    reviewBatch: pick(s.reviewBatch, [5, 10, 15, 20] as const, 10),
-    map3d: s.map3d === true,
-  }
-}
-
-function sanitizeLearn(stored: unknown): LearnState | null {
-  if (!isRecord(stored)) return null
-  const record = <T,>(value: unknown): Record<string, T> => (isRecord(value) ? (value as Record<string, T>) : {})
-  const answers = isRecord(stored.answers) ? stored.answers : {}
-  return {
-    tiles: record(stored.tiles),
-    cards: record(stored.cards),
-    days: record(stored.days),
-    courseMs: record(stored.courseMs),
-    answers: {
-      total: typeof answers.total === 'number' ? answers.total : 0,
-      correct: typeof answers.correct === 'number' ? answers.correct : 0,
-    },
-    lastCourseId: typeof stored.lastCourseId === 'string' ? stored.lastCourseId : undefined,
-  }
 }
 
 /** Gespeicherte Kurse lesen; ältere („lessons“) werden dabei umgewandelt */
@@ -250,13 +215,31 @@ export function finishTile(courseId: string, tileId: string, firstTry: Record<st
   })
 }
 
-/** Ergebnis einer Wiederholungsrunde (nur erste Versuche zählen) */
-export function finishReview(results: { key: string; courseId: string; correct: boolean }[], ms: number) {
+export interface ReviewResult {
+  key: string
+  courseId: string
+  correct: boolean
+  /** Ratewahrscheinlichkeit der Frage (siehe guessChance) */
+  guess?: number
+  /** Die Kachel der Frage ist gelernt → fehlt ihr Gedächtnis-Stand, wird er angelegt */
+  learned?: boolean
+}
+
+/**
+ * Ergebnis einer Wiederholungsrunde oder Prüfung (nur erste Versuche zählen).
+ * - `complete`: Runde zu Ende gebracht → zählt als Lerntag. Abgebrochene Runden
+ *   speichern ihre Antworten trotzdem.
+ * - `examOf`: Kurs, dessen Prüfung das war → Ergebnis wird am Kurs vermerkt.
+ */
+export function finishReview(results: ReviewResult[], ms: number, options: { complete?: boolean; examOf?: string } = {}) {
+  const { complete = true, examOf } = options
+  if (results.length === 0) return Promise.resolve()
   const now = Date.now()
   return updateLearn((learn) => {
     const cards = { ...learn.cards }
-    for (const { key, correct } of results) {
-      if (cards[key]) cards[key] = reviewCard(cards[key], correct, now)
+    for (const { key, correct, guess, learned } of results) {
+      if (cards[key]) cards[key] = reviewCard(cards[key], correct, now, guess)
+      else if (learned) cards[key] = newCard(correct, now)
     }
     // Lernzeit gleichmäßig auf die beteiligten Kurse verteilen
     const courseMs = { ...learn.courseMs }
@@ -267,9 +250,20 @@ export function finishReview(results: { key: string; courseId: string; correct: 
       ...learn,
       cards,
       courseMs,
-      days: addToDay(learn, now, { reviews: 1, ms }),
+      days: addToDay(learn, now, { reviews: complete ? 1 : 0, ms }),
       answers: { total: learn.answers.total + results.length, correct: learn.answers.correct + correct },
+      exams: examOf && complete ? { ...learn.exams, [examOf]: { at: now, correct, total: results.length } } : learn.exams,
     }
+  })
+}
+
+/** Prüfungstermin eines Kurses setzen („JJJJ-MM-TT“) oder löschen (null) */
+export function setExamDate(courseId: string, date: string | null) {
+  return updateLearn((learn) => {
+    const examDates = { ...learn.examDates }
+    if (date) examDates[courseId] = date
+    else delete examDates[courseId]
+    return { ...learn, examDates }
   })
 }
 
@@ -301,9 +295,9 @@ export function resetTile(courseId: string, tileId: string) {
   })
 }
 
-/** Gesamten Lernfortschritt zurücksetzen – Lerntage und Lernzeit bleiben */
+/** Gesamten Lernfortschritt zurücksetzen – Lerntage, Lernzeit und Prüfungstermine bleiben */
 export function resetProgress() {
-  return updateLearn((learn) => ({ ...learn, tiles: {}, cards: {} }))
+  return updateLearn((learn) => ({ ...learn, tiles: {}, cards: {}, exams: {} }))
 }
 
 /** Kurse hinzufügen; ein Kurs mit gleicher ID ersetzt den vorhandenen an seiner Stelle */
@@ -328,8 +322,20 @@ export async function deleteCourse(courseId: string) {
     delete tiles[courseId]
     const courseMs = { ...learn.courseMs }
     delete courseMs[courseId]
-    return { ...learn, tiles, courseMs, cards: withoutCards(learn.cards, `${courseId}::`) }
+    const examDates = { ...learn.examDates }
+    delete examDates[courseId]
+    const exams = { ...learn.exams }
+    delete exams[courseId]
+    return { ...learn, tiles, courseMs, examDates, exams, cards: withoutCards(learn.cards, `${courseId}::`) }
   })
+}
+
+/** Sicherung einspielen: ersetzt importierte Kurse, Lernstand und Einstellungen */
+export async function restoreBackup(data: { courses: Course[]; learn: LearnState; settings: Settings }) {
+  setState({ importedCourses: data.courses, learn: data.learn, settings: data.settings })
+  await persist(KEYS.courses, data.courses)
+  await persist(KEYS.learn, data.learn)
+  await persist(KEYS.settings, data.settings)
 }
 
 export function isBuiltinCourse(courseId: string): boolean {

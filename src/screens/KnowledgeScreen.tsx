@@ -2,9 +2,10 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Icon } from '../components/Icon.tsx'
 import { IconButton, TopBar } from '../components/TopBar.tsx'
 import { courseColor } from '../lib/colors.ts'
-import { cardKey, courseStats, formatStudyTime, tileQuestions, tileStatus } from '../lib/model.ts'
+import { cardKey, courseStats, formatStudyTime, questionText, tileQuestions, tileStatus } from '../lib/model.ts'
 import type { Navigation } from '../lib/navigation.ts'
-import { atRiskCards } from '../lib/smart.ts'
+import { lookupQuestion } from '../lib/session.ts'
+import { dueCards, dueForecast, hardCards, learnedCards } from '../lib/smart.ts'
 import { daysUntilForgetting, isAtRisk, median, PROGNOSIS_MARKS, prognosisPosition } from '../lib/srs.ts'
 import { useAppState } from '../lib/store.ts'
 import { currentStreak, dayKey, hasStamp, monthGrid, MONTHS, totalStamps, weekKeys, WEEKDAYS } from '../lib/streak.ts'
@@ -41,7 +42,9 @@ export function KnowledgeScreen({ nav, section }: { nav: Navigation; section?: '
   }
   const safe = chips.filter((chip) => chip.dots.every(Boolean))
   const risky = chips.filter((chip) => !chip.dots.every(Boolean))
-  const due = atRiskCards(courses, learn, now).length
+  const due = dueCards(courses, learn, now).length
+  const forecast = dueForecast(courses, learn, now)
+  const hard = hardCards(courses, learn)
 
   // ---- Kurse mit Fortschritt ----
   const active = courses.filter((course) =>
@@ -116,9 +119,58 @@ export function KnowledgeScreen({ nav, section }: { nav: Navigation; section?: '
                 Wissen stärken{due > 0 ? ` (${due} fällig)` : ''}
               </button>
               <p className="muted small">Du kannst so oft stärken, wie du möchtest – zuerst kommen die schwächsten Fragen.</p>
+              <dl className="kb-forecast" aria-label="Anstehende Wiederholungen">
+                <div>
+                  <dt>Heute</dt>
+                  <dd>{forecast.today}</dd>
+                </div>
+                <div>
+                  <dt>Morgen</dt>
+                  <dd>{forecast.tomorrow}</dd>
+                </div>
+                <div>
+                  <dt>In 7 Tagen</dt>
+                  <dd>{forecast.week}</dd>
+                </div>
+              </dl>
             </>
           )}
         </section>
+
+        {/* Schwierige Fragen: mehrfach falsch beantwortet */}
+        {hard.length > 0 && (
+          <section className="card kb-card">
+            <h2 className="kb-heading">Schwierige Fragen</h2>
+            <p className="muted small">
+              Diese Fragen lagen schon mehrfach daneben. Tippe eine an, um ihre Kachel nochmal zu lesen – oder übe sie gezielt.
+            </p>
+            <ul className="kb-hard">
+              {hard.slice(0, 8).map((ref) => {
+                const found = lookupQuestion(courses, ref)
+                if (!found) return null
+                return (
+                  <li key={ref.key}>
+                    <button
+                      type="button"
+                      className="kb-hard-row"
+                      style={{ '--course': courseColor(found.course) } as CSSProperties}
+                      onClick={() => nav.navigate({ name: 'tile', courseId: ref.courseId, tileId: ref.tileId, mode: 'read' })}
+                    >
+                      <span className="kb-hard-text">{questionText(found.step)}</span>
+                      <span className="kb-hard-meta">
+                        {found.course.title} · {found.tile.title} · {ref.card.lapses}-mal falsch
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            <button type="button" className="btn btn-secondary btn-course" onClick={() => nav.navigate({ name: 'review', round: 1, hard: true })}>
+              <Icon name="shield" size={20} />
+              Schwierige Fragen üben ({hard.length})
+            </button>
+          </section>
+        )}
 
         {/* Gerade am Lernen */}
         {active.length > 0 && (
@@ -165,9 +217,10 @@ export function KnowledgeScreen({ nav, section }: { nav: Navigation; section?: '
             Wiederholung schiebt den Punkt nach rechts.
           </p>
           {courses.map((course) => {
-            const days = Object.entries(learn.cards)
-              .filter(([key]) => key.startsWith(`${course.id}::`))
-              .map(([, card]) => daysUntilForgetting(card, now))
+            // nur Fragen, die es im Kurs noch gibt (nach einem Re-Import bleiben alte Stände liegen)
+            const days = learnedCards(courses, learn, course.id)
+              .filter((ref) => ref.card.reps > 0)
+              .map((ref) => daysUntilForgetting(ref.card, now))
             if (days.length === 0) return null
             const position = prognosisPosition(median(days))
             return (

@@ -55,7 +55,25 @@ export interface ClozeStep {
   explanation?: string
 }
 
-export type QuestionStep = ChoiceStep | BinaryStep | TrueFalseStep | ClozeStep
+/** Karteikarte: Antwort erst im Kopf abrufen, dann aufdecken und selbst bewerten */
+export interface RecallStep {
+  type: 'recall'
+  question: string
+  answer: string
+  explanation?: string
+}
+
+/** Reihenfolge: `items` stehen in der richtigen Reihenfolge (3–6), die App mischt sie */
+export interface OrderStep {
+  type: 'order'
+  question: string
+  items: string[]
+  explanation?: string
+}
+
+/** Fragen, bei denen man eine von mehreren vorgegebenen Antworten wählt */
+export type OptionStep = ChoiceStep | BinaryStep | ClozeStep
+export type QuestionStep = OptionStep | TrueFalseStep | RecallStep | OrderStep
 export type Step = TextStep | QuestionStep
 
 /** Eine Kachel = eine kurze Lerneinheit */
@@ -77,6 +95,8 @@ export interface Course {
   description?: string
   /** Farbname aus der Palette (siehe colors.ts) */
   color?: string
+  /** Themengebiet: Kurse mit demselben Namen stehen auf der Karte beieinander */
+  group?: string
   tiles: Tile[]
 }
 
@@ -112,6 +132,13 @@ export interface DayActivity {
   ms: number
 }
 
+/** Ergebnis der letzten Prüfung eines Kurses */
+export interface ExamResult {
+  at: number
+  correct: number
+  total: number
+}
+
 export interface LearnState {
   /** tiles[kursId][kachelId] */
   tiles: Record<string, Record<string, TileState>>
@@ -124,6 +151,10 @@ export interface LearnState {
   answers: { total: number; correct: number }
   /** zuletzt gelernter Kurs (für „Schlau lernen“) */
   lastCourseId?: string
+  /** Prüfungstermin je Kurs, „JJJJ-MM-TT“ */
+  examDates?: Record<string, string>
+  /** letzte Prüfung je Kurs */
+  exams?: Record<string, ExamResult>
 }
 
 export const EMPTY_LEARN: LearnState = {
@@ -148,8 +179,8 @@ export interface Settings {
   theme: Theme
   /** Fragen pro Wiederholungsrunde */
   reviewBatch: number
-  /** Testmodus: Wissenskarte als 3D-Säulen */
-  map3d: boolean
+  /** Wann zuletzt eine Sicherung gespeichert wurde (ms) */
+  lastBackupAt?: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -158,7 +189,6 @@ export const DEFAULT_SETTINGS: Settings = {
   fontSize: 'M',
   theme: 'auto',
   reviewBatch: 10,
-  map3d: false,
 }
 
 export function isQuestion(step: Step): step is QuestionStep {

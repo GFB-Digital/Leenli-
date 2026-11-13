@@ -8,6 +8,8 @@ import type {
   ClozeStep,
   Course,
   ImageRef,
+  OrderStep,
+  RecallStep,
   Step,
   TextStep,
   Tile,
@@ -21,7 +23,10 @@ export type ParseOutcome =
 /** Mehr Fehler auf einmal zu zeigen wäre unübersichtlich */
 export const MAX_ERRORS = 25
 
-const STEP_TYPES = '"text", "choice", "binary", "truefalse" oder "cloze"'
+const STEP_TYPES = '"text", "choice", "binary", "truefalse", "cloze", "recall" oder "order"'
+
+/** Ab so vielen Wörtern gibt es einen Hinweis, dass eine Leseseite lang ist */
+export const LONG_PAGE_WORDS = 160
 
 /** Lücke im Lückentext: drei oder mehr Unterstriche */
 export const CLOZE_GAP = /_{3,}/
@@ -304,6 +309,40 @@ function validateStep(value: unknown, where: string, ctx: Context): Step | null 
     return step
   }
 
+  if (type === 'recall') {
+    const question = f.required('question', 'Die Frage')
+    const answer = typeof value.answer === 'number' ? String(value.answer) : f.required('answer', 'Die Antwort')
+    const explanation = f.optional('explanation')
+    if (question === null || answer === null) return null
+    const step: RecallStep = { type, question, answer }
+    if (explanation) step.explanation = explanation
+    return step
+  }
+
+  if (type === 'order') {
+    const question = f.required('question', 'Die Frage')
+    const explanation = f.optional('explanation')
+    const items = value.items
+    if (!Array.isArray(items) || items.length < 3 || items.length > 6) {
+      ctx.errors.push(`${where}: „items“ muss eine Liste mit 3 bis 6 Einträgen in der richtigen Reihenfolge sein.`)
+      return null
+    }
+    const bad = items.findIndex((item) => !isText(item))
+    if (bad >= 0) {
+      ctx.errors.push(`${where}: Eintrag ${bad + 1} in „items“ ist leer oder kein Text.`)
+      return null
+    }
+    const clean = (items as string[]).map((item) => item.trim())
+    if (new Set(clean).size !== clean.length) {
+      ctx.errors.push(`${where}: In „items“ kommt ein Eintrag doppelt vor – die Reihenfolge wäre nicht eindeutig.`)
+      return null
+    }
+    if (question === null) return null
+    const step: OrderStep = { type, question, items: clean }
+    if (explanation) step.explanation = explanation
+    return step
+  }
+
   ctx.errors.push(`${where}: Unbekannter Typ „${String(type)}“. Erlaubt sind ${STEP_TYPES}.`)
   return null
 }
@@ -371,6 +410,7 @@ function validateCourse(value: unknown, index: number, total: number, ctx: Conte
   const title = f.required('title', 'Der Titel')
   const emoji = f.optional('emoji')
   const description = f.optional('description')
+  const group = f.optional('group')
 
   let color = f.optional('color')
   if (color && !isCourseColor(color)) {
@@ -415,7 +455,41 @@ function validateCourse(value: unknown, index: number, total: number, ctx: Conte
   if (emoji) course.emoji = emoji
   if (description) course.description = description
   if (color) course.color = color
+  if (group) course.group = group
+  ctx.notes.push(...contentHints(course, label))
   return course
+}
+
+/**
+ * Hinweise zum Inhalt – kein Fehler, der Kurs wird trotzdem importiert:
+ * sehr lange Leseseiten und Kacheln ohne Frage (die lassen sich nicht wiederholen).
+ */
+export function contentHints(course: Course, label = 'Kurs'): string[] {
+  const hints: string[] = []
+  const long: string[] = []
+  const unasked: string[] = []
+  for (const tile of course.tiles) {
+    let page = 0
+    for (const step of tile.steps) {
+      if (step.type !== 'text') continue
+      page++
+      const words = step.text.split(/\s+/).filter(Boolean).length
+      if (words > LONG_PAGE_WORDS) long.push(`„${shorten(tile.title, 30)}“, Seite ${page} (${words} Wörter)`)
+    }
+    if (tile.steps.every((step) => step.type === 'text')) unasked.push(`„${shorten(tile.title, 30)}“`)
+  }
+  const list = (items: string[]) => (items.length > 3 ? `${items.slice(0, 3).join(', ')} und ${items.length - 3} weitere` : items.join(', '))
+  if (long.length > 0) {
+    hints.push(
+      `${label}: ${long.length === 1 ? '1 Seite ist' : `${long.length} Seiten sind`} länger als ${LONG_PAGE_WORDS} Wörter – kürzere Seiten lernen sich leichter: ${list(long)}.`,
+    )
+  }
+  if (unasked.length > 0) {
+    hints.push(
+      `${label}: ${unasked.length === 1 ? '1 Kachel hat' : `${unasked.length} Kacheln haben`} keine Frage und ${unasked.length === 1 ? 'kann' : 'können'} deshalb nicht wiederholt werden: ${list(unasked)}.`,
+    )
+  }
+  return hints
 }
 
 // ---------------------------------------------------------------------------

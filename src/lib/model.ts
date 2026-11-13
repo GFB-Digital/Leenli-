@@ -4,9 +4,11 @@ import {
   isQuestion,
   type Course,
   type LearnState,
+  type OptionStep,
   type QuestionStep,
   type Tile,
   type TileState,
+  type TrueFalseStep,
 } from './types.ts'
 
 export function plural(count: number, one: string, many: string): string {
@@ -71,7 +73,7 @@ export function questionText(step: QuestionStep): string {
   }
 }
 
-export function questionChoices(step: QuestionStep, order: number[]): Choice[] {
+export function questionChoices(step: OptionStep | TrueFalseStep, order: number[]): Choice[] {
   if (step.type === 'truefalse') {
     return [
       { value: 1, label: 'Stimmt' },
@@ -83,14 +85,26 @@ export function questionChoices(step: QuestionStep, order: number[]): Choice[] {
   return indices.map((i) => ({ value: i, label: options[i] }))
 }
 
-export function correctValue(step: QuestionStep): number {
+export function correctValue(step: OptionStep | TrueFalseStep): number {
   if (step.type === 'truefalse') return step.answer ? 1 : 0
   return step.answer
 }
 
 export function correctLabel(step: QuestionStep): string {
   if (step.type === 'truefalse') return step.answer ? 'Die Aussage stimmt.' : 'Die Aussage stimmt nicht.'
+  if (step.type === 'recall') return step.answer
+  if (step.type === 'order') return step.items.join(' → ')
   return step.options[step.answer]
+}
+
+/**
+ * Wie wahrscheinlich man die Frage durch bloßes Raten richtig hat (0–1).
+ * Richtig geratene Antworten sollen den Wiederholungsabstand weniger verlängern.
+ */
+export function guessChance(step: QuestionStep): number {
+  if (step.type === 'recall' || step.type === 'order') return 0
+  if (step.type === 'truefalse') return 0.5
+  return 1 / step.options.length
 }
 
 /** Kurzer, stabiler Fingerabdruck einer Frage (FNV-1a) */

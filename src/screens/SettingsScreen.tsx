@@ -128,24 +128,6 @@ export function SettingsScreen({ nav }: { nav: Navigation }) {
             />
             <span className="setting-hint">„Automatisch“ folgt der Einstellung deines Geräts.</span>
           </div>
-          <div className="setting">
-            <div className="setting-text">
-              <span className="setting-label">3D-Karte (Test)</span>
-              <span className="setting-hint">
-                Kacheln als Säulen, je höher, desto mehr Seiten und Fragen. Drehen mit zwei Fingern, am PC mit Umschalt + Mausrad.
-              </span>
-            </div>
-            <SegmentedControl
-              label="3D-Karte"
-              value={settings.map3d ? 'on' : 'off'}
-              options={[
-                { value: 'off', label: 'Aus' },
-                { value: 'on', label: 'An' },
-              ]}
-              onChange={(value) => void updateSettings({ map3d: value === 'on' })}
-              fill
-            />
-          </div>
         </section>
 
         <section className="card settings-group">

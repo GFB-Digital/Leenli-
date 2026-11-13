@@ -88,6 +88,19 @@ const PATHS = {
       <path d="M14 3.5V8h4.5" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6" />
+      <path d="M15 15l5 5" />
+    </>
+  ),
+  export: (
+    <>
+      <path d="M12 15V4" />
+      <path d="M7 9l5-5 5 5" />
+      <path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2" />
+    </>
+  ),
   settings: (
     <>
       <path d="M4 7h9M19 7h1M4 17h1M11 17h9" />

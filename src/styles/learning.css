@@ -35,11 +35,11 @@
   display: block;
 }
 
+/* Farben eines Kurses. Neue Kacheln sind neutral mit einem Hauch Kursfarbe –
+   hell wie dunkel etwas kräftiger als der Hintergrund, damit die Säule Seiten zeigt. */
 .map-course {
-  --terr: color-mix(in srgb, var(--course) 32%, var(--bg));
-  --terr-line: color-mix(in srgb, var(--course) 18%, var(--bg));
-  --tile-new: color-mix(in srgb, var(--course) 15%, var(--bg));
-  --seam: color-mix(in srgb, var(--course) 8%, var(--bg));
+  --tile-new: color-mix(in srgb, var(--course) 16%, color-mix(in srgb, var(--text) 13%, var(--bg)));
+  --seam: color-mix(in srgb, var(--text) 9%, var(--bg));
   transition: opacity 0.3s ease;
 }
 
@@ -47,38 +47,43 @@
   opacity: 0.3;
 }
 
-/* Gebiet: Fläche mit zarten Sechseck-Umrissen */
-.map-terr {
-  fill: var(--terr);
+/* Säulen: --top ist die Deckelfarbe, die Seiten sind je nach Licht
+   (--shade, im Code berechnet) dunkler. Zwischen den Deckeln nur eine feine Fuge. */
+.map-tile {
+  --top: var(--tile-new);
 }
 
-.map-terr-hex {
-  fill: none;
-  stroke: var(--terr-line);
-  stroke-width: 2.6;
-  stroke-linejoin: round;
+.map-tile--learning {
+  --top: color-mix(in srgb, var(--course) 70%, var(--bg));
 }
 
-/* Kacheln: Sechsecke liegen direkt aneinander, nur eine feine Fuge trennt sie */
+.map-tile--done {
+  --top: var(--course);
+}
+
+/* Wiederholung fällig: Die Säule verblasst, bis das Wissen wieder gestärkt ist */
+.map-tile--due {
+  --top: color-mix(in srgb, var(--course) 46%, var(--tile-new));
+}
+
 .map-tile-shape {
-  fill: var(--tile-new);
+  fill: var(--top);
   stroke: var(--seam);
   stroke-width: 2;
   stroke-linejoin: round;
-  transition: fill 0.2s ease;
 }
 
-.map-tile--learning .map-tile-shape {
-  fill: color-mix(in srgb, var(--course) 70%, var(--bg));
+.map-col-side {
+  fill: color-mix(in srgb, var(--top), #000 var(--shade));
+  /* gleiche Farbe als Rand → keine haarfeinen Spalten zwischen den Seiten */
+  stroke: color-mix(in srgb, var(--top), #000 var(--shade));
+  stroke-width: 0.6;
+  stroke-linejoin: round;
 }
 
-/* Gelernt: aus der Ferne in Kursfarbe mit Häkchen, aus der Nähe hell mit Zeichen */
-.map-tile--done .map-tile-shape {
-  fill: var(--course);
-}
-
-.map-d2 .map-tile--done .map-tile-shape {
-  fill: color-mix(in srgb, var(--course) var(--map-done), #fff);
+.map-shadow {
+  fill: rgb(0 0 0 / 0.1);
+  pointer-events: none;
 }
 
 /* Nächste Kachel */
@@ -90,6 +95,14 @@
   pointer-events: none;
 }
 
+/* Auf einer angefangenen (farbigen) Kachel wäre der Ring in Kursfarbe kaum zu sehen */
+.map-tile--learning .map-next-ring {
+  stroke: #fff;
+}
+
+/* Stufenlose Details beim Zoomen: --check und --marks (0–1) setzt die Karte.
+   Aus der Ferne ein Häkchen auf gelernten Kacheln, aus der Nähe ein heller
+   Deckel mit den Zeichen für Seiten und Fragen. */
 .map-tile-check {
   fill: none;
   stroke: #fff;
@@ -97,10 +110,18 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   pointer-events: none;
+  opacity: var(--check, 1);
+}
+
+.map-tile-wash {
+  fill: color-mix(in srgb, var(--course) var(--map-done), #fff);
+  pointer-events: none;
+  opacity: var(--marks, 0);
 }
 
 .map-content {
   pointer-events: none;
+  opacity: var(--marks, 0);
 }
 
 /* Zeichenreihen wie in der Leiste beim Lernen: Kreis = Leseseite, Schild = Frage */
@@ -128,50 +149,16 @@
   fill: color-mix(in srgb, var(--course) 72%, #000);
 }
 
-/* 3D-Karte (Testmodus): Säulen. --top ist die Deckelfarbe, die Seiten sind
-   je nach Licht (--shade, im Code berechnet) dunkler. */
-.map3d .map-tile {
-  --top: var(--tile-new);
-}
-
-.map3d .map-tile--learning {
-  --top: color-mix(in srgb, var(--course) 70%, var(--bg));
-}
-
-.map3d .map-tile--done {
-  --top: var(--course);
-}
-
-.map3d.map-d2 .map-tile--done {
-  --top: color-mix(in srgb, var(--course) var(--map-done), #fff);
-}
-
-.map3d .map-tile .map-tile-shape {
-  fill: var(--top);
-}
-
-.map-side {
-  fill: color-mix(in srgb, var(--top), #000 var(--shade));
-  /* gleiche Farbe als Rand → keine haarfeinen Spalten zwischen den Seiten */
-  stroke: color-mix(in srgb, var(--top), #000 var(--shade));
-  stroke-width: 0.6;
-  stroke-linejoin: round;
-}
-
-.map-shadow {
-  fill: rgb(0 0 0 / 0.13);
-}
-
 .map-compass {
   position: absolute;
-  top: calc(1rem + var(--safe-top) + 2 * 52px + 1.2rem);
+  top: calc(1rem + var(--safe-top) + 3 * 52px + 1.8rem);
   right: max(var(--gutter), var(--safe-right));
 }
 
-/* Kursname wie ein Reiter oben auf der Umrandung */
+/* Kursname wie ein Reiter über der Kachelgruppe */
 .map-label {
   position: absolute;
-  transform: translate(-50%, calc(-100% + 10px));
+  transform: translateX(-50%);
   max-width: 72vw;
   padding: 0.45rem 0.9rem;
   border: none;
@@ -187,11 +174,24 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
+}
+
+/* Weit herausgezoomt: kleiner, damit die Namen die Karte nicht zudecken */
+.map-label--small {
+  padding: 0.32rem 0.7rem;
+  border-radius: 9px;
+  font-size: 0.8rem;
 }
 
 .map-label--dim {
   opacity: 0.35;
+}
+
+/* Würde einen anderen Kursnamen überdecken → ausgeblendet, bis wieder Platz ist */
+.map-label--hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Kopf: großer Schriftzug, runde Knöpfe rechts */
@@ -514,6 +514,49 @@
   font-weight: 800;
   text-anchor: middle;
   dominant-baseline: middle;
+}
+
+/* Prüfung im Kursblatt: Termin, Tagespensum, Probe-Prüfung */
+.sheet-exam {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 18px;
+  background: rgb(0 0 0 / 0.14);
+}
+
+.sheet-exam .btn-course {
+  margin-top: 0.1rem;
+}
+
+.sheet-exam-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 700;
+}
+
+.sheet-exam-date input {
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border: none;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  color-scheme: dark;
+}
+
+.sheet-exam-plan {
+  font-weight: 700;
+}
+
+.sheet-exam-note {
+  color: rgb(255 255 255 / 0.8);
+  font-size: 0.85rem;
 }
 
 .btn-course {
@@ -986,6 +1029,125 @@
   color: #1d7a45;
 }
 
+/* Karteikarte: erst abrufen, dann aufdecken */
+.q-hint {
+  font-family: var(--font-text);
+  font-size: calc(0.92rem * var(--font-scale));
+  line-height: 1.45;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.q-reveal {
+  font-family: var(--font-text);
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 1rem;
+  border: 2px dashed rgb(255 255 255 / 0.6);
+  border-radius: 18px;
+  background: rgb(0 0 0 / 0.1);
+  color: #fff;
+  font-size: calc(1.05rem * var(--font-scale));
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.q-answer {
+  font-family: var(--font-text);
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: #fff;
+  color: #2b2a33;
+  font-size: calc(1.05rem * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.45;
+  animation: step-in 0.2s ease both;
+}
+
+.q-answer-label {
+  color: color-mix(in srgb, var(--course) 85%, #000);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Reihenfolge: nummerierte Plätze, darunter die noch freien Einträge */
+.q-order {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.q-order-slot {
+  font-family: var(--font-text);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.2rem;
+  padding: 0.6rem 1rem 0.6rem 0.6rem;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  color: #2b2a33;
+  font-size: calc(1rem * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.q-order-slot:disabled {
+  cursor: default;
+}
+
+.q-order-slot[data-state='empty'] {
+  background: rgb(0 0 0 / 0.12);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.3);
+}
+
+.q-order-slot[data-state='correct'] {
+  color: #1d7a45;
+}
+
+.q-order-slot[data-state='wrong'] {
+  color: #a35300;
+}
+
+.q-order-number {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--course) 16%, #fff);
+  color: color-mix(in srgb, var(--course) 85%, #000);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.q-order-slot[data-state='empty'] .q-order-number {
+  background: rgb(255 255 255 / 0.25);
+  color: #fff;
+}
+
+/* Ein einzelner Knopf (Prüfung) nimmt die ganze Breite */
+.q-actions > :only-child {
+  grid-column: 1 / -1;
+}
+
 .q-feedback {
   font-family: var(--font-text);
   display: grid;
@@ -1127,6 +1289,39 @@
   background: var(--accent-soft);
   color: var(--accent-text);
   font-weight: 700;
+}
+
+/* Prüfung: Ergebnis je Kachel */
+.exam-breakdown {
+  list-style: none;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.exam-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 0.95rem;
+}
+
+.exam-row strong {
+  flex: none;
+  color: var(--correct);
+  font-variant-numeric: tabular-nums;
+}
+
+.exam-row--weak strong {
+  color: var(--wrong);
 }
 
 /* ---------- Wissensbank ---------- */
@@ -1488,4 +1683,155 @@
 
 .session .lesson-footer .btn-primary:disabled {
   background: color-mix(in srgb, var(--course) 35%, var(--surface));
+}
+
+/* ---------- Wissensbank: Vorschau und schwierige Fragen ---------- */
+
+.kb-forecast {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
+.kb-forecast > div {
+  padding: 0.6rem 0.4rem;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.kb-forecast dt {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.kb-forecast dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-hard {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.kb-hard-row {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: none;
+  border-left: 4px solid var(--course);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kb-hard-text {
+  font-family: var(--font-text);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.kb-hard-meta {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* ---------- Sicherung ---------- */
+
+.backup-age {
+  font-weight: 700;
+}
+
+.backup-age--old {
+  color: var(--wrong);
+}
+
+/* ---------- Suche ---------- */
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 54px;
+  padding: 0 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.search-field:focus-within {
+  border-color: var(--accent);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.search-hit {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-left: 4px solid var(--course);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  text-align: left;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.search-hit-kind {
+  color: color-mix(in srgb, var(--course) 70%, var(--text));
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.search-hit-title {
+  font-weight: 700;
+}
+
+.search-hit-context {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.search-hit-snippet {
+  margin-top: 0.2rem;
+  font-family: var(--font-text);
+  font-size: 0.92rem;
+  line-height: 1.45;
 }

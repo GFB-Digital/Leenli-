@@ -13,10 +13,13 @@ export type View =
   | { name: 'course'; courseId: string; tileId?: string }
   /** Kachel lernen oder nur lesen */
   | { name: 'tile'; courseId: string; tileId: string; mode: 'learn' | 'read' }
-  /** Wissen stärken (alle Kurse oder einer); round zählt „Noch eine Runde“ */
-  | { name: 'review'; courseId?: string; round: number }
+  /** Wissen stärken (alle Kurse oder einer); round zählt „Noch eine Runde“; hard = nur schwierige Fragen */
+  | { name: 'review'; courseId?: string; round: number; hard?: boolean }
+  /** Prüfung über einen Kurs */
+  | { name: 'exam'; courseId: string; round: number }
   | { name: 'smart' }
   | { name: 'knowledge'; section?: 'days' }
+  | { name: 'search' }
   | { name: 'content' }
   | { name: 'settings' }
 

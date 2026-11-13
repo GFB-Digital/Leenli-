@@ -3,9 +3,10 @@
 // Die Zeilen sind um eine halbe Zelle versetzt; jede Zelle hat sechs Nachbarn.
 // Gerechnet wird mit axialen Koordinaten (q, r) wie bei üblichen Sechseck-Karten.
 //
-// Jeder Kurs ist eine rundliche Gruppe aus Kacheln (zeilenweise in
-// Lernreihenfolge), umgeben von einer Fläche („Gebiet“). Die Kurse werden so
-// angeordnet, dass zwischen ihren Gebieten immer eine Zelle frei bleibt.
+// Jeder Kurs ist eine Gruppe aus Kacheln, die Zelle für Zelle „wächst“ – zufällig,
+// aber mit festem Startwert aus der Kurs-ID. So sieht jede Gruppe anders aus,
+// bleibt aber bei jedem Öffnen gleich, und neue Kacheln hängen sich an, ohne
+// die alten zu verschieben. Zwischen zwei Kursen bleiben immer drei Zellen frei.
 // Reine Funktionen → maplayout.test.ts.
 
 /** Breite einer Zelle (Kante zu Kante) = Abstand zweier Nachbarn in einer Zeile, in Kartenpixeln bei Zoom 1 */
@@ -70,20 +71,6 @@ export function hexagonPoints(cx: number, cy: number, width: number): string {
     .join(' ')
 }
 
-/**
- * Viele Sechsecke als ein SVG-Pfad. Alle laufen im gleichen Drehsinn, deshalb
- * ergibt die Füllung ihre Vereinigung – eine Fläche, deren Rand den Sechsecken folgt.
- */
-export function hexagonsPath(cells: Cell[], width: number): string {
-  return cells
-    .map((cell) => {
-      const { x, y } = cellCenter(cell)
-      const [first, ...rest] = hexagonCorners(x, y, width)
-      return `M${fmt(first[0])} ${fmt(first[1])}` + rest.map(([px, py]) => `L${fmt(px)} ${fmt(py)}`).join('') + 'Z'
-    })
-    .join('')
-}
-
 /** Zufallszahlen, die für denselben Text immer gleich ausfallen (mulberry32) */
 export function seededRandom(seed: string): () => number {
   let h = 1779033703
@@ -98,95 +85,84 @@ export function seededRandom(seed: string): () => number {
   }
 }
 
-/** Senkrechte Abstände zählen etwas weniger → Kurse werden eher hoch als breit (passt zum Handy) */
-const UPRIGHT = 0.9
-
-/** Mögliche Mittelpunkte einer Kachelgruppe: Zellmitte, zwischen zwei Zellen, zwischen drei Zellen */
-const GROUP_CENTERS = [
-  { x: 0, y: 0 },
-  { x: CELL / 2, y: 0 },
-  { x: CELL / 4, y: ROW / 2 },
-  { x: CELL / 2, y: ROW / 3 },
-  { x: CELL, y: (2 * ROW) / 3 },
-]
-
-/** Kachel-Reihenfolge: zeilenweise von oben nach unten, in jeder Zeile von links nach rechts */
+/** Kachel-Reihenfolge für gleich gute Kandidaten: zeilenweise von oben links */
 function readingOrder(a: Cell, b: Cell): number {
   return a.r - b.r || a.q + a.r / 2 - (b.q + b.r / 2)
 }
 
 /**
- * Kacheln eines Kurses als möglichst runde Gruppe (wie eine Wabe) anordnen.
- * Ausprobiert werden mehrere Mittelpunkte; genommen wird die kompakteste Form.
+ * Kacheln eines Kurses als gewachsene Gruppe: Die erste Kachel liegt im Ursprung,
+ * jede weitere dockt an einer freien Nachbarzelle an. Bevorzugt werden Zellen mit
+ * vielen belegten Nachbarn (die Gruppe bleibt kompakt) und Zellen neben der
+ * zuletzt gesetzten Kachel (der Lernweg schlängelt sich durch die Gruppe).
+ *
+ * Gleicher Startwert → gleiche Gruppe. Die ersten n Zellen hängen nicht davon ab,
+ * wie viele danach noch kommen: Eine zusätzliche Kachel verschiebt keine alte.
  */
-export function blockCells(count: number): Cell[] {
+export function growCells(seed: string, count: number): Cell[] {
   const n = Math.max(1, count)
-  const radius = Math.ceil(Math.sqrt(n)) + 2
-  const pool: Cell[] = []
-  for (let r = -radius; r <= radius; r++) {
-    for (let q = -2 * radius; q <= 2 * radius; q++) {
-      if (cellDistance({ q, r }, { q: 0, r: 0 }) <= radius) pool.push({ q, r })
+  const random = seededRandom(seed)
+  const cells: Cell[] = [{ q: 0, r: 0 }]
+  const taken = new Set([cellKey(cells[0])])
+  while (cells.length < n) {
+    const last = cells[cells.length - 1]
+    // Freie Nachbarzellen und wie viele belegte Nachbarn sie haben
+    const touching = new Map<string, { cell: Cell; count: number }>()
+    for (const cell of cells) {
+      for (const c of neighbors(cell)) {
+        const key = cellKey(c)
+        if (taken.has(key)) continue
+        const entry = touching.get(key)
+        if (entry) entry.count++
+        else touching.set(key, { cell: c, count: 1 })
+      }
     }
+    const candidates = [...touching.values()].sort((x, y) => readingOrder(x.cell, y.cell))
+    // Fast eingeschlossene Zellen zuerst füllen → keine Löcher in der Gruppe
+    const pit = candidates.find((c) => c.count >= 5)
+    let chosen = pit?.cell
+    if (!chosen) {
+      const weights = candidates.map((c) => c.count ** 2 * (cellDistance(c.cell, last) === 1 ? 3 : 1))
+      let pick = random() * weights.reduce((sum, w) => sum + w, 0)
+      chosen = candidates[candidates.length - 1].cell
+      for (let i = 0; i < candidates.length; i++) {
+        pick -= weights[i]
+        if (pick < 0) {
+          chosen = candidates[i].cell
+          break
+        }
+      }
+    }
+    cells.push(chosen)
+    taken.add(cellKey(chosen))
   }
-  const weighted = (cell: Cell, cx: number, cy: number) => {
-    const { x, y } = cellCenter(cell)
-    return (x - cx) ** 2 + ((y - cy) * UPRIGHT) ** 2
-  }
-
-  let best: { cells: Cell[]; spread: number } | null = null
-  for (const center of GROUP_CENTERS) {
-    const cells = [...pool]
-      .sort((a, b) => weighted(a, center.x, center.y) - weighted(b, center.x, center.y) || readingOrder(a, b))
-      .slice(0, n)
-    const mx = cells.reduce((sum, c) => sum + cellCenter(c).x, 0) / n
-    const my = cells.reduce((sum, c) => sum + cellCenter(c).y, 0) / n
-    const spread = cells.reduce((sum, c) => sum + weighted(c, mx, my), 0)
-    if (!best || spread < best.spread - 1e-6) best = { cells, spread }
-  }
-
-  return normalize(best!.cells).sort(readingOrder)
-}
-
-/** Verschiebt Zellen so, dass die erste Zeile r = 0 ist und die linke Kante bei x ≈ 0 liegt */
-function normalize(cells: Cell[]): Cell[] {
-  const minR = Math.min(...cells.map((c) => c.r))
-  const moved = cells.map((c) => ({ q: c.q, r: c.r - minR }))
-  const minX = Math.min(...moved.map((c) => c.q + c.r / 2))
-  const dq = -Math.floor(minX)
-  return moved.map((c) => ({ q: c.q + dq, r: c.r }))
+  return cells
 }
 
 export interface CourseLayout {
   id: string
   /** Zellen der Kacheln in Kachel-Reihenfolge (absolut) */
   tiles: Cell[]
-  /** Zellen der umgebenden Fläche (absolut, ohne Kacheln) */
-  territory: Cell[]
-  /** Teil des Gebiets, auf dem zarte Sechseck-Umrisse liegen (Schmuck) */
-  decor: Cell[]
 }
 
-/** Kacheln + Gebiet eines Kurses, relativ zum Ursprung */
-function buildCourse(id: string, tileCount: number): CourseLayout {
-  const random = seededRandom(id)
-  const tiles = blockCells(tileCount)
-  const taken = new Set(tiles.map(cellKey))
-  const territory: Cell[] = []
-  const add = (cell: Cell) => {
-    taken.add(cellKey(cell))
-    territory.push(cell)
+/** Freie Zellen zwischen zwei Kursen (Platz für Namen, hohe Säulen verdecken keinen Nachbarkurs) */
+export const COURSE_GAP = 3
+
+/** Alle Zellen im Umkreis von `distance` Schritten (ohne die Mitte) */
+function ring(distance: number): Cell[] {
+  const list: Cell[] = []
+  for (let r = -distance; r <= distance; r++) {
+    for (let q = -distance; q <= distance; q++) {
+      const d = cellDistance({ q, r }, { q: 0, r: 0 })
+      if (d > 0 && d <= distance) list.push({ q, r })
+    }
   }
-  // Erster Ring geschlossen, zweiter ausgefranst → natürliche Form ohne Löcher
-  const ring1: Cell[] = []
-  for (const t of tiles) for (const c of neighbors(t)) if (!taken.has(cellKey(c))) add(c), ring1.push(c)
-  for (const t of ring1) for (const c of neighbors(t)) if (!taken.has(cellKey(c)) && random() < 0.5) add(c)
-  // Zarte Umrisse nur abseits der Kacheln, damit sie nicht wie Kacheln wirken
-  const nearTiles = new Set(ring1.map(cellKey))
-  const decor = territory.filter((c) => !nearTiles.has(cellKey(c)) && random() < 0.5)
-  return { id, tiles, territory, decor }
+  return list
 }
 
-/** Mögliche Verschiebungen, nach Abstand zur Kartenmitte sortiert (hochkant bevorzugt) */
+const GAP_OFFSETS = ring(COURSE_GAP)
+
+/** Mögliche Verschiebungen, nach Abstand zur Mitte sortiert (hochkant bevorzugt, passt zum Handy) */
 const SHIFTS: Cell[] = (() => {
   const reach = 60
   const list: Cell[] = []
@@ -201,52 +177,43 @@ const SHIFTS: Cell[] = (() => {
 })()
 
 /**
- * Ordnet alle Kurse an: jeder kommt an die nächstgelegene Stelle, an der
- * sein Gebiet mit mindestens einer freien Zelle Abstand zu allen anderen passt.
+ * Ordnet alle Kurse an: Jeder kommt an die nächstgelegene Stelle, an der er mit
+ * drei freien Zellen Abstand zu allen früheren passt. Kurse mit demselben
+ * Themengebiet (`group`) suchen ihren Platz rund um den ersten Kurs des Gebiets.
+ * Ein Kurs, der hinten dazukommt, verschiebt keinen früheren.
  */
-export function layoutCourses(courses: { id: string; tileCount: number }[]): CourseLayout[] {
+export function layoutCourses(courses: { id: string; tileCount: number; group?: string }[]): CourseLayout[] {
   const occupied = new Set<string>()
+  const groupCenter = new Map<string, Cell>()
   const result: CourseLayout[] = []
   for (const course of courses) {
-    const base = buildCourse(course.id, course.tileCount)
-    const own = [...base.tiles, ...base.territory]
-    // Zelle in der Mitte der Kacheln als Anker
-    const mx = base.tiles.reduce((s, c) => s + cellCenter(c).x, 0) / base.tiles.length
-    const my = base.tiles.reduce((s, c) => s + cellCenter(c).y, 0) / base.tiles.length
-    const anchor = [...base.tiles].sort((a, b) => {
-      const pa = cellCenter(a)
-      const pb = cellCenter(b)
-      return (pa.x - mx) ** 2 + (pa.y - my) ** 2 - ((pb.x - mx) ** 2 + (pb.y - my) ** 2)
-    })[0]
-    // Alles, was frei sein muss: eigene Zellen und ihre Nachbarn (= eine Zelle Abstand)
+    const base = growCells(course.id, course.tileCount)
+    // Alles, was frei sein muss: die eigenen Zellen und ihr Umkreis
     const haloKeys = new Set<string>()
     const halo: Cell[] = []
-    for (const cell of own) {
-      for (const c of [cell, ...neighbors(cell)]) {
-        const key = cellKey(c)
-        if (!haloKeys.has(key)) haloKeys.add(key), halo.push(c)
+    for (const cell of base) {
+      for (const c of [{ q: 0, r: 0 }, ...GAP_OFFSETS]) {
+        const moved = { q: cell.q + c.q, r: cell.r + c.r }
+        const key = cellKey(moved)
+        if (!haloKeys.has(key)) haloKeys.add(key), halo.push(moved)
       }
     }
     const fits = (dq: number, dr: number) => halo.every((c) => !occupied.has(cellKey({ q: c.q + dq, r: c.r + dr })))
 
+    const center = (course.group && groupCenter.get(course.group)) || { q: 0, r: 0 }
     let shift = { q: 0, r: (result.length + 1) * 200 }
     for (const target of SHIFTS) {
-      const dq = target.q - anchor.q
-      const dr = target.r - anchor.r
+      const dq = center.q + target.q
+      const dr = center.r + target.r
       if (fits(dq, dr)) {
         shift = { q: dq, r: dr }
         break
       }
     }
-    const move = (c: Cell) => ({ q: c.q + shift.q, r: c.r + shift.r })
-    const placed: CourseLayout = {
-      id: course.id,
-      tiles: base.tiles.map(move),
-      territory: base.territory.map(move),
-      decor: base.decor.map(move),
-    }
-    for (const c of [...placed.tiles, ...placed.territory]) occupied.add(cellKey(c))
-    result.push(placed)
+    if (course.group && !groupCenter.has(course.group)) groupCenter.set(course.group, shift)
+    const tiles = base.map((c) => ({ q: c.q + shift.q, r: c.r + shift.r }))
+    for (const c of tiles) occupied.add(cellKey(c))
+    result.push({ id: course.id, tiles })
   }
   return result
 }

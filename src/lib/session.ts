@@ -50,12 +50,15 @@ export function startSession(items: SessionItem[]): SessionState {
   return { items, index: 0, firstTry: {} }
 }
 
-/** Antwort auf die aktuelle Frage einrechnen; falsch → hinten erneut anhängen */
-export function answer(state: SessionState, key: string, correct: boolean): SessionState {
+/**
+ * Antwort auf die aktuelle Frage einrechnen; falsch → hinten erneut anhängen.
+ * In einer Prüfung (`retry` = false) kommt jede Frage genau einmal.
+ */
+export function answer(state: SessionState, key: string, correct: boolean, retry = true): SessionState {
   const item = state.items[state.index]
   if (!item || item.kind !== 'question') return state
   const firstTry = key in state.firstTry ? state.firstTry : { ...state.firstTry, [key]: correct }
-  const items = correct ? state.items : [...state.items, { ...item, retry: true }]
+  const items = correct || !retry ? state.items : [...state.items, { ...item, retry: true }]
   return { ...state, items, firstTry }
 }
 
