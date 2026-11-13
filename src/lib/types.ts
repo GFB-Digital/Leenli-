@@ -1,4 +1,4 @@
-// Datenmodell von Leenli: Kurs → Kacheln → Schritte (Seiten und Fragen)
+// Datenmodell von Locus: Kurs → Kacheln → Schritte (Seiten und Fragen)
 
 // ---------------------------------------------------------------------------
 // Inhalte

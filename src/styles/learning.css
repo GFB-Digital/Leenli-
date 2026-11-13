@@ -180,16 +180,16 @@
 
 .map-logo {
   font-family: var(--font-ui);
-  font-size: 3.2rem;
+  font-size: 2rem;
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
 .map-tagline {
-  margin-top: 0.35rem;
+  margin-top: 0.2rem;
   color: var(--text-muted);
-  font-size: 1.15rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -708,6 +708,7 @@
 }
 
 .reveal {
+  font-family: var(--font-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -817,6 +818,7 @@
 }
 
 .q-title {
+  font-family: var(--font-text);
   font-size: calc(1.3rem * var(--font-scale));
   font-weight: 800;
   line-height: 1.35;
@@ -842,6 +844,7 @@
 }
 
 .q-option {
+  font-family: var(--font-text);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -943,6 +946,7 @@
 }
 
 .q-feedback {
+  font-family: var(--font-text);
   display: grid;
   gap: 0.35rem;
   padding: 0.9rem 1rem;

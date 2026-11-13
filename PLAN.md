@@ -1,5 +1,7 @@
 # Leenli – Projektplan
 
+> **Umbenannt am 13.11.2026:** Die App heißt jetzt **Locus** („Der Ort des Wissens“). Repo, Ordner und interne Speicher-Schlüssel heißen weiter `Leenli`/`leenli`.
+
 Du baust mit mir meine Lern-App „Leenli“. Ich bin Anfänger, arbeite auf Windows in VS Code im Ordner C:\Users\PCUser\Leenli- (schon mit GitHub verbunden: GFB-Digital/Leenli-, Branch main). Node.js, Git und VS Code sind installiert. Erkläre Terminal-Befehle kurz und für Windows (PowerShell).
 
 ## Ziel

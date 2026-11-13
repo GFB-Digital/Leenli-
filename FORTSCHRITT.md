@@ -1,9 +1,9 @@
-# Leenli – Fortschritt
+# Locus (früher Leenli) – Fortschritt
 
 Hier steht, was schon erledigt ist, welche Entscheidungen getroffen wurden und was als Nächstes kommt.
 Wird nach jeder Phase aktualisiert. Den eigentlichen Auftrag beschreibt [PLAN.md](PLAN.md).
 
-**Stand:** 12.11.2026 – Dritte Überarbeitung: zurück zu Sechsecken, lückenlos aneinander, ohne Umrandung. Als Nächstes: erneuter Test auf dem iPhone.
+**Stand:** 13.11.2026 – App heißt jetzt **Locus**, Startseite „Der Ort des Wissens“; davor: Lesetext, Fragen und Speed-Reader in Google Sans. Als Nächstes: erneuter Test auf dem iPhone.
 
 ## Erledigt
 
@@ -96,6 +96,18 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **Zarte Umrisse** im Gebiet nur noch abseits der Kacheln, damit sie nicht wie Kacheln wirken. Kursname sitzt knapp über der obersten Reihe.
 - **Auch sonst Sechsecke** statt Achtecke: Lerntage-Stempel, Kachel-Nummern im Kursblatt, Abzeichen in Zusammenfassung und Wissensbank (Icons `hex`/`hexFilled`, CSS-Form `--hex`).
 
+### Schrift Google Sans (12.11.2026)
+- **Wunsch des Nutzers:** Lesetext und Fragen in Google Sans. Gilt für Leseseiten (Text und Überschrift), Fragen, Antworten, Rückmeldung, „Du lernst …“/Rückblick und das Wort im Speed-Reader. Überschriften, Karte und Bedienelemente behalten ihre Schriften.
+- **In der App gespeichert** statt von Google geladen: [src/assets/fonts/](src/assets/fonts/) (nur Latein und Latein-Erweiterung, normal und kursiv, variable Strichstärke 400–700, zusammen rund 118 KB), eingebunden in [fonts.css](src/styles/fonts.css), Variable `--font-text` in global.css. Der Service Worker speichert die Dateien vorab (`woff2` in `globPatterns`), also auch offline und später in Capacitor.
+- **Lizenz:** SIL Open Font License 1.1, Lizenztext liegt daneben ([OFL.txt](src/assets/fonts/OFL.txt)). Quelle: npm-Paket `@fontsource-variable/google-sans` 5.3.2 (nur die Dateien kopiert, keine neue Abhängigkeit).
+- **Speed-Reader** misst die Wortbreite nach dem Laden der Schrift einmal neu (`document.fonts.ready` in [RsvpWord.tsx](src/components/speed/RsvpWord.tsx)). Gemessen: Fokus bei allen 90 Wörtern auf 0,01 px genau, nichts abgeschnitten (hell/dunkel, 390 px).
+
+### Umbenennung in Locus (13.11.2026)
+- **Sichtbarer Name** jetzt „Locus“: Startseite, Fenstertitel, Name auf dem Home-Bildschirm (Manifest, `apple-mobile-web-app-title`), Claude-Vorlage, Beispielkurs, README.
+- **Startseite:** Untertitel „Der Ort des Wissens“ statt „Deine Wissenskarte“; Schriftzug kleiner in der Ecke oben links (2 rem statt 3,2 rem, Untertitel 0,9 rem).
+- **Bewusst nicht umbenannt:** Datenbank `leenli`, `localStorage`-Schlüssel `leenli-appearance`, Bilder-Cache `leenli-bilder`, die Kennung im Browser-Verlauf und `package.json`. Sonst wären gespeicherte Kurse, Fortschritt und Einstellungen weg. Ebenso bleiben Repo (`GFB-Digital/Leenli-`), Ordner und Web-Adresse gleich.
+- Das App-Icon (rotes „L“) passt weiter.
+
 ## Entscheidungen und Abweichungen vom Plan
 - **Eigene Studienkurse (12.11.2026):** Die Kurse aus den Vorlesungen (ABWL, Fertigungstechnik, Konstruktion) entstehen in `kurse/`. Der Ordner ist ein eigenes **privates** Repo (`GFB-Digital/Leenli-Kurse`) und hier per `.gitignore` ausgeschlossen, weil er urheberrechtlich geschützte Vorlesungsinhalte enthält. Die App selbst bleibt unverändert: Kurse kommen über „Inhalte → Datei wählen“ hinein. `kurse/werkzeuge/bauen.mjs` prüft jeden Kurs mit dem Importer aus `src/lib/importer.ts`.
 - **Updates:** keine automatische Aktualisierung, sondern ein Hinweis „Neue Version verfügbar → Aktualisieren“, damit eine laufende Lektion nicht verloren geht.
@@ -138,5 +150,6 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - Mögliche Ideen für später: Sicherung von Kursen und Lernstand als Datei, Kategorien (mehrere Kurse zu einem Themengebiet auf der Karte), Suche, Startbildschirme für iOS
 
 ## Offene Punkte
+- **Abweichung von PLAN.md:** Der Plan sieht nur Systemschriften vor. Für Lesetext und Fragen gibt es jetzt Google Sans, wegen der Offline-Pflicht aber in der App gespeichert, nicht von einem CDN.
 - **Hosting:** GitHub Pages ist eingeschaltet, jeder Push auf main veröffentlicht automatisch.
 - **Abweichung von PLAN.md:** Der Plan nennt für den Fokusbuchstaben „Mitte“. Auf Wunsch des Nutzers (Video-Vorbild) steht er jetzt bei 38 %.

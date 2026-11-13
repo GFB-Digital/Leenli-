@@ -46,8 +46,8 @@ export function MapScreen({
 
       <header className="map-header">
         <div className="map-brand">
-          <span className="map-logo">Leenli</span>
-          <span className="map-tagline">Deine Wissenskarte</span>
+          <span className="map-logo">Locus</span>
+          <span className="map-tagline">Der Ort des Wissens</span>
         </div>
         <div className="map-actions">
           <button type="button" className="round-btn round-btn--glass" aria-label="Inhalte" title="Inhalte" onClick={() => nav.navigate({ name: 'content' })}>

@@ -19,8 +19,8 @@ export default defineConfig({
       includeManifestIcons: false, // Icons erfasst bereits globPatterns unten
       manifest: {
         id: './',
-        name: 'Leenli',
-        short_name: 'Leenli',
+        name: 'Locus',
+        short_name: 'Locus',
         description: 'Lernen in kurzen Abschnitten – mit eingebautem Speed-Reader.',
         lang: 'de',
         dir: 'ltr',
@@ -40,7 +40,7 @@ export default defineConfig({
       workbox: {
         // Alles, was die App braucht, wird vorab gespeichert → komplett offline
         // (das Manifest fügt das Plugin selbst hinzu)
-        globPatterns: ['**/*.{js,css,html,svg,png}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         // Bilder aus Kursen (z. B. Wikimedia) nach dem ersten Laden offline verfügbar

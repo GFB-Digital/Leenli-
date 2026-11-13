@@ -54,6 +54,15 @@ export function RsvpWord({ token }: { token: Token | undefined }) {
   // Vor dem Zeichnen anpassen → kein kurzes Aufblitzen in falscher Größe
   useLayoutEffect(fit, [token, fit])
 
+  // Schrift (Google Sans) erst nach dem ersten Wort geladen → neu messen
+  useEffect(() => {
+    let active = true
+    document.fonts?.ready.then(() => active && fit())
+    return () => {
+      active = false
+    }
+  }, [fit])
+
   // Breite ändert sich (Drehen, Fenstergröße)
   useEffect(() => {
     const layer = layerRef.current

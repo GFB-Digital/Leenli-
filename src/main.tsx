@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import { startServiceWorker } from './lib/pwa.ts'
 import { loadAppState } from './lib/store.ts'
+import './styles/fonts.css'
 import './styles/global.css'
 import './styles/learning.css'
 

@@ -1,4 +1,4 @@
-# Leenli
+# Locus
 
 Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sechsecken** vor dir: Jeder Kurs ist ein Cluster, jede Kachel eine kurze Lerneinheit aus Leseseiten und Fragen. Gelerntes wird danach in wachsenden Abständen wiederholt, damit es wirklich hängen bleibt. Jede Seite lässt sich normal lesen oder mit dem eingebauten **Speed-Reader** – ein Wort nach dem anderen, mit rotem Fokusbuchstaben.
 
@@ -14,7 +14,7 @@ Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sec
 ## Inhalt
 
 1. [Auf dem Handy installieren](#auf-dem-handy-installieren)
-2. [So lernst du mit Leenli](#so-lernst-du-mit-leenli)
+2. [So lernst du mit Locus](#so-lernst-du-mit-locus)
 3. [Eigene Kurse mit Claude erstellen](#eigene-kurse-mit-claude-erstellen)
 4. [Das Kursformat](#das-kursformat)
 5. [Der Speed-Reader](#der-speed-reader)
@@ -33,13 +33,13 @@ Eine Lern-App in kurzen Häppchen. Deine Kurse liegen als **Wissenskarte aus Sec
 | **Android** | In Chrome öffnen → Menü ⋮ → **„App installieren“** |
 | **PC (Chrome/Edge)** | Rechts in der Adressleiste auf das Installieren-Symbol klicken |
 
-Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neue Version, erscheint unten der Hinweis „Neue Version verfügbar → Aktualisieren“. Die App lädt nie ungefragt neu, damit keine laufende Kachel verloren geht.
+Nach dem ersten Öffnen funktioniert Locus auch ohne Internet. Gibt es eine neue Version, erscheint unten der Hinweis „Neue Version verfügbar → Aktualisieren“. Die App lädt nie ungefragt neu, damit keine laufende Kachel verloren geht.
 
 > **Wichtig:** Deine Kurse und dein Fortschritt liegen nur auf dem jeweiligen Gerät. Wird die App vom Home-Bildschirm gelöscht, sind auch die Daten weg.
 
 ---
 
-## So lernst du mit Leenli
+## So lernst du mit Locus
 
 **Die Wissenskarte (Startseite).** Jeder Kurs ist eine farbige Gruppe aus Sechsecken, die lückenlos aneinanderliegen – ein Sechseck pro Kachel. Mit einem Finger verschieben, mit zwei Fingern (am PC: Mausrad) zoomen, doppelt tippen zum Hineinzoomen. Je näher du heranzoomst, desto mehr siehst du: erst Flächen, dann Häkchen auf erledigten Kacheln, ganz nah in jeder Kachel ihren Inhalt: einen Kreis je Leseseite und ein Schild je Frage, nebeneinander in der Reihenfolge, in der sie drankommen.
 
@@ -54,7 +54,7 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 **Fragetypen:** Auswahl, Entweder-oder (eine Antwort oben, eine unten – tippen oder wischen), Richtig/Falsch und Lückentext.
 
-**Wiederholen (Spaced Repetition).** Nach einer Kachel bekommt jede ihrer Fragen einen Gedächtnis-Stand. Leenli rechnet aus, wann du sie voraussichtlich vergisst, und holt sie kurz vorher wieder. Richtig beantwortet → der Abstand wächst (Tage → Wochen → Monate). Falsch → er schrumpft deutlich. Die Kachel musst du dafür nicht noch einmal lesen.
+**Wiederholen (Spaced Repetition).** Nach einer Kachel bekommt jede ihrer Fragen einen Gedächtnis-Stand. Locus rechnet aus, wann du sie voraussichtlich vergisst, und holt sie kurz vorher wieder. Richtig beantwortet → der Abstand wächst (Tage → Wochen → Monate). Falsch → er schrumpft deutlich. Die Kachel musst du dafür nicht noch einmal lesen.
 
 **Wissensbank** (Knopf unten links):
 
@@ -72,21 +72,21 @@ Nach dem ersten Öffnen funktioniert Leenli auch ohne Internet. Gibt es eine neu
 
 ## Eigene Kurse mit Claude erstellen
 
-1. In Leenli **Inhalte** öffnen (Pfeil-Symbol oben rechts) → **„Vorlage kopieren“**
+1. In Locus **Inhalte** öffnen (Pfeil-Symbol oben rechts) → **„Vorlage kopieren“**
 2. Bei Claude einfügen, Thema und Umfang eintragen, absenden
-3. Claudes Antwort komplett kopieren – auch mit Text davor oder dem ```json-Rahmen, das entfernt Leenli selbst
-4. In Leenli unter **Inhalte** einfügen → **„Importieren“** (oder eine `.json`-Datei wählen)
+3. Claudes Antwort komplett kopieren – auch mit Text davor oder dem ```json-Rahmen, das entfernt Locus selbst
+4. In Locus unter **Inhalte** einfügen → **„Importieren“** (oder eine `.json`-Datei wählen)
 
-Findet Leenli Fehler, steht genau da, wo: zum Beispiel
+Findet Locus Fehler, steht genau da, wo: zum Beispiel
 „Kurs („Photosynthese“) › Kachel 2 › Schritt 3 (Frage): „answer“ ist 4, erlaubt sind aber nur 0 bis 3.“
 Diese Meldung kannst du Claude einfach zurückgeben und um Korrektur bitten.
 
 ### Kurse überarbeiten statt doppelt anlegen
 
-Jeder Kurs hat eine **ID**. Daran erkennt Leenli „denselben“ Kurs.
+Jeder Kurs hat eine **ID**. Daran erkennt Locus „denselben“ Kurs.
 
 - **Neuer Kurs:** Die Vorlage lässt Claude das heutige Datum in die ID schreiben (z. B. `photosynthese-20261112`). So überschneiden sich neue Kurse nie.
-- **Verbesserter Kurs:** Bitte Claude, die IDs beizubehalten. Beim Import fragt Leenli dann:
+- **Verbesserter Kurs:** Bitte Claude, die IDs beizubehalten. Beim Import fragt Locus dann:
   - **Ersetzen** – der alte Kurs wird ausgetauscht, dein Fortschritt bleibt für Kacheln mit gleicher ID erhalten.
   - **Als neuen Kurs hinzufügen** – der Kurs bekommt automatisch eine neue ID (bei gleichem Titel z. B. „Photosynthese (2)“).
 
@@ -98,7 +98,7 @@ So sieht die Vorlage aus (in der App steht statt `JJJJMMTT` das heutige Datum):
 
 <!-- VORLAGE:ANFANG -->
 ````text
-Erstelle mir einen Lernkurs für meine Lern-App „Leenli“.
+Erstelle mir einen Lernkurs für meine Lern-App „Locus“.
 
 Thema: [HIER DEIN THEMA EINTRAGEN]
 Umfang: [z. B. 6 Kacheln]
@@ -209,7 +209,7 @@ Kurs → Kacheln → Schritte (Seiten und Fragen). Ein Import kann ein einzelner
 
 Absätze werden mit einer Leerzeile getrennt – im JSON als `\n\n` geschrieben. `**zwei Sternchen**` machen ein Wort fett. Das Bild ist freiwillig; nach dem ersten Laden ist es auch offline verfügbar.
 
-**Auswahlfrage** (2 bis 6 Antworten, Leenli mischt sie beim Anzeigen)
+**Auswahlfrage** (2 bis 6 Antworten, Locus mischt sie beim Anzeigen)
 
 ```json
 { "type": "choice", "question": "Frage?", "options": ["A", "B", "C"], "answer": 1, "explanation": "Optional: warum B stimmt." }
@@ -354,7 +354,7 @@ Der aktuelle Arbeitsstand steht in [FORTSCHRITT.md](FORTSCHRITT.md), der Auftrag
 
 ## Später als echte App (Capacitor)
 
-Leenli ist so gebaut, dass daraus ohne Umbau eine App für App Store und Play Store werden kann:
+Locus ist so gebaut, dass daraus ohne Umbau eine App für App Store und Play Store werden kann:
 
 - **Relative Pfade** (`base: './'` in [vite.config.ts](vite.config.ts)) – der Build läuft unverändert in der App-Hülle.
 - **Kein Service Worker in der App:** [src/lib/pwa.ts](src/lib/pwa.ts) erkennt Capacitor und schaltet ihn ab (die Dateien liegen dort ohnehin auf dem Gerät).
@@ -366,7 +366,7 @@ So ginge es los (braucht für iOS einen Mac mit Xcode, für Android Android Stud
 ```powershell
 npm install @capacitor/core
 npm install -D @capacitor/cli
-npx cap init Leenli de.gfbdigital.leenli --web-dir dist
+npx cap init Locus de.gfbdigital.locus --web-dir dist
 npm install @capacitor/ios @capacitor/android
 npx cap add ios
 npx cap add android

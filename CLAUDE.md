@@ -1,4 +1,4 @@
-# Leenli – Hinweise für Claude
+# Locus (früher Leenli) – Hinweise für Claude
 
 Claude Code liest diese Datei zu Beginn jeder Sitzung automatisch. Die beiden folgenden Dateien werden damit ebenfalls geladen:
 
