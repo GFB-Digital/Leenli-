@@ -123,7 +123,7 @@ Der Nutzer hat gebeten, diese Phasen ohne Pause nacheinander umzusetzen. Überno
 - **App-Icons** erzeugt [scripts/generate-icons.mjs](scripts/generate-icons.mjs) jetzt aus dem Logo (eigener kleiner PNG-Decoder, keine Bibliothek): Schriftzug entfernt (Verlauf darüber und darunter überblendet), Tempel mittig auf 84 % der Breite, Rand des grauen Verlaufs fortgesetzt. Maskable-Icon mit 68 %, damit der Tempel in der runden Android-Maske bleibt. Favicon 32 px mit 96 %.
 - **Entfernt:** `public/favicon.svg` (altes rotes „L“); das Browser-Tab nutzt `icons/favicon-32.png`.
 - **Größe:** Die Icons sind zusammen rund 270 KB (vorher wenige KB), weil das Logo ein fein verrauschtes Bild ist. PNG-Zeilenfilter brachten nur ~5 % und wurden deshalb nicht eingebaut.
-- **Repo umbenannt:** `GFB-Digital/Locus` → `GFB-Digital/Topos` (per `gh repo rename`), Remote auf `https://github.com/GFB-Digital/Topos.git` umgestellt. Die App liegt jetzt unter <https://gfb-digital.github.io/Topos/>, `…/Locus/` gibt 404. Auf den Geräten muss die App von der neuen Adresse neu installiert werden. Der Ordner bleibt `C:UsersPCUserLocus`.
+- **Repo umbenannt:** `GFB-Digital/Locus` → `GFB-Digital/Topos` (per `gh repo rename`), Remote auf `https://github.com/GFB-Digital/Topos.git` umgestellt. Die App liegt jetzt unter <https://gfb-digital.github.io/Topos/>, `…/Locus/` gibt 404. Auf den Geräten muss die App von der neuen Adresse neu installiert werden. Der Ordner heißt seit 13.11.2026 `C:\Users\PCUser\Topos` (vorher `Locus`, davor `Leenli-`).
 - **Geprüft:** `npm run build` und `npm test` (108 Tests) fehlerfrei; gebautes Manifest heißt ΤΟΠΟΣ (echte griechische Buchstaben, keine lateinischen T/O).
 
 ## Entscheidungen und Abweichungen vom Plan

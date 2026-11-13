@@ -2,13 +2,13 @@
 
 > **Umbenannt am 13.11.2026:** Die App heißt jetzt **ΤΟΠΟΣ** (griechisch für „Ort“, lateinisch geschrieben „Topos“; vorher Locus, davor Leenli). Überall, wo der Name sichtbar ist (Seitentitel, Name unter dem Icon, Überschriften in der App), steht **ΤΟΠΟΣ** in griechischen Großbuchstaben. Wo nur lateinische Buchstaben gehen (Paketname, Dateinamen), heißt sie „Topos“.
 >
-> Der Ordner heißt `C:\Users\PCUser\Locus`, das GitHub-Repo heißt `GFB-Digital/Topos` (die App liegt unter `https://gfb-digital.github.io/Topos/` und muss auf den Geräten neu installiert werden). Interne Speicher-Schlüssel bleiben `leenli…`, damit kein Lernstand verloren geht.
+> Der Ordner heißt `C:\Users\PCUser\Topos` (bis 13.11.2026 `Locus`), das GitHub-Repo heißt `GFB-Digital/Topos` (die App liegt unter `https://gfb-digital.github.io/Topos/` und muss auf den Geräten neu installiert werden). Interne Speicher-Schlüssel bleiben `leenli…`, damit kein Lernstand verloren geht.
 >
 > **Umgesetzt (13.11.2026):** sichtbarer Name im Code ist ΤΟΠΟΣ, Icons aus dem Logo (siehe FORTSCHRITT.md). Repo ist umbenannt in `GFB-Digital/Topos`, App unter https://gfb-digital.github.io/Topos/.
 >
 > **Logo:** Weißer 3D-Tempel mit rotem Punkt im Giebel auf Basaltgrau (RAL 7012, `#575D5E`), darüber der Schriftzug ΤΟΠΟΣ.
 
-Du baust mit mir meine Lern-App „ΤΟΠΟΣ“. Ich bin Anfänger, arbeite auf Windows in VS Code im Ordner C:\Users\PCUser\Locus (mit GitHub verbunden: GFB-Digital/Topos, früher Locus, Branch main). Node.js, Git und VS Code sind installiert. Erkläre Terminal-Befehle kurz und für Windows (PowerShell).
+Du baust mit mir meine Lern-App „ΤΟΠΟΣ“. Ich bin Anfänger, arbeite auf Windows in VS Code im Ordner C:\Users\PCUser\Topos (mit GitHub verbunden: GFB-Digital/Topos, früher Locus, Branch main). Node.js, Git und VS Code sind installiert. Erkläre Terminal-Befehle kurz und für Windows (PowerShell).
 
 ## Ziel
 Eine Lern-App wie Kinnu: Lektionen bestehen aus kurzen Leseabschnitten, nach jedem Abschnitt kommt eine Frage. Besonderheit: Jeder Leseabschnitt kann normal ODER mit einem Speed-Reader gelesen werden (wie spreeder.com, aber besser). Ich will beliebig viele eigene Inhalte importieren, die ich mir von Claude als JSON erstellen lasse.
