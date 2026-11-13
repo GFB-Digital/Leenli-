@@ -21,6 +21,6 @@ Thumbs.db
 .env
 .env.*
 
-# Eigene Studienkurse: eigenes privates Repo (GFB-Digital/Leenli-Kurse),
+# Eigene Studienkurse: eigenes privates Repo (GFB-Digital/Topos-Kurse),
 # enthält urheberrechtlich geschützte Vorlesungsinhalte – nie hier veröffentlichen
 kurse/
